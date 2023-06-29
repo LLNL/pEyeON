@@ -1,0 +1,60 @@
+{
+  "$id": "observation.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EyeON Observation",
+  "type": "object",
+  "required": ["bytecount", "filename", "magic", "md5", "observation_ts", "sha1", "sha256"],
+  "properties": {
+    "bytecount": {
+      "type":"integer",
+      "description": "Size of file in bytes"
+    },
+    "compiler": {
+      "type": "string",
+      "description": "Compiler Identifier"
+    },
+    "filename": {
+      "type": "string",
+      "description": "Basename of file"
+    },
+    "hosts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of hosts file will target"
+    },
+    "imphash": {
+      "type": "string",
+      "description": "Import Hash calculated via pefile"
+    },
+    "magic": {
+      "type": "string",
+      "description": "`file` Magic output for given file"
+    },
+    "md5": {
+      "type": "string",
+      "description": "MD5 of file"
+    },
+    "observation_ts": {
+      "type": "string",
+      "description": "Date and time file was scanned"
+    },
+    "parent": {
+      "type": "string",
+      "description": "Some yet-to-be-determined pointer to a parent file or something"
+    },
+    "sha1": {
+      "type": "string",
+      "description": "Sha1 of file"
+    },
+    "sha256": {
+      "type": "string",
+      "description": "Sha256 of file"
+    },
+    "target_os": {
+      "type": "string",
+      "description": "Operating system of target machine"
+    }
+  }
+}

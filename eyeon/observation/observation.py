@@ -1,9 +1,12 @@
 from dataclasses import dataclass
 import datetime
 import hashlib
+import json
 import magic
 import os
 import pefile
+
+
 
 
 @dataclass
@@ -13,8 +16,8 @@ class Observation:
     filename: str
     magic: str
     md5: str
-    modtime: datetime.datetime
-    observation_ts: datetime.datetime
+    modtime: str
+    observation_ts: str
     sha1: str
     sha256: str
     permissions: int  # needs to be in octal for reading
@@ -26,35 +29,48 @@ class Observation:
 
     def __init__(self, file) -> None:
         stat = os.stat(file)
-        self.modtime = stat.st_mtime
-        self.observation_ts = datetime.datetime.now()
-        self.permissions = stat.st_mode
+        self.bytecount = stat.st_size
+        self.filename = os.path.basename(file)  # TODO: split into absolute path maybe?
+        try:
+            self.set_imphash(file)
+        except pefile.PEFormatError:
+            self.imphash = "N/A"
+        self.magic = magic.from_file(file)
+        self.modtime = datetime.datetime.utcfromtimestamp(stat.st_mtime).strftime('%Y-%m-%d %H:%M:%S')
+        self.observation_ts = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        self.permissions = oct(stat.st_mode)
+
+
+
         with open(file, 'rb') as f:
-            self.set_magic(f)
-            self.set_md5(f)
-            self.set_sha1(f)
-            self.set_sha256(f)
-            self.set_imphash(f)
+            self.md5 = Observation.create_hash(f, "md5")
+            self.sha1 = Observation.create_hash(f, "sha1")
+            self.sha256 = Observation.create_hash(f, "sha256")
+
+
+    @staticmethod
+    def create_hash( f, hash):
+        hashers = {
+            "md5": hashlib.md5,
+            "sha1": hashlib.sha1,
+            "sha256": hashlib.sha256,
+        }
+        h = hashers[hash]()
+        h.update(f.read())
+        return h.hexdigest()
 
     def set_magic(self, file) -> None:
         self.magic = magic.from_file(file)
-
-    def set_md5(self, file) -> None:
-        md5 = hashlib.md5()
-        md5.update()
-
-    def set_sha1(self, file) -> None:
-        pass
-
-    def set_sha256(self, file) -> None:
-        pass
 
     def set_imphash(self, file) -> None:
         pef = pefile.PE(file)
         self.imphash = pef.get_imphash()
 
-    def write_json(self) -> None:
-        pass
+    def write_json(self, outfile=None) -> None:
+        if not outfile:
+            outfile = f"{self.filename}.{self.md5}.json"
+        with open(outfile, 'w') as f:
+            json.dump(vars(self), f, indent=2)
 
 
 

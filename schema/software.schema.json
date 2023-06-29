@@ -1,0 +1,28 @@
+{
+  "$id": "software.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Software Package Instance",
+  "type": "object",
+  "properties": {
+    "bytecount": {
+      "type":"integer",
+      "description": "Size of software package in bytes"
+    },
+    "file_count": {
+      "type": "integer",
+      "description": "number of files contained within software package"
+    },
+    "package_name": {
+      "type": "string",
+      "description": "Basename of software"
+    },
+      "package_sha256": {
+      "type": "string",
+      "description": "Sha256 of package"
+    },
+    "vendor": {
+      "type": "string",
+      "description": "Date and time was scanned"
+    }
+  }
+}
