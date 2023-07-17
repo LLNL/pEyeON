@@ -1,0 +1,3 @@
+jsonschema=="4.17"
+python-magic=="0.4.27"
+pefile=="2023.2.7"

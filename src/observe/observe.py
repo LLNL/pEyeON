@@ -5,12 +5,11 @@ import json
 import magic
 import os
 import pefile
-
-
+import pprint
 
 
 @dataclass
-class Observation:
+class Observe:
     # required fields
     bytecount: int
     filename: str
@@ -23,9 +22,9 @@ class Observation:
     permissions: int  # needs to be in octal for reading
 
     # optional fields
-    compiler: str
-    host: list
-    imphash: str
+    compiler: str = None
+    host: list = None
+    imphash: str = None
 
     def __init__(self, file) -> None:
         stat = os.stat(file)
@@ -40,12 +39,10 @@ class Observation:
         self.observation_ts = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         self.permissions = oct(stat.st_mode)
 
-
-
         with open(file, 'rb') as f:
-            self.md5 = Observation.create_hash(f, "md5")
-            self.sha1 = Observation.create_hash(f, "sha1")
-            self.sha256 = Observation.create_hash(f, "sha256")
+            self.md5 = Observe.create_hash(f, "md5")
+            self.sha1 = Observe.create_hash(f, "sha1")
+            self.sha256 = Observe.create_hash(f, "sha256")
 
 
     @staticmethod
@@ -73,6 +70,14 @@ class Observation:
             json.dump(vars(self), f, indent=2)
 
 
+    def __str__(self) -> str:
+        return pprint.pformat(vars(self), indent=2)
 
 
-    
+def main() -> None:
+    obs = Observe("/usr/bin/ls")
+    print(obs)
+
+
+if __name__ == "__main__":
+    main()
