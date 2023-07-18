@@ -6,7 +6,9 @@ import magic
 import os
 import pefile
 import pprint
-
+from unblob import models
+import tempfile
+# TODO: import tika
 
 @dataclass
 class Observe:
@@ -39,22 +41,21 @@ class Observe:
         self.observation_ts = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         self.permissions = oct(stat.st_mode)
 
-        with open(file, 'rb') as f:
-            self.md5 = Observe.create_hash(f, "md5")
-            self.sha1 = Observe.create_hash(f, "sha1")
-            self.sha256 = Observe.create_hash(f, "sha256")
-
+        self.md5 = Observe.create_hash(file, "md5")
+        self.sha1 = Observe.create_hash(file, "sha1")
+        self.sha256 = Observe.create_hash(file, "sha256")
 
     @staticmethod
-    def create_hash( f, hash):
+    def create_hash(file, hash):
         hashers = {
             "md5": hashlib.md5,
             "sha1": hashlib.sha1,
             "sha256": hashlib.sha256,
         }
-        h = hashers[hash]()
-        h.update(f.read())
-        return h.hexdigest()
+        with open(file, 'rb') as f:
+            h = hashers[hash]()
+            h.update(f.read())
+            return h.hexdigest()
 
     def set_magic(self, file) -> None:
         self.magic = magic.from_file(file)
@@ -69,9 +70,13 @@ class Observe:
         with open(outfile, 'w') as f:
             json.dump(vars(self), f, indent=2)
 
-
     def __str__(self) -> str:
         return pprint.pformat(vars(self), indent=2)
+
+    def extract(self) -> None:
+        # TODO: add the system heirarchy stuff here
+        with tempfile.TemporaryDirectory() as td:
+            extr = models.Extractor().extract(self.filename, td)
 
 
 def main() -> None:
