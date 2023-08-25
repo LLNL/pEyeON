@@ -4,12 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name="eyeon"
-version="0.1"
+version="0.2"
 description="EyeON update tracking utility"
 requires-python=">=3.9"
 # author="LLNL"
 dependencies=[
     "jsonschema == 4.17",
+    "lief <= 0.13.2",
     "python-magic == 0.4.27",
     "pefile == 2023.2.7",
+    # "unblob == 23.8.11",
 ]

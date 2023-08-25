@@ -1,5 +1,5 @@
 import argparse
-import observe
+import eyeon.observe as observe
 class CommandLine:
     def __init__(self) -> None:
         pass
