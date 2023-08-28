@@ -3,5 +3,5 @@ __pycache__
 .swp
 *.egg-info
 dist
-*.exe
+# *.exe
 outputs/

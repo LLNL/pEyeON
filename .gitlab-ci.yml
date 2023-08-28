@@ -1,0 +1,35 @@
+# Run workflow for both push and MR triggers, but avoid duplicate pipeline runs
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: '$CI_COMMIT_BRANCH'
+
+stages:
+  - test
+
+.oslic:
+  tags:
+    - shell
+    - oslic
+
+before_script:
+  - python3 -m venv eyeon  # Create venv
+  - source eyeon/bin/activate
+
+unittest:
+  stage: test
+  extends:
+    - .oslic
+  image: python:3.10
+  script:
+    - pip install dists/eyeon-*.whl
+    - cd tests/
+    - python3 testObserve.py
+
+sbom:
+  stage: sbom
+  script:
+    - cd .. # back to eyeon folder
+    - ./sbom-tool generate -b build/ -bc lsbom/ -pn lsbom -pv 0.2 -ps "Lawrence Livermore National Laboratory" -nsb https://www.llnl.gov/
