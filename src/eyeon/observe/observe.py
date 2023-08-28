@@ -1,31 +1,38 @@
-# from dataclasses import dataclass, field
+"""
+eyeon.observe.Observe makes an observation of a file.
+An observation will output a json file containing unique identifying information
+  such as hashes, modify date, certificate info, etc.
+See the Observe class doc for full details.
+"""
 import datetime
 import hashlib
 import json
+import os
+import pprint
+import subprocess
+
+import lief
+
+# from glob import glob
+
+# import tempfile
+# from unblob import models
+
 try:
     import magic
 except ImportError:
     print("Is libmagic1 installed on host machine?")
-import os
-import pefile
-import pprint
-# from unblob import models
-import tempfile
-import subprocess
-from glob import glob
-# TODO: import tika
-import lief
 
 
-def decore() -> None:
-    ''' for some reason detect-it-easy generates these big core dumps
-    they will fill up the disk if we don't clean them up
-    '''
-    for rm in glob("core.*"):
-        try:
-            os.remove(rm)
-        except FileNotFoundError:
-            pass
+# def decore() -> None:
+#     """for some reason detect-it-easy generates these big core dumps
+#     they will fill up the disk if we don't clean them up
+#     """
+#     for rm in glob("core.*"):
+#         try:
+#             os.remove(rm)
+#         except FileNotFoundError:
+#             pass
 
 
 class Observe:
@@ -51,92 +58,130 @@ class Observe:
         imphash (str): Import hash. Only valid for Windows binaries.
         # die (str): Detect-It-Easy output.
         # {signature: [cert1, ...]}
-        pe_info (dict): Descriptors of PE information, including signatures and certificates.
+        signatures (dict): Descriptors of signature information,
+            including signatures and certificates.
     """
 
-    def __init__(self, file) -> None:
+    def __init__(self, file: str) -> None:
         stat = os.stat(file)
         self.bytecount = stat.st_size
         self.filename = os.path.basename(file)  # TODO: split into absolute path maybe?
-        try:
+        self.signatures = {}
+        if lief.is_pe(file):
             self.set_imphash(file)
-        except pefile.PEFormatError:
+            self.set_signatures(file)
+        elif lief.is_elf(file):
+            self.set_telfhash(file)
+        else:
             self.imphash = "N/A"
+            self.signatures = {"valid": "N/A"}
         self.magic = magic.from_file(file)
-        self.modtime = datetime.datetime.utcfromtimestamp(stat.st_mtime).strftime('%Y-%m-%d %H:%M:%S')
-        self.observation_ts = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        self.modtime = datetime.datetime.utcfromtimestamp(stat.st_mtime).strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
+        self.observation_ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.permissions = oct(stat.st_mode)
 
         self.md5 = Observe.create_hash(file, "md5")
         self.sha1 = Observe.create_hash(file, "sha1")
         self.sha256 = Observe.create_hash(file, "sha256")
 
-        self.set_pe_info(file)
-
     @staticmethod
     def create_hash(file, hash):
+        """
+        Generator for hash functions.
+        """
         hashers = {
             "md5": hashlib.md5,
             "sha1": hashlib.sha1,
             "sha256": hashlib.sha256,
         }
-        with open(file, 'rb') as f:
+        with open(file, "rb") as f:
             h = hashers[hash]()
             h.update(f.read())
             return h.hexdigest()
 
-    def set_magic(self, file) -> None:
+    def set_magic(self, file: str) -> None:
+        """
+        Reads magic bytes at beginning of file.
+        """
         self.magic = magic.from_file(file)
 
-    def set_imphash(self, file) -> None:
+    def set_imphash(self, file: str) -> None:
+        """
+        Sets import hash for PE files.
+        See
+         https://www.mandiant.com/resources/blog/tracking-malware-import-hashing.
+        """
+        import pefile
+
         pef = pefile.PE(file)
         self.imphash = pef.get_imphash()
 
-    def set_die(self, file) -> None:
+    def set_die(self, file: str) -> None:
+        """
+        Sets Detect-It-Easy info. WIP
+        """
         try:
             dp = os.environ["DIEPATH"]
             self.die = subprocess.run(
-                [os.path.join(dp, "diec.sh"), file],
-                capture_output=True,
-                timeout=10
+                [os.path.join(dp, "diec.sh"), file], capture_output=True, timeout=10
             ).stdout.decode("utf-8")
         except KeyError:
             print("No $DIEPATH set. See README.md for more information.")
         except Exception as E:  # no file diec
             print(E)
 
-    def set_pe_info(self, file) -> None:
-        if lief.is_pe(file):
-            pe = lief.parse(file)
-            if len(pe.signatures) > 1:
-                print("file has multiple signatures")
-            for sig in pe.signatures:
-                # signinfo = sig.SignerInfo  # this thing is documented but has no constructor defined
-                self.signatures[sig.content_info.digest.hex()] = {
-                    # "certs": [{
-                    #     "version": c.version,
-                    #     "serial_number": c.serial_number,
-                    #     "issuer": c.issuer_name,
-                    #     "subject": c.subject,
-                    #     "valid_from": c.valid_from,
-                    #     "valid_to": c.valid_to,
-                    #     "algorithm": c.signature_algorithm,  # OID format...
-                    # } for c in sig.certificates],
-                    "certs": [c.__str__() for c in sig.certificates],
-                    "signers": sig.signers,
-                    "digest_algorithm": sig.digest_algorithm,
-                    "verification": sig.check().__str__()
-                    # "sections": [s.__str__() for s in pe.sections]
-                    # **signinfo,
-                }
-                
+    def set_signatures(self, file: str) -> None:
+        """
+        Runs LIEF signature validation and collects certificate chain.
+        """
+        pe = lief.parse(file)
+        if len(pe.signatures) > 1:
+            print("file has multiple signatures")
+        self.signatures["valid"] = str(pe.verify_signature())
+        self.signatures["signatures"] = {}
+        self.authentihash = pe.signatures[0].content_info.digest.hex()
+        for sig in pe.signatures:
+            # signinfo = sig.SignerInfo
+            # this thing is documented but has no constructor defined
+            self.signatures["signatures"][sig.content_info.digest.hex()] = {
+                """
+                 "certs": [{
+                    "version": c.version,
+                    "serial_number": c.serial_number,
+                    "issuer": c.issuer_name,
+                    "subject": c.subject,
+                    "valid_from": c.valid_from,
+                    "valid_to": c.valid_to,
+                    "algorithm": c.signature_algorithm,  # OID format...
+                 } for c in sig.certificates],
+                """
+                "certs": [str(c) for c in sig.certificates],
+                "signers": str(sig.signers[0]),
+                "digest_algorithm": str(sig.digest_algorithm),
+                "verification": str(sig.check())
+                # "sections": [s.__str__() for s in pe.sections]
+                # **signinfo,
+            }
 
+    def set_telfhash(self, file: str) -> None:
+        """
+        Sets telfhash for ELF files.
+        See https://github.com/trendmicro/telfhash.
+        """
+        import telfhash
 
+        self.imphash = telfhash.telfhash(file)[0]["telfhash"]
 
-    def write_json(self, outfile=None) -> None:
-        if not outfile:
-            outfile = f"{self.filename}.{self.md5}.json"
-        with open(outfile, 'w') as f:
+    def write_json(self, outdir: str = ".") -> None:
+        """
+        Writes observation to json file.
+        :param outdir: output directory prefix. Defaults to local directory.
+        """
+
+        outfile = f"{os.path.join(outdir, self.filename)}.{self.md5}.json"
+        with open(outfile, "w") as f:
             json.dump(vars(self), f, indent=2)
 
     def __str__(self) -> str:
@@ -146,7 +191,6 @@ class Observe:
     #     # TODO: add the system heirarchy stuff here
     #     with tempfile.TemporaryDirectory() as td:
     #         extr = models.Extractor().extract(self.filename, td)
-
 
 
 def main() -> None:
