@@ -16,3 +16,6 @@ dependencies=[
     # "unblob == 23.8.11",
     "telfhash == 0.9.8",
 ]
+
+[tools.setuptools]
+packages = ["eyeon", "eyeon.cli", "eyeon.observe", "eyeon.parse"]

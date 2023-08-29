@@ -65,7 +65,7 @@ class ObservationTestCase2(unittest.TestCase):
         self.assertEqual(self.OBS.permissions, "0o100700")
 
         self.assertEqual(
-            self.ssdeep,
+            self.OBS.ssdeep,
             "1536:1QMY7SpeylTgzfbPlxjBG3PMyFESaZrOwWXKMk3NJvvsC7W+oVfuokwcLxIvOG0H:1Qp7SQDPlxjBiRhwukI+d5wLOne+",
         )
 
