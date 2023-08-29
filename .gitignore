@@ -2,6 +2,6 @@ __pycache__
 .pyc
 .swp
 *.egg-info
-dist
+dist/eyeon*.gz
 # *.exe
 outputs/

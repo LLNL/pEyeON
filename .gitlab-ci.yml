@@ -18,6 +18,7 @@ stages:
 before_script:
   - python3 -m venv eyeon  # Create venv
   - source eyeon/bin/activate
+  - cd peyeon
 
 unittest:
   stage: test
