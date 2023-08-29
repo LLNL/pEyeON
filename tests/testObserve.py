@@ -28,7 +28,7 @@ class ObservationTestCase(unittest.TestCase):
         self.assertEqual(
             self.OBS.sha256, "8759af1eb38bd975c52dcf31f4ce185b3adcef0baf1a4677b51065ea9eb1e7d4"
         )
-        self.assertEqual(self.OBS.modtime, "2023-08-23 16:45:58")
+        # self.assertEqual(self.OBS.modtime, "2023-08-29 16:51:31")  # fails in CI/CD bc of write
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100755")
 
@@ -51,7 +51,7 @@ class ObservationTestCase2(unittest.TestCase):
     # def tearDown(self) -> None:
     #     return super().tearDown()
 
-    def testVarsExe(self) -> None:
+    def testVarsElf(self) -> None:
         self.assertEqual(self.OBS.bytecount, 138208)
         self.assertEqual(self.OBS.filename, "ls")
         # self.assertEqual(self.OBS.magic, )
@@ -60,7 +60,7 @@ class ObservationTestCase2(unittest.TestCase):
         self.assertEqual(
             self.OBS.sha256, "8696974df4fc39af88ee23e307139afc533064f976da82172de823c3ad66f444"
         )
-        self.assertEqual(self.OBS.modtime, "2023-08-29 16:51:31")
+        # self.assertEqual(self.OBS.modtime, "2023-08-29 16:51:31")  # fails in CI/CD bc of write
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100755")
         self.assertEqual(
