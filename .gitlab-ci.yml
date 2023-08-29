@@ -8,7 +8,7 @@
 
 stages:
   - test
-  - sbom
+#   - sbom
 
 .oslic:
   tags:
@@ -30,8 +30,8 @@ unittest:
     - cd tests/
     - python3 testObserveRemote.py
 
-sbom:
-  stage: sbom
-  script:
-    - cd .. # back to eyeon folder
-    - ./sbom-tool generate -b build/ -bc lsbom/ -pn lsbom -pv 0.2 -ps "Lawrence Livermore National Laboratory" -nsb https://www.llnl.gov/
+# sbom:
+#   stage: sbom
+#   script:
+#     - cd .. # back to eyeon folder
+#     - ./sbom-tool generate -b build/ -bc lsbom/ -pn lsbom -pv 0.2 -ps "Lawrence Livermore National Laboratory" -nsb https://www.llnl.gov/
