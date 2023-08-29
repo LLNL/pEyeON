@@ -62,7 +62,7 @@ class Observe:
         # {signature: [cert1, ...]}
         signatures (dict): Descriptors of signature information,
             including signatures and certificates.
-        sshdeep: Fuzzy hash used by VirusTotal to match similar binaries.
+        ssdeep: Fuzzy hash used by VirusTotal to match similar binaries.
     """
 
     def __init__(self, file: str) -> None:
@@ -88,7 +88,7 @@ class Observe:
         self.md5 = Observe.create_hash(file, "md5")
         self.sha1 = Observe.create_hash(file, "sha1")
         self.sha256 = Observe.create_hash(file, "sha256")
-        self.set_ssdeephash(file)
+        self.set_ssdeep(file)
 
     @staticmethod
     def create_hash(file, hash):
@@ -183,7 +183,7 @@ class Observe:
             return
         self.imphash = telfhash.telfhash(file)[0]["telfhash"]
 
-    def set_ssdeephash(self, file: str) -> None:
+    def set_ssdeep(self, file: str) -> None:
         """
         Computes fuzzy hashing using ssdeep.
         See https://ssdeep-project.github.io/ssdeep/index.html.
@@ -197,7 +197,7 @@ class Observe:
             return
         out = out.split("\n")[1]  # header/hash/emptystring
         out = out.split(",")[0]  # hash/filename
-        self.sshdeep = out
+        self.ssdeep = out
 
     def write_json(self, outdir: str = ".") -> None:
         """
