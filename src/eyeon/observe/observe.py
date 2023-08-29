@@ -13,6 +13,8 @@ import subprocess
 
 import lief
 
+# import logging
+
 # from glob import glob
 
 # import tempfile
@@ -131,6 +133,8 @@ class Observe:
             ).stdout.decode("utf-8")
         except KeyError:
             print("No $DIEPATH set. See README.md for more information.")
+        except FileNotFoundError:
+            print("Please install Detect-It-Easy.")
         except Exception as E:  # no file diec
             print(E)
 
@@ -172,8 +176,11 @@ class Observe:
         Sets telfhash for ELF files.
         See https://github.com/trendmicro/telfhash.
         """
-        import telfhash
-
+        try:
+            import telfhash
+        except ModuleNotFoundError:
+            print("Please install tlsh and telfhash.")
+            return
         self.imphash = telfhash.telfhash(file)[0]["telfhash"]
 
     def set_ssdeephash(self, file: str) -> None:
@@ -181,7 +188,13 @@ class Observe:
         Computes fuzzy hashing using ssdeep.
         See https://ssdeep-project.github.io/ssdeep/index.html.
         """
-        out = subprocess.run(["ssdeep", "-b", file], stdout=subprocess.PIPE).stdout.decode("utf-8")
+        try:
+            out = subprocess.run(["ssdeep", "-b", file], stdout=subprocess.PIPE).stdout.decode(
+                "utf-8"
+            )
+        except FileNotFoundError:
+            print("Please install ssdeep.")
+            return
         out = out.split("\n")[1]  # header/hash/emptystring
         out = out.split(",")[0]  # hash/filename
         self.sshdeep = out

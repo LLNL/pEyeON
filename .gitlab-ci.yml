@@ -28,7 +28,7 @@ unittest:
   script:
     - pip install dist/eyeon-*.whl
     - cd tests/
-    - python3 testObserve.py
+    - python3 testObserveRemote.py
 
 sbom:
   stage: sbom
