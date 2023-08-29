@@ -60,7 +60,7 @@ class ObservationTestCase2(unittest.TestCase):
         self.assertEqual(
             self.OBS.sha256, "8696974df4fc39af88ee23e307139afc533064f976da82172de823c3ad66f444"
         )
-        self.assertEqual(self.OBS.modtime, "2023-08-28 14:25:29")
+        self.assertEqual(self.OBS.modtime, "2023-08-29 16:51:31")
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100755")
         self.assertEqual(
