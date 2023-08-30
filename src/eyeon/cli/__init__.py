@@ -5,7 +5,7 @@ CLI interface for EyeON tools.
 
 import argparse
 
-import eyeon
+import eyeon.observe
 
 
 class CommandLine:
@@ -56,4 +56,4 @@ def main():
     """
     Call to run CLI parser.
     """
-    CommandLine().run()
+    CommandLine().observe()

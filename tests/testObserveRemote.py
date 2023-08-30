@@ -61,6 +61,7 @@ class ObservationTestCase2(unittest.TestCase):
             self.OBS.sha256, "8696974df4fc39af88ee23e307139afc533064f976da82172de823c3ad66f444"
         )
         # self.assertEqual(self.OBS.modtime, "2023-08-29 16:51:31")  # fails in CI/CD bc of write
+        # maybe can preserve modtime if tar.gz'ed?
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100700")
 
