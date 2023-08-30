@@ -7,6 +7,7 @@
 #     - if: '$CI_COMMIT_BRANCH'
 
 stages:
+  - build
   - test
 #   - sbom
 
@@ -16,22 +17,26 @@ stages:
     - oslic
 
 before_script:
-  - python3 -m venv eyeon  # Create venv
-  - source eyeon/bin/activate
-  # - ls
+  - python3 -m venv eye  # Create venv
+  - source eye/bin/activate
+
+build:
+  stage: build
+  script:
+    - python3 -m build
 
 unittest:
   stage: test
   extends:
     - .oslic
-  image: python:3.10
+  # image: python:3.10
   script:
     - pip install dist/eyeon-*.whl
     - cd tests/
     - python3 testObserveRemote.py
 
-# sbom:
+# sbom:  # put in artifacts instead
 #   stage: sbom
 #   script:
 #     - cd .. # back to eyeon folder
-#     - ./sbom-tool generate -b build/ -bc lsbom/ -pn lsbom -pv 0.2 -ps "Lawrence Livermore National Laboratory" -nsb https://www.llnl.gov/
+#     - ./sbom-tool generate -b / -bc src/ -pn lsbom -pv 0.2 -ps "Lawrence Livermore National Laboratory" -nsb https://www.llnl.gov/

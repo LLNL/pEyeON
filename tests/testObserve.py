@@ -66,7 +66,7 @@ class ObservationTestCase2(unittest.TestCase):
 
         self.assertEqual(
             self.OBS.ssdeep,
-            "1536:1QMY7SpeylTgzfbPlxjBG3PMyFESaZrOwWXKMk3NJvvsC7W+oVfuokwcLxIvOG0H:1Qp7SQDPlxjBiRhwukI+d5wLOne+",
+            "1536:1QMY7SpeylTgzfbPlxjBG3PMyFESaZrOwWXKMk3NJvvsC7W+oVfuokwcLxIvOG0H:1Qp7SQDPlxjBiRhwukI+d5wLOne+",  # noqa: E501
         )
 
     def testWriteJson(self) -> None:
