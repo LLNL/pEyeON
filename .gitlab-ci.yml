@@ -19,6 +19,7 @@ stages:
 before_script:
   - python3 -m venv eye  # Create venv
   - source eye/bin/activate
+  - pip3 install build
 
 build:
   stage: build
