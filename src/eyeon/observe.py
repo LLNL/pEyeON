@@ -13,7 +13,7 @@ import subprocess
 
 import lief
 import logging
-from setup_log import logger  # noqa: F401
+from .setup_log import logger  # noqa: F401
 
 log = logging.getLogger("eyeon.observe")
 # from glob import glob
@@ -62,7 +62,12 @@ class Observe:
 
     def __init__(self, file: str, log_level: int, log_file: str = None) -> None:
         if log_file:
-            self.log = logging.basicConfig(log_file, level=log_level)
+            fh = logging.FileHandler(log_file)
+            fh.setFormatter(
+                logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+            )
+            logging.getLogger().handlers.clear()  # remove console log
+            log.addHandler(fh)
 
         stat = os.stat(file)
         self.bytecount = stat.st_size
@@ -87,6 +92,7 @@ class Observe:
         self.sha1 = Observe.create_hash(file, "sha1")
         self.sha256 = Observe.create_hash(file, "sha256")
         self.set_ssdeep(file)
+        log.debug("end of init")
 
     @staticmethod
     def create_hash(file, hash):
@@ -110,7 +116,7 @@ class Observe:
         try:
             import magic
         except ImportError:
-            self.log.warning("libmagic1 or python-magic is not installed.")
+            log.warning("libmagic1 or python-magic is not installed.")
         self.magic = magic.from_file(file)
 
     def set_imphash(self, file: str) -> None:
@@ -134,11 +140,11 @@ class Observe:
                 [os.path.join(dp, "diec.sh"), file], capture_output=True, timeout=10
             ).stdout.decode("utf-8")
         except KeyError:
-            self.log.warning("No $DIEPATH set. See README.md for more information.")
+            log.warning("No $DIEPATH set. See README.md for more information.")
         except FileNotFoundError:
-            self.log.warning("Please install Detect-It-Easy.")
+            log.warning("Please install Detect-It-Easy.")
         except Exception as E:
-            self.log.error(E)
+            log.error(E)
 
     def set_signatures(self, file: str) -> None:
         """
@@ -146,7 +152,7 @@ class Observe:
         """
         pe = lief.parse(file)
         if len(pe.signatures) > 1:
-            self.log.info("file has multiple signatures")
+            log.info("file has multiple signatures")
         self.signatures["valid"] = str(pe.verify_signature())
         self.signatures["signatures"] = {}
         self.authentihash = pe.signatures[0].content_info.digest.hex()
@@ -181,7 +187,7 @@ class Observe:
         try:
             import telfhash
         except ModuleNotFoundError:
-            self.log.warning("tlsh and telfhash are not installed.")
+            log.warning("tlsh and telfhash are not installed.")
             return
         self.imphash = telfhash.telfhash(file)[0]["telfhash"]
 
@@ -195,7 +201,7 @@ class Observe:
                 "utf-8"
             )
         except FileNotFoundError:
-            self.log.warning("ssdeep is not installed.")
+            log.warning("ssdeep is not installed.")
             return
         out = out.split("\n")[1]  # header/hash/emptystring
         out = out.split(",")[0]  # hash/filename

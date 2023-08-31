@@ -6,6 +6,7 @@ CLI interface for EyeON tools.
 import argparse
 
 import eyeon.observe
+import logging
 
 
 class CommandLine:
@@ -36,9 +37,15 @@ class CommandLine:
             "--location",
             help="Site location where scan/install happens. Can set on $SITE to auto-read.",
         )
+        parser.add_argument(
+            "-g", "--log-file", help="Output file for log. If none, prints to console."
+        )
+        parser.add_argument(
+            "-v", "--log-level", default=logging.ERROR, help="Set the log level. Defaults to ERROR."
+        )
 
         args = parser.parse_args()
-        obs = eyeon.observe.Observe(args.filename)
+        obs = eyeon.observe.Observe(args.filename, args.log_level, args.log_file)
 
         if args.output_dir:
             obs.write_json(args.output_dir)
