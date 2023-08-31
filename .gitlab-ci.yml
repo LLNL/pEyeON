@@ -27,6 +27,9 @@ build:
    - .oslic
   script:
     - python3 -m build
+  artifacts:
+    paths:
+      - dist/
 
 unittest:
   stage: test
@@ -38,6 +41,8 @@ unittest:
     - pip install dist/eyeon-*.whl
     - cd tests/
     - python3 testObserveRemote.py
+  dependencies:
+    - build
 
 # sbom:  # put in artifacts instead
 #   stage: sbom
