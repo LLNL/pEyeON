@@ -23,6 +23,8 @@ before_script:
 
 build:
   stage: build
+  extends:
+   - .oslic
   script:
     - python3 -m build
 

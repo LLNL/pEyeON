@@ -60,7 +60,7 @@ class Observe:
         ssdeep: Fuzzy hash used by VirusTotal to match similar binaries.
     """
 
-    def __init__(self, file: str, log_level: int, log_file: str = None) -> None:
+    def __init__(self, file: str, log_level: int = logging.ERROR, log_file: str = None) -> None:
         if log_file:
             fh = logging.FileHandler(log_file)
             fh.setFormatter(
@@ -68,7 +68,7 @@ class Observe:
             )
             logging.getLogger().handlers.clear()  # remove console log
             log.addHandler(fh)
-
+        logging.getLogger().setLevel(log_level)
         stat = os.stat(file)
         self.bytecount = stat.st_size
         self.filename = os.path.basename(file)  # TODO: split into absolute path maybe?
@@ -81,7 +81,7 @@ class Observe:
         else:
             self.imphash = "N/A"
             self.signatures = {"valid": "N/A"}
-        self.magic = self.set_magic(file)
+        self.set_magic(file)
         self.modtime = datetime.datetime.utcfromtimestamp(stat.st_mtime).strftime(
             "%Y-%m-%d %H:%M:%S"
         )

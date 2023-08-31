@@ -1,14 +1,12 @@
-# import datetime
-# import json
-
 # import tempfile
 import os
 import unittest
 from glob import glob
+import json
 
 from eyeon import observe
 
-# import jsonschema
+import jsonschema
 
 
 class ObservationTestCase(unittest.TestCase):
@@ -40,7 +38,11 @@ class ObservationTestCase(unittest.TestCase):
             pass
 
     def testValidateJson(self) -> None:
-        pass
+        with open("../schema/observation.schema.json") as schem:
+            schema = json.loads(schem.read())
+        # print(self.OBS)
+        obs_json = json.loads(json.dumps(vars(self.OBS)))
+        print(jsonschema.validate(instance=obs_json, schema=schema))
 
 
 class ObservationTestCase2(unittest.TestCase):
@@ -78,7 +80,11 @@ class ObservationTestCase2(unittest.TestCase):
             pass
 
     def testValidateJson(self) -> None:
-        pass
+        with open("../schema/observation.schema.json") as schem:
+            schema = json.loads(schem.read())
+        # print(self.OBS)
+        obs_json = json.loads(json.dumps(vars(self.OBS)))
+        print(jsonschema.validate(instance=obs_json, schema=schema))
 
 
 if __name__ == "__main__":

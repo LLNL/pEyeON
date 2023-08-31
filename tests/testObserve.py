@@ -1,14 +1,14 @@
-# import datetime
-# import json
-
 # import tempfile
 import os
 import unittest
 from glob import glob
 
+# import StringIO
+import json
+
 from eyeon import observe
 
-# import jsonschema
+import jsonschema
 
 
 class ObservationTestCase(unittest.TestCase):
@@ -31,6 +31,14 @@ class ObservationTestCase(unittest.TestCase):
         self.assertEqual(self.OBS.modtime, "2023-08-23 16:45:58")  # fails in CI/CD bc of write
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100755")
+        self.assertEqual(
+            self.OBS.magic,
+            "PE32 executable (GUI) Intel 80386, for MS Windows, Nullsoft Installer self-extracting archive",  # noqa: E501
+        )
+        self.assertEqual(
+            self.OBS.ssdeep,
+            "1572864:ZVBOHCnuy3zotWQbHr3DRYt3bVTBmoURPljZKT8RnmY:TnDPQjvytRQouimh",  # noqa: E501
+        )
 
     def testWriteJson(self) -> None:
         try:
@@ -38,6 +46,8 @@ class ObservationTestCase(unittest.TestCase):
                 os.remove(j)
         except FileNotFoundError:
             pass
+        self.OBS.write_json()
+        # unittest.mock?
 
     def testValidateJson(self) -> None:
         pass
@@ -63,7 +73,10 @@ class ObservationTestCase2(unittest.TestCase):
         self.assertEqual(self.OBS.modtime, "2023-08-28 21:25:29")
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100755")
-
+        self.assertEqual(
+            self.OBS.magic,
+            "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=897f49cafa98c11d63e619e7e40352f855249c13, for GNU/Linux 3.2.0, stripped",  # noqa: E501
+        )
         self.assertEqual(
             self.OBS.ssdeep,
             "1536:1QMY7SpeylTgzfbPlxjBG3PMyFESaZrOwWXKMk3NJvvsC7W+oVfuokwcLxIvOG0H:1Qp7SQDPlxjBiRhwukI+d5wLOne+",  # noqa: E501
@@ -77,7 +90,11 @@ class ObservationTestCase2(unittest.TestCase):
             pass
 
     def testValidateJson(self) -> None:
-        pass
+        with open("../schema/observation.schema.json") as schem:
+            schema = json.loads(schem.read())
+        # print(self.OBS)
+        obs_json = json.loads(json.dumps(vars(self.OBS)))
+        print(jsonschema.validate(instance=obs_json, schema=schema))
 
 
 if __name__ == "__main__":
