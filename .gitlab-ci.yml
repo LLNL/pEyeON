@@ -34,6 +34,7 @@ unittest:
     - .oslic
   # image: python:3.10
   script:
+    - ls
     - pip install dist/eyeon-*.whl
     - cd tests/
     - python3 testObserveRemote.py
