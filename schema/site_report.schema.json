@@ -1,0 +1,28 @@
+{
+  "$id": "site_report.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EyeON Site Report",
+  "type": "object",
+  "properties": {
+    "host": {
+      "type": "string",
+      "description": ""
+    },
+    "sha256": {
+      "type": "string",
+      "description": "Sha256 of file"
+    },
+    "filename": {
+      "type": "string",
+      "description": "Basename of file"
+    },
+    "bytecount": {
+      "type":"integer",
+      "description": "Size of file in bytes"
+    },
+    "observation_ts": {
+      "type": "date",
+      "description": "Date and time file was scanned"
+    }
+  }
+}
