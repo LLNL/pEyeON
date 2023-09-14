@@ -45,19 +45,20 @@ class Observe:
         md5 (str): ``md5sum`` of file
         modtime (str): Datetime string of last modified time
         observation_ts (str): Datetime string of time of scan
+        permissions (str): Octet string of file permission value
         sha1 (str): ``sha1sum`` of file
         sha256 (str): ``sha256sum`` of file
-        permissions (str): Octet string of file permission value
+        ssdeep: Fuzzy hash used by VirusTotal to match similar binaries.
+
 
     Optional Attributes:
         compiler (str): String describing compiler, compiler version, flags, etc.
         host (str): csv string containing intended install locations
-        imphash (str): Import hash. Only valid for Windows binaries.
+        imphash (str): Either Import hash for Windows binaries or telfhash for ELF Linux binaries.
         # die (str): Detect-It-Easy output.
         # {signature: [cert1, ...]}
         signatures (dict): Descriptors of signature information,
-            including signatures and certificates.
-        ssdeep: Fuzzy hash used by VirusTotal to match similar binaries.
+            including signatures and certificates. Only valid for Windows
     """
 
     def __init__(self, file: str, log_level: int = logging.ERROR, log_file: str = None) -> None:
@@ -160,17 +161,17 @@ class Observe:
             # signinfo = sig.SignerInfo
             # this thing is documented but has no constructor defined
             self.signatures["signatures"][sig.content_info.digest.hex()] = {
-                """
-                 "certs": [{
-                    "version": c.version,
-                    "serial_number": c.serial_number,
-                    "issuer": c.issuer_name,
-                    "subject": c.subject,
-                    "valid_from": c.valid_from,
-                    "valid_to": c.valid_to,
-                    "algorithm": c.signature_algorithm,  # OID format...
-                 } for c in sig.certificates],
-                """
+                # """
+                #  "certs": [{
+                #     "version": c.version,
+                #     "serial_number": c.serial_number,
+                #     "issuer": c.issuer_name,
+                #     "subject": c.subject,
+                #     "valid_from": c.valid_from,
+                #     "valid_to": c.valid_to,
+                #     "algorithm": c.signature_algorithm,  # OID format...
+                #  } for c in sig.certificates],
+                # """
                 "certs": [str(c) for c in sig.certificates],
                 "signers": str(sig.signers[0]),
                 "digest_algorithm": str(sig.digest_algorithm),
@@ -212,7 +213,7 @@ class Observe:
         Writes observation to json file.
         :param outdir: output directory prefix. Defaults to local directory.
         """
-
+        os.makedirs(outdir, exist_ok=True)
         outfile = f"{os.path.join(outdir, self.filename)}.{self.md5}.json"
         with open(outfile, "w") as f:
             json.dump(vars(self), f, indent=2)
