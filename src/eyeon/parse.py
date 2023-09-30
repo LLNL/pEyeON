@@ -28,7 +28,7 @@ class Parse:
         o = Observe(file)
         o.write_json(result_path)
 
-    def __call__(self, result_path: str = "./results", threads: int = 4) -> Any:
+    def __call__(self, result_path: str = "./results", threads: int = 1) -> Any:
         files = [
             (os.path.join(dir, file), result_path)
             for dir, _, files in os.walk(self.path)
