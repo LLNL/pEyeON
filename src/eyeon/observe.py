@@ -36,6 +36,7 @@ class Observe:
     """
     Class to create an Observation of a file.
     Parameters:
+    -----------
         file (str): Path to file to be scanned.
 
     Required Attributes:

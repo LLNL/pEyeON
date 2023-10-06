@@ -11,6 +11,18 @@ log = logging.getLogger("eyeon.parse")
 class Parse:
     """
     General parser for eyeon. Given a folder path, will return a list of observations.
+
+    Parameters
+    ----------
+
+    dirpath : str
+        A string specifying the folder to parse.
+
+    log_level : int, optional (default=logging.ERROR)
+        As logging level; defaults to ERROR.
+
+    log_file : str, optional (default=None)
+        A file to write logs. If None, will print log to console.
     """
 
     def __init__(self, dirpath: str, log_level: int = logging.ERROR, log_file: str = None) -> None:
