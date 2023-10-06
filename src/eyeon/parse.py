@@ -1,6 +1,7 @@
 import logging
 from typing import Any
-from .setup_log import logger  # noqa: F401
+
+# from .setup_log import logger  # noqa: F401
 from .observe import Observe
 import os
 
