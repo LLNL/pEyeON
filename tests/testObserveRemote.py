@@ -1,11 +1,14 @@
 # import tempfile
+# native python libs
 import os
 import unittest
 from glob import glob
 import json
 
+# this program
 from eyeon import observe
 
+# have to pip install
 import jsonschema
 
 

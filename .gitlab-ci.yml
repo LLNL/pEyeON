@@ -41,6 +41,7 @@ unittest:
     - pip install dist/eyeon-*.whl
     - cd tests/
     - python3 testObserveRemote.py
+    - python3 testParse.py
   dependencies:
     - build
 
