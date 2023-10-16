@@ -10,6 +10,7 @@ import json
 import os
 import pprint
 import subprocess
+import re
 
 import lief
 import logging
@@ -60,6 +61,7 @@ class Observe:
         # {signature: [cert1, ...]}
         signatures (dict): Descriptors of signature information,
             including signatures and certificates. Only valid for Windows
+        metadata: Windows File properties -- OS, Arch, File Info, etc.
     """
 
     def __init__(self, file: str, log_level: int = logging.ERROR, log_file: str = None) -> None:
@@ -78,6 +80,7 @@ class Observe:
         if lief.is_pe(file):
             self.set_imphash(file)
             self.set_signatures(file)
+            self.set_windows_metadata(file)
         elif lief.is_elf(file):
             self.set_telfhash(file)
         else:
@@ -148,6 +151,18 @@ class Observe:
         except Exception as E:
             log.error(E)
 
+    @staticmethod
+    def _cert_parser(cert: str) -> dict:
+        """lief certs are messy. convert to json data"""
+        crt = cert.split("\n")
+        cert_d = {}
+        for line in crt:
+            if line:  # catch empty string
+                k, v = re.split("\s+: ", line)  # noqa: W605
+                k = "_".join(k.split())  # replace space with underscore
+                cert_d[k] = v
+        return cert_d
+
     def set_signatures(self, file: str) -> None:
         """
         Runs LIEF signature validation and collects certificate chain.
@@ -162,18 +177,7 @@ class Observe:
             # signinfo = sig.SignerInfo
             # this thing is documented but has no constructor defined
             self.signatures["signatures"][sig.content_info.digest.hex()] = {
-                # """
-                #  "certs": [{
-                #     "version": c.version,
-                #     "serial_number": c.serial_number,
-                #     "issuer": c.issuer_name,
-                #     "subject": c.subject,
-                #     "valid_from": c.valid_from,
-                #     "valid_to": c.valid_to,
-                #     "algorithm": c.signature_algorithm,  # OID format...
-                #  } for c in sig.certificates],
-                # """
-                "certs": [str(c) for c in sig.certificates],
+                "certs": [self._cert_parser(str(c)) for c in sig.certificates],
                 "signers": str(sig.signers[0]),
                 "digest_algorithm": str(sig.digest_algorithm),
                 "verification": str(sig.check())
@@ -208,6 +212,12 @@ class Observe:
         out = out.split("\n")[1]  # header/hash/emptystring
         out = out.split(",")[0]  # hash/filename
         self.ssdeep = out
+
+    def set_windows_metadata(self, file: str) -> None:
+        """Finds the metadata from surfactant"""
+        from surfactant.infoextractors.pe_file import extract_pe_info
+
+        self.metadata = extract_pe_info(file)
 
     def write_json(self, outdir: str = ".") -> None:
         """

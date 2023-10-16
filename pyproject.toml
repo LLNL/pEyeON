@@ -15,6 +15,7 @@ dependencies=[
     "pefile == 2023.2.7",
     # "unblob == 23.8.11",
     "telfhash == 0.9.8",
+    "surfactant == 0.0.0rc0"
 ]
 
 [project.scripts]
