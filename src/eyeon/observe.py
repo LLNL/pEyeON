@@ -10,6 +10,7 @@ import json
 import os
 import pprint
 import subprocess
+from pathlib import Path
 
 import lief
 import logging
@@ -77,6 +78,7 @@ class Observe:
         self.signatures = {}
         if lief.is_pe(file):
             self.set_imphash(file)
+            self.certs = {}
             self.set_signatures(file)
         elif lief.is_elf(file):
             self.set_telfhash(file)
@@ -94,6 +96,7 @@ class Observe:
         self.sha1 = Observe.create_hash(file, "sha1")
         self.sha256 = Observe.create_hash(file, "sha256")
         self.set_ssdeep(file)
+
         log.debug("end of init")
 
     @staticmethod
@@ -174,12 +177,18 @@ class Observe:
                 #  } for c in sig.certificates],
                 # """
                 "certs": [str(c) for c in sig.certificates],
+                "cert_bins": [str(c) for c in sig.certificates],
                 "signers": str(sig.signers[0]),
                 "digest_algorithm": str(sig.digest_algorithm),
                 "verification": str(sig.check())
                 # "sections": [s.__str__() for s in pe.sections]
                 # **signinfo,
             }
+            for c in sig.certificates:
+                hc = hashlib.sha256()
+                hc.update(c.raw)
+                hc = hc.hexdigest()
+                self.certs[hc] = c.raw
 
     def set_telfhash(self, file: str) -> None:
         """
@@ -215,9 +224,16 @@ class Observe:
         :param outdir: output directory prefix. Defaults to local directory.
         """
         os.makedirs(outdir, exist_ok=True)
+        vs = vars(self)
+        if "certs" in vs:
+            Path(os.path.join(outdir, "certs")).mkdir(parents=True, exist_ok=True)
+            for c, b in self.certs.items():
+                with open(f"{os.path.join(outdir, 'certs', c)}.crt", "wb") as cert_out:
+                    cert_out.write(b)
+            del self.certs
         outfile = f"{os.path.join(outdir, self.filename)}.{self.md5}.json"
         with open(outfile, "w") as f:
-            json.dump(vars(self), f, indent=2)
+            json.dump(vs, f, indent=2)
 
     def __str__(self) -> str:
         return pprint.pformat(vars(self), indent=2)
