@@ -218,6 +218,21 @@ class Observe:
         out = out.split(",")[0]  # hash/filename
         self.ssdeep = out
 
+    def _safe_serialize(self, obj) -> str:
+        """
+        Certs are byte objects, not json.
+        This function gives a default value to unserializable data.
+        :param obj: object to serialize
+        :returns: json encoded string where the non-serializable bits are
+            a string saying not serializable
+
+        """
+
+        def default(o):
+            return f"<<non-serializable: {type(o).__qualname__}>>"
+
+        return json.dumps(obj, default=default)
+
     def write_json(self, outdir: str = ".") -> None:
         """
         Writes observation to json file.
@@ -230,10 +245,9 @@ class Observe:
             for c, b in self.certs.items():
                 with open(f"{os.path.join(outdir, 'certs', c)}.crt", "wb") as cert_out:
                     cert_out.write(b)
-            del self.certs
         outfile = f"{os.path.join(outdir, self.filename)}.{self.md5}.json"
         with open(outfile, "w") as f:
-            json.dump(vs, f, indent=2)
+            f.write(self._safe_serialize(vs))
 
     def __str__(self) -> str:
         return pprint.pformat(vars(self), indent=2)
