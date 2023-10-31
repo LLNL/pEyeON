@@ -160,6 +160,9 @@ class Observe:
             log.info("file has multiple signatures")
         self.signatures["valid"] = str(pe.verify_signature())
         self.signatures["signatures"] = {}
+        if not pe.signatures:
+            log.info(f"file {file} has no signatures.")
+            return
         self.authentihash = pe.signatures[0].content_info.digest.hex()
         for sig in pe.signatures:
             # signinfo = sig.SignerInfo
@@ -177,7 +180,6 @@ class Observe:
                 #  } for c in sig.certificates],
                 # """
                 "certs": [str(c) for c in sig.certificates],
-                "cert_bins": [str(c) for c in sig.certificates],
                 "signers": str(sig.signers[0]),
                 "digest_algorithm": str(sig.digest_algorithm),
                 "verification": str(sig.check())
