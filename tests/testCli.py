@@ -9,8 +9,7 @@ class CliTestCase(unittest.TestCase):
             f"-o ./outputs  -g file.log -v {logging.DEBUG} observe -l LLNL demo.ipynb ".split()
         )
         self.cli2 = CommandLine(
-            f"--output-dir ./outputs --log-file file.log --log-level"
-            f" {logging.DEBUG} parse tests -t 2 ".split()
+            f"--output-dir ./outputs --log-file file.log --log-level {logging.DEBUG} parse tests -t 2 ".split()  # noqa: E501
         )
 
     def testObserveArgs(self) -> None:
