@@ -15,7 +15,7 @@ class CommandLine:
     Command Line object to interact with eyeon tools.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, testargs: str = None) -> None:
         parser = argparse.ArgumentParser(
             prog="eyeon",
             description="Eye on Operational techNology, an update tracker for OT devices",
@@ -29,7 +29,11 @@ class CommandLine:
             "-g", "--log-file", help="Output file for log. If none, prints to console."
         )
         parser.add_argument(
-            "-v", "--log-level", default=logging.ERROR, help="Set the log level. Defaults to ERROR."
+            "-v",
+            "--log-level",
+            default=logging.ERROR,
+            type=int,
+            help="Set the log level. Defaults to ERROR.",
         )
 
         # Create subparser
@@ -56,7 +60,14 @@ class CommandLine:
             type=int,
         )
         parse_parser.set_defaults(func=self.parse)
-        self.args = parser.parse_args()
+
+        # new
+        if testargs:
+            self.args = parser.parse_args(testargs)
+        else:
+            self.args = parser.parse_args()
+
+        # self.args = parser.parse_args()
         # args.func(args)
 
     def observe(self, args) -> None:
