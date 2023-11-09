@@ -8,6 +8,7 @@ class CliTestCase(unittest.TestCase):
         self.cli1 = CommandLine(
             f"-o ./outputs  -g file.log -v {logging.DEBUG} observe -l LLNL demo.ipynb ".split()
         )
+
         self.cli2 = CommandLine(
             f"--output-dir ./outputs --log-file file.log --log-level {logging.DEBUG} parse tests -t 2 ".split()  # noqa: E501
         )
@@ -18,6 +19,7 @@ class CliTestCase(unittest.TestCase):
         self.assertEqual(self.cli1.args.log_level, logging.DEBUG)
         self.assertEqual(self.cli1.args.log_file, "file.log")
         self.assertEqual(self.cli1.args.location, "LLNL")
+        self.assertEqual(self.cli1.args.func, self.cli1.observe)
 
     def testParseArgs(self) -> None:
         self.assertEqual(self.cli2.args.dir, "tests")
@@ -25,10 +27,7 @@ class CliTestCase(unittest.TestCase):
         self.assertEqual(self.cli2.args.log_file, "file.log")
         self.assertEqual(self.cli2.args.log_level, logging.DEBUG)
         self.assertEqual(self.cli2.args.threads, 2)
-
-    # test observe function
-
-    # test parse function
+        self.assertEqual(self.cli2.args.func, self.cli2.parse)
 
 
 if __name__ == "__main__":
