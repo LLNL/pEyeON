@@ -11,6 +11,7 @@ import os
 import pprint
 import subprocess
 import re
+from pathlib import Path
 
 import lief
 import logging
@@ -79,6 +80,7 @@ class Observe:
         self.signatures = {}
         if lief.is_pe(file):
             self.set_imphash(file)
+            self.certs = {}
             self.set_signatures(file)
             self.set_windows_metadata(file)
         elif lief.is_elf(file):
@@ -97,6 +99,7 @@ class Observe:
         self.sha1 = Observe.create_hash(file, "sha1")
         self.sha256 = Observe.create_hash(file, "sha256")
         self.set_ssdeep(file)
+
         log.debug("end of init")
 
     @staticmethod
@@ -172,6 +175,9 @@ class Observe:
             log.info("file has multiple signatures")
         self.signatures["valid"] = str(pe.verify_signature())
         self.signatures["signatures"] = {}
+        if not pe.signatures:
+            log.info(f"file {file} has no signatures.")
+            return
         self.authentihash = pe.signatures[0].content_info.digest.hex()
         for sig in pe.signatures:
             # signinfo = sig.SignerInfo
@@ -184,6 +190,11 @@ class Observe:
                 # "sections": [s.__str__() for s in pe.sections]
                 # **signinfo,
             }
+            for c in sig.certificates:
+                hc = hashlib.sha256()
+                hc.update(c.raw)
+                hc = hc.hexdigest()
+                self.certs[hc] = c.raw
 
     def set_telfhash(self, file: str) -> None:
         """
@@ -219,15 +230,36 @@ class Observe:
 
         self.metadata = extract_pe_info(file)
 
+    def _safe_serialize(self, obj) -> str:
+        """
+        Certs are byte objects, not json.
+        This function gives a default value to unserializable data.
+        :param obj: object to serialize
+        :returns: json encoded string where the non-serializable bits are
+            a string saying not serializable
+
+        """
+
+        def default(o):
+            return f"<<non-serializable: {type(o).__qualname__}>>"
+
+        return json.dumps(obj, default=default)
+
     def write_json(self, outdir: str = ".") -> None:
         """
         Writes observation to json file.
         :param outdir: output directory prefix. Defaults to local directory.
         """
         os.makedirs(outdir, exist_ok=True)
+        vs = vars(self)
+        if "certs" in vs:
+            Path(os.path.join(outdir, "certs")).mkdir(parents=True, exist_ok=True)
+            for c, b in self.certs.items():
+                with open(f"{os.path.join(outdir, 'certs', c)}.crt", "wb") as cert_out:
+                    cert_out.write(b)
         outfile = f"{os.path.join(outdir, self.filename)}.{self.md5}.json"
         with open(outfile, "w") as f:
-            json.dump(vars(self), f, indent=2)
+            f.write(self._safe_serialize(vs))
 
     def __str__(self) -> str:
         return pprint.pformat(vars(self), indent=2)
