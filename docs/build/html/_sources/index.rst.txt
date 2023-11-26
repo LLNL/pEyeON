@@ -6,6 +6,8 @@
 Welcome to EyeOn's documentation!
 =================================
 
+EyeOn is a CLI tool that allows users to get software data pertaining to their machines.
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
