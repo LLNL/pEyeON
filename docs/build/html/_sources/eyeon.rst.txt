@@ -1,6 +1,5 @@
-EyeOn Directory
-===================
-
+EyeOn Modules
+================
 
 .. toctree::
    :maxdepth: 4
@@ -8,7 +7,7 @@ EyeOn Directory
    eyeon.cli
 
 
-eyeon.Observe module  
+eyeon.observe module
 --------------------
 
 .. automodule:: eyeon.observe
@@ -16,10 +15,26 @@ eyeon.Observe module
    :undoc-members:
    :show-inheritance:
 
-eyeon.Parse module
+eyeon.parse module
 ------------------
 
 .. automodule:: eyeon.parse
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+eyeon.setup\_log module
+-----------------------
+
+.. automodule:: eyeon.setup_log
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: eyeon
    :members:
    :undoc-members:
    :show-inheritance:

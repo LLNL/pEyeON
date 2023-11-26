@@ -72,7 +72,7 @@
 <span></span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">eyeon.observe.Observe makes an observation of a file.</span>
 <span class="sd">An observation will output a json file containing unique identifying information</span>
-<span class="sd">  such as hashes, modify date, certificate info, etc.</span>
+<span class="sd">such as hashes, modify date, certificate info, etc.</span>
 <span class="sd">See the Observe class doc for full details.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">datetime</span>
@@ -109,31 +109,49 @@
 <span class="k">class</span> <span class="nc">Observe</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Class to create an Observation of a file.</span>
+<span class="sd">    </span>
 <span class="sd">    Parameters:</span>
 <span class="sd">    -----------</span>
 <span class="sd">        file (str): Path to file to be scanned.</span>
 
 <span class="sd">    Required Attributes:</span>
-<span class="sd">        bytecount (int): sizeof file</span>
-<span class="sd">        filename (str): File name</span>
-<span class="sd">        magic (str): Magic byte descriptor</span>
-<span class="sd">        md5 (str): ``md5sum`` of file</span>
-<span class="sd">        modtime (str): Datetime string of last modified time</span>
-<span class="sd">        observation_ts (str): Datetime string of time of scan</span>
-<span class="sd">        permissions (str): Octet string of file permission value</span>
-<span class="sd">        sha1 (str): ``sha1sum`` of file</span>
-<span class="sd">        sha256 (str): ``sha256sum`` of file</span>
-<span class="sd">        ssdeep: Fuzzy hash used by VirusTotal to match similar binaries.</span>
+<span class="sd">    ----------------------</span>
+<span class="sd">        bytecount : int</span>
+<span class="sd">            size of file</span>
+<span class="sd">        filename :str </span>
+<span class="sd">            File name</span>
+<span class="sd">        magic : str </span>
+<span class="sd">            Magic byte descriptor</span>
+<span class="sd">        md5 : str </span>
+<span class="sd">            ``md5sum`` of file</span>
+<span class="sd">        modtime : str </span>
+<span class="sd">            Datetime string of last modified time</span>
+<span class="sd">        observation_ts : str </span>
+<span class="sd">            Datetime string of time of scan</span>
+<span class="sd">        permissions : str </span>
+<span class="sd">            Octet string of file permission value</span>
+<span class="sd">        sha1 : str </span>
+<span class="sd">            ``sha1sum`` of file</span>
+<span class="sd">        sha256 : str </span>
+<span class="sd">            ``sha256sum`` of file</span>
+<span class="sd">        ssdeep </span>
+<span class="sd">            Fuzzy hash used by VirusTotal to match similar binaries.</span>
 
 
 <span class="sd">    Optional Attributes:</span>
-<span class="sd">        compiler (str): String describing compiler, compiler version, flags, etc.</span>
-<span class="sd">        host (str): csv string containing intended install locations</span>
-<span class="sd">        imphash (str): Either Import hash for Windows binaries or telfhash for ELF Linux binaries.</span>
-<span class="sd">        # die (str): Detect-It-Easy output.</span>
+<span class="sd">    -----------------------</span>
+<span class="sd">        compiler : str </span>
+<span class="sd">            String describing compiler, compiler version, flags, etc.</span>
+<span class="sd">        host : str </span>
+<span class="sd">            csv string containing intended install locations</span>
+<span class="sd">        imphash : str </span>
+<span class="sd">            Either Import hash for Windows binaries or telfhash for ELF Linux binaries.</span>
+<span class="sd">        # die : str </span>
+<span class="sd">            #Detect-It-Easy output.</span>
 <span class="sd">        # {signature: [cert1, ...]}</span>
-<span class="sd">        signatures (dict): Descriptors of signature information,</span>
-<span class="sd">            including signatures and certificates. Only valid for Windows</span>
+<span class="sd">        </span>
+<span class="sd">        signatures : dict </span>
+<span class="sd">            Descriptors of signature information, including signatures and certificates. Only valid for Windows</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">log_level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="n">log_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -208,8 +226,7 @@
     <span class="k">def</span> <span class="nf">set_imphash</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Sets import hash for PE files.</span>
-<span class="sd">        See</span>
-<span class="sd">         https://www.mandiant.com/resources/blog/tracking-malware-import-hashing.</span>
+<span class="sd">        See https://www.mandiant.com/resources/blog/tracking-malware-import-hashing.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">import</span> <span class="nn">pefile</span>
 
