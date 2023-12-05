@@ -332,37 +332,34 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">ssdeep</span> <span class="o">=</span> <span class="n">out</span></div>
 
 
-<div class="viewcode-block" id="Observe.safe_serialize">
-<a class="viewcode-back" href="../../eyeon.html#eyeon.observe.Observe.safe_serialize">[docs]</a>
-    <span class="k">def</span> <span class="nf">safe_serialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_safe_serialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Certs are byte objects, not json.</span>
 <span class="sd">        This function gives a default value to unserializable data.</span>
 <span class="sd">        Returns json encoded string where the non-serializable bits are</span>
 <span class="sd">        a string saying not serializable.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Parameters:</span>
 <span class="sd">        -----------</span>
-<span class="sd">            obj  </span>
+<span class="sd">            obj</span>
 <span class="sd">                Object to serialize.</span>
-<span class="sd">        </span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">def</span> <span class="nf">default</span><span class="p">(</span><span class="n">o</span><span class="p">):</span>
             <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&lt;&lt;non-serializable: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">o</span><span class="p">)</span><span class="o">.</span><span class="vm">__qualname__</span><span class="si">}</span><span class="s2">&gt;&gt;&quot;</span>
 
-        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">default</span><span class="p">)</span></div>
-
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">default</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Observe.write_json">
 <a class="viewcode-back" href="../../eyeon.html#eyeon.observe.Observe.write_json">[docs]</a>
     <span class="k">def</span> <span class="nf">write_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outdir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Writes observation to json file.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Parameters:</span>
 <span class="sd">        -----------</span>
-<span class="sd">            outdir </span>
+<span class="sd">            outdir</span>
 <span class="sd">                Output directory prefix. Defaults to local directory.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -374,7 +371,7 @@
                     <span class="n">cert_out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
         <span class="n">outfile</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">md5</span><span class="si">}</span><span class="s2">.json&quot;</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">outfile</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">safe_serialize</span><span class="p">(</span><span class="n">vs</span><span class="p">))</span></div>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_safe_serialize</span><span class="p">(</span><span class="n">vs</span><span class="p">))</span></div>
 
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>

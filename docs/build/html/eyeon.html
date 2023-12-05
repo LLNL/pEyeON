@@ -177,24 +177,6 @@ valid for Windows</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="eyeon.observe.Observe.safe_serialize">
-<span class="sig-name descname"><span class="pre">safe_serialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/eyeon/observe.html#Observe.safe_serialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#eyeon.observe.Observe.safe_serialize" title="Link to this definition"></a></dt>
-<dd><p>Certs are byte objects, not json.
-This function gives a default value to unserializable data.
-Returns json encoded string where the non-serializable bits are
-a string saying not serializable.</p>
-<section id="id1">
-<h4>Parameters:<a class="headerlink" href="#id1" title="Link to this heading"></a></h4>
-<blockquote>
-<div><dl class="simple">
-<dt>obj  </dt><dd><p>Object to serialize.</p>
-</dd>
-</dl>
-</div></blockquote>
-</section>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="eyeon.observe.Observe.set_die">
 <span class="sig-name descname"><span class="pre">set_die</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/eyeon/observe.html#Observe.set_die"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#eyeon.observe.Observe.set_die" title="Link to this definition"></a></dt>
 <dd><p>Sets Detect-It-Easy info. WIP</p>
@@ -237,11 +219,11 @@ See <a class="reference external" href="https://github.com/trendmicro/telfhash">
 <dt class="sig sig-object py" id="eyeon.observe.Observe.write_json">
 <span class="sig-name descname"><span class="pre">write_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outdir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'.'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/eyeon/observe.html#Observe.write_json"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#eyeon.observe.Observe.write_json" title="Link to this definition"></a></dt>
 <dd><p>Writes observation to json file.</p>
-<section id="id2">
-<h4>Parameters:<a class="headerlink" href="#id2" title="Link to this heading"></a></h4>
+<section id="id1">
+<h4>Parameters:<a class="headerlink" href="#id1" title="Link to this heading"></a></h4>
 <blockquote>
 <div><dl class="simple">
-<dt>outdir </dt><dd><p>Output directory prefix. Defaults to local directory.</p>
+<dt>outdir</dt><dd><p>Output directory prefix. Defaults to local directory.</p>
 </dd>
 </dl>
 </div></blockquote>
@@ -259,8 +241,8 @@ See <a class="reference external" href="https://github.com/trendmicro/telfhash">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">eyeon.parse.</span></span><span class="sig-name descname"><span class="pre">Parse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dirpath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">40</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/eyeon/parse.html#Parse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#eyeon.parse.Parse" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>General parser for eyeon. Given a folder path, will return a list of observations.</p>
-<section id="id3">
-<h3>Parameters<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<section id="id2">
+<h3>Parameters<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
 <dl class="simple">
 <dt>dirpath<span class="classifier">str</span></dt><dd><p>A string specifying the folder to parse.</p>
 </dd>
