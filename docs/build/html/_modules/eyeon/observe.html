@@ -118,7 +118,7 @@
 <span class="sd">    ----------------------</span>
 <span class="sd">        bytecount : int</span>
 <span class="sd">            size of file</span>
-<span class="sd">        filename :str</span>
+<span class="sd">        filename : str</span>
 <span class="sd">            File name</span>
 <span class="sd">        magic : str</span>
 <span class="sd">            Magic byte descriptor</span>
@@ -134,7 +134,7 @@
 <span class="sd">            ``sha1sum`` of file</span>
 <span class="sd">        sha256 : str</span>
 <span class="sd">            ``sha256sum`` of file</span>
-<span class="sd">        ssdeep</span>
+<span class="sd">        ssdeep : str</span>
 <span class="sd">            Fuzzy hash used by VirusTotal to match similar binaries.</span>
 
 
@@ -341,7 +341,7 @@
 
 <span class="sd">        Parameters:</span>
 <span class="sd">        -----------</span>
-<span class="sd">            obj</span>
+<span class="sd">            obj : dict</span>
 <span class="sd">                Object to serialize.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -359,7 +359,7 @@
 
 <span class="sd">        Parameters:</span>
 <span class="sd">        -----------</span>
-<span class="sd">            outdir</span>
+<span class="sd">            outdir : str</span>
 <span class="sd">                Output directory prefix. Defaults to local directory.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>

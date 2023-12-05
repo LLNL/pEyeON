@@ -45,7 +45,7 @@ class Observe:
     ----------------------
         bytecount : int
             size of file
-        filename :str
+        filename : str
             File name
         magic : str
             Magic byte descriptor
@@ -61,7 +61,7 @@ class Observe:
             ``sha1sum`` of file
         sha256 : str
             ``sha256sum`` of file
-        ssdeep
+        ssdeep : str
             Fuzzy hash used by VirusTotal to match similar binaries.
 
 
@@ -238,7 +238,7 @@ class Observe:
         out = out.split(",")[0]  # hash/filename
         self.ssdeep = out
 
-    def safe_serialize(self, obj) -> str:
+    def _safe_serialize(self, obj) -> str:
         """
         Certs are byte objects, not json.
         This function gives a default value to unserializable data.
@@ -247,7 +247,7 @@ class Observe:
 
         Parameters:
         -----------
-            obj
+            obj : dict
                 Object to serialize.
 
         """
@@ -263,7 +263,7 @@ class Observe:
 
         Parameters:
         -----------
-            outdir
+            outdir : str
                 Output directory prefix. Defaults to local directory.
         """
         os.makedirs(outdir, exist_ok=True)
@@ -275,7 +275,7 @@ class Observe:
                     cert_out.write(b)
         outfile = f"{os.path.join(outdir, self.filename)}.{self.md5}.json"
         with open(outfile, "w") as f:
-            f.write(self.safe_serialize(vs))
+            f.write(self._safe_serialize(vs))
 
     def __str__(self) -> str:
         return pprint.pformat(vars(self), indent=2)

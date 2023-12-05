@@ -45,7 +45,7 @@ class ObservationTestCase(unittest.TestCase):
         with open("../schema/observation.schema.json") as schem:
             schema = json.loads(schem.read())
         vs = vars(self.OBS)
-        obs_json = json.loads(self.OBS.safe_serialize(vs))
+        obs_json = json.loads(self.OBS._safe_serialize(vs))
         print(jsonschema.validate(instance=obs_json, schema=schema))
 
 
