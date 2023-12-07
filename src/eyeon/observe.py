@@ -1,7 +1,7 @@
 """
 eyeon.observe.Observe makes an observation of a file.
 An observation will output a json file containing unique identifying information
-  such as hashes, modify date, certificate info, etc.
+such as hashes, modify date, certificate info, etc.
 See the Observe class doc for full details.
 """
 import datetime
@@ -36,31 +36,50 @@ log = logging.getLogger("eyeon.observe")
 class Observe:
     """
     Class to create an Observation of a file.
+
     Parameters:
     -----------
         file (str): Path to file to be scanned.
 
     Required Attributes:
-        bytecount (int): sizeof file
-        filename (str): File name
-        magic (str): Magic byte descriptor
-        md5 (str): ``md5sum`` of file
-        modtime (str): Datetime string of last modified time
-        observation_ts (str): Datetime string of time of scan
-        permissions (str): Octet string of file permission value
-        sha1 (str): ``sha1sum`` of file
-        sha256 (str): ``sha256sum`` of file
-        ssdeep: Fuzzy hash used by VirusTotal to match similar binaries.
+    ----------------------
+        bytecount : int
+            size of file
+        filename : str
+            File name
+        magic : str
+            Magic byte descriptor
+        md5 : str
+            ``md5sum`` of file
+        modtime : str
+            Datetime string of last modified time
+        observation_ts : str
+            Datetime string of time of scan
+        permissions : str
+            Octet string of file permission value
+        sha1 : str
+            ``sha1sum`` of file
+        sha256 : str
+            ``sha256sum`` of file
+        ssdeep : str
+            Fuzzy hash used by VirusTotal to match similar binaries.
 
 
     Optional Attributes:
-        compiler (str): String describing compiler, compiler version, flags, etc.
-        host (str): csv string containing intended install locations
-        imphash (str): Either Import hash for Windows binaries or telfhash for ELF Linux binaries.
-        # die (str): Detect-It-Easy output.
+    -----------------------
+        compiler : str
+            String describing compiler, compiler version, flags, etc.
+        host : str
+            csv string containing intended install locations
+        imphash : str
+            Either Import hash for Windows binaries or telfhash for ELF Linux binaries.
+        # die : str
+            #Detect-It-Easy output.
         # {signature: [cert1, ...]}
-        signatures (dict): Descriptors of signature information,
-            including signatures and certificates. Only valid for Windows
+
+        signatures : dict
+            Descriptors of signature information, including signatures and certificates. Only
+            valid for Windows
     """
 
     def __init__(self, file: str, log_level: int = logging.ERROR, log_file: str = None) -> None:
@@ -127,8 +146,7 @@ class Observe:
     def set_imphash(self, file: str) -> None:
         """
         Sets import hash for PE files.
-        See
-         https://www.mandiant.com/resources/blog/tracking-malware-import-hashing.
+        See https://www.mandiant.com/resources/blog/tracking-malware-import-hashing.
         """
         import pefile
 
@@ -224,9 +242,13 @@ class Observe:
         """
         Certs are byte objects, not json.
         This function gives a default value to unserializable data.
-        :param obj: object to serialize
-        :returns: json encoded string where the non-serializable bits are
-            a string saying not serializable
+        Returns json encoded string where the non-serializable bits are
+        a string saying not serializable.
+
+        Parameters:
+        -----------
+            obj : dict
+                Object to serialize.
 
         """
 
@@ -238,7 +260,11 @@ class Observe:
     def write_json(self, outdir: str = ".") -> None:
         """
         Writes observation to json file.
-        :param outdir: output directory prefix. Defaults to local directory.
+
+        Parameters:
+        -----------
+            outdir : str
+                Output directory prefix. Defaults to local directory.
         """
         os.makedirs(outdir, exist_ok=True)
         vs = vars(self)
