@@ -38,8 +38,13 @@ class Parse:
 
     def _observe(self, file_and_path: tuple) -> None:
         file, result_path = file_and_path
-        o = Observe(file)
-        o.write_json(result_path)
+        try:
+            o = Observe(file)
+            o.write_json(result_path)
+        except PermissionError:
+            log.warning(f"File {file} cannot be read.")
+        except FileNotFoundError:
+            log.warning(f"No such file {file}.")
 
     def __call__(self, result_path: str = "./results", threads: int = 1) -> Any:
         files = [
