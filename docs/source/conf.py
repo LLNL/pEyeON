@@ -12,7 +12,7 @@ import sys
 sys.path.insert(0, os.path.abspath("../../src/eyeon/"))
 
 project = "EyeOn"
-copyright = "2023, Wangmo Tenzing"
+copyright = "2023, Lawrence Livermore National Laboratory"
 author = "Wangmo Tenzing"
 release = "1.0.0"
 
