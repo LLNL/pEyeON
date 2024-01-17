@@ -1,11 +1,15 @@
 # pEyeON
 
-A CLI tool that allows users to get software data pertaining to their machines.It can be used to quickly verify that the software and firmware used in operational technology is secure. 
+EyeON is a CLI tool that allows users to get software data pertaining to their machines by performing threat and inventory analysis. It can be used to quickly verify that the software and firmware used in OT environments are secure. 
 
+<p align="center">
+<img src="Photo/EyeON_logo.png" width="300" height="270">
 
-## Description
+## Motivation
 
-EyeON consists of two parts - an observe call and a parse call. observe works on a single file to return a suite of identifying metrics. parse calls observe recursively, returning an observation for each file in a directory. Both of these can be run either from a library import or a CLI command.
+Validation is important when installing new software. Existing tools use a hash/signature check to validate that the software has not been tampered. Knowing that the software works as intended saves a lot of time and energy, but just performing these hash/signature checks doesn't provide all the information needed to understand supply chain threats. 
+
+EyeON provides an automated, consistent process across users to scan software files used for operational technologies. It's findings can be used to generate reports that can help in tracking software patterns to shed light on supply chain risks. This tool's main capabilities are focused on increasing the security of OT software. 
 
 ## Installation
 ```bash
@@ -16,77 +20,79 @@ or
 git clone https://lc.llnl.gov/gitlab/cir-software-assurance/peyeon.git
 ```
 
+### Dockerfile
+This dockerfile contains all the pertinent tools specific to data extraction. The three tools mainly needed are ssdeep, libmagic, and tlsh.
+
+Build docker image:
+```bash
+docker build -t peyeon -f eyeon.Dockerfile .
+```
+
+Run docker container:
+```bash
+docker run ...
+```
+
 ## Usage
 
-1. Display all arguments 
+This section shows how to run the CLI component. 
+
+1. Displays all arguments 
 ```bash
 eyeon --help
 ```
 
-2. Display observe arguments 
+2. Displays observe arguments 
 ```bash
 eyeon observe --help
 ```
 
-3. Display parse arguments 
+3. Displays parse arguments 
 ```bash
 eyeon parse --help
 ```
 
-## Objects
+EyeON consists of two parts - an observe call and a parse call. Observe.py works on a single file to return a suite of identifying metrics. Both of these can be run either from a library import or a CLI command.
 
-EyeON consists of two parts - an observe call and a parse call. observe works on a single file to return a suite of identifying metrics. parse calls observe recursively, returning an observation for each file in a directory. Both of these can be run either from a library import or a CLI command.
+#### Observe
 
-1. Calling observe function
+1. This CLI command calls the observe function and makes an observation of a file. 
+
+CLI command:
 
 ```bash
-obs = observe.Observe("./tests/Obsidian.1.1.9.exe")
-ols = observe.Observe("./tests/ls")
+eyeon observe Obsidian.1.1.9.exe
 ```
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+Init file calls observe function in observe.py
+
+```bash
+obs = eyeon.observe.Observe("./tests/Obsidian.1.1.9.exe")
+```
+The observation will output a json file containing unique identifying information such as hashes, modify date, certificate info, etc.
+
+```json
+{"bytecount": 9381, 
+"filename": "demo.ipynb", 
+"signatures": {"valid": "N/A"}, 
+"imphash": "N/A", 
+"magic": "JSON text data", 
+"modtime": "2023-11-03 20:21:20", 
+"observation_ts": "2024-01-17 09:16:48", 
+"permissions": "0o100644", 
+"md5": "34e11a35c91d57ac249ff1300055a816", 
+"sha1": "9388f99f2c05e6e36b279dc2453ebea4bdc83242", 
+"sha256": "fa95b3820d4ee30a635982bf9b02a467e738deaebd0db1ff6a262623d762f60d", 
+"ssdeep": "96:Ui7ooWT+sPmRBeco20zV32G0r/R4jUkv57nPBSujJfcMZC606/StUbm/lGMipUQy:U/pdratRqJ3ZHStx4UA+I1jS"}
+```
 
 
+#### Parse
+parse.py calls observe recursively, returning an observation for each file in a directory. 
 
-# Editing this README
+```bash
+obs = eyeon.parse.Parse(args.dir)
+```
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-
-## Name
-Choose a self-explaining name for your project.
-
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+## Future Work
+There will be a second part to this project, which will be to develop a cloud application that anonymizes and summarizes the findings to enable OT security analysis.

@@ -3,10 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to EyeOn's Documentation!
+Welcome to EyeON's Documentation
 =================================
 
-EyeOn is a CLI tool that allows users to get software data pertaining to their machines.
+EyeON is a CLI tool that allows users to get software data pertaining to their machines.
 
 .. toctree::
    :maxdepth: 2
