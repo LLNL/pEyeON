@@ -72,18 +72,20 @@ obs = eyeon.observe.Observe("./tests/Obsidian.1.1.9.exe")
 The observation will output a json file containing unique identifying information such as hashes, modify date, certificate info, etc.
 
 ```json
-{"bytecount": 9381, 
-"filename": "demo.ipynb", 
-"signatures": {"valid": "N/A"}, 
-"imphash": "N/A", 
-"magic": "JSON text data", 
-"modtime": "2023-11-03 20:21:20", 
-"observation_ts": "2024-01-17 09:16:48", 
-"permissions": "0o100644", 
-"md5": "34e11a35c91d57ac249ff1300055a816", 
-"sha1": "9388f99f2c05e6e36b279dc2453ebea4bdc83242", 
-"sha256": "fa95b3820d4ee30a635982bf9b02a467e738deaebd0db1ff6a262623d762f60d", 
-"ssdeep": "96:Ui7ooWT+sPmRBeco20zV32G0r/R4jUkv57nPBSujJfcMZC606/StUbm/lGMipUQy:U/pdratRqJ3ZHStx4UA+I1jS"}
+{
+    "bytecount": 9381, 
+    "filename": "demo.ipynb", 
+    "signatures": {"valid": "N/A"}, 
+    "imphash": "N/A", 
+    "magic": "JSON text data", 
+    "modtime": "2023-11-03 20:21:20", 
+    "observation_ts": "2024-01-17 09:16:48", 
+    "permissions": "0o100644", 
+    "md5": "34e11a35c91d57ac249ff1300055a816", 
+    "sha1": "9388f99f2c05e6e36b279dc2453ebea4bdc83242", 
+    "sha256": "fa95b3820d4ee30a635982bf9b02a467e738deaebd0db1ff6a262623d762f60d", 
+    "ssdeep": "96:Ui7ooWT+sPmRBeco20zV32G0r/R4jUkv57nPBSujJfcMZC606/StUbm/lGMipUQy:U/pdratRqJ3ZHStx4UA+I1jS"
+}
 ```
 
 
