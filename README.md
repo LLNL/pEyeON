@@ -30,7 +30,7 @@ docker build -t peyeon -f eyeon.Dockerfile .
 
 Run docker container:
 ```bash
-docker run ...
+docker run
 ```
 
 ## Usage
@@ -71,6 +71,8 @@ obs = eyeon.observe.Observe("./tests/Obsidian.1.1.9.exe")
 ```
 The observation will output a json file containing unique identifying information such as hashes, modify date, certificate info, etc.
 
+Example json file:
+
 ```json
 {
     "bytecount": 9381, 
@@ -87,7 +89,6 @@ The observation will output a json file containing unique identifying informatio
     "ssdeep": "96:Ui7ooWT+sPmRBeco20zV32G0r/R4jUkv57nPBSujJfcMZC606/StUbm/lGMipUQy:U/pdratRqJ3ZHStx4UA+I1jS"
 }
 ```
-
 
 #### Parse
 parse.py calls observe recursively, returning an observation for each file in a directory. 
