@@ -21,17 +21,42 @@ git clone https://lc.llnl.gov/gitlab/cir-software-assurance/peyeon.git
 ```
 
 ### Dockerfile
-This dockerfile contains all the pertinent tools specific to data extraction. The three tools mainly needed are ssdeep, libmagic, and tlsh.
+This dockerfile contains all the pertinent tools specific to data extraction. The three tools mainly needed are ssdeep, libmagic, and tlsh. There are a couple variables that need to be changed in order for it to work.
+
+Fix user permissions in eyeon.Dockerfile:
+```bash
+1. Change all instances of "50001" to "1000." 
+There are 3 instances of it.
+
+Ex. "&& groupadd -g 50001 xyz \" to "&& groupadd -g 1000 xyz \"
+
+2. Change all instances of "xyz" to system_user_name. 
+There are 6 instances of it. 
+
+Ex. "&& groupadd -g 1000 xyz \" to "&& groupadd -g 1000 system_user_name \"
+
+```
+Add path variable at the bottom and point it to your current user directory:
+```bash
+ENV PATH=/home/<system_user_name>/.local/bin:$PATH
+```
 
 Build docker image:
 ```bash
 docker build -t peyeon -f eyeon.Dockerfile .
 ```
 
-Run docker container:
+Install EyeON in docker environment and then run docker container:
 ```bash
-docker run
+docker run -it -v $(pwd):/workdir peyeon /bin/bash
 ```
+This attaches current code directory as work directory in the container. 
+In the container:
+```bash
+cd into /workdir/tests directory 
+run `rein` alias to build python dependencies 
+```
+EyeON commands should work now.
 
 ## Usage
 
