@@ -3,8 +3,6 @@ FROM ubuntu
 ARG USER_ID
 ARG OUN
 
-WORKDIR /PEYEON
-
 RUN apt update \
     && apt install -y python3 python3-pip python3-dev python3-venv libmagic1 git make wget unzip build-essential vim ssdeep jq \
     && groupadd -g $USER_ID $OUN \
@@ -30,5 +28,4 @@ RUN pip3 install telfhash
 
 USER $OUN
 
-COPY . /PEYEON
 ENV PATH=/home/$OUN/.local/bin:$PATH
