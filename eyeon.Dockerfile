@@ -31,6 +31,3 @@ RUN pip3 install telfhash
 USER $OUN
 
 COPY . /PEYEON
-#COPY tests .
-#COPY src .
-#COPY docs .
