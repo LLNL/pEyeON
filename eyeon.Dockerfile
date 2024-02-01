@@ -28,4 +28,4 @@ RUN pip3 install telfhash
 
 USER $OUN
 
-ENV PATH=/home/$OUN/.local/bin:$PATH
+ENV PATH=/home/$OUN/.local/bin:$PATHs
