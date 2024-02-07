@@ -6,24 +6,20 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-import pathlib
+import os
 import sys
 
-sys.path.insert(0, pathlib.Path(__file__).parents[2].resolve().as_posix())
+sys.path.insert(0, os.path.abspath("../../src/eyeon/"))
 
 project = "EyeON"
-copyright = "2023, Seth Lyles"
-author = "Seth Lyles"
-release = "0.2"
+copyright = "2023, Lawrence Livermore National Laboratory"
+author = "Wangmo Tenzing"
+release = "1.0.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = [
-    "sphinx.ext.duration",
-    "sphinx.ext.doctest",
-    "sphinx.ext.autodoc",
-]
+extensions = ["sphinx.ext.viewcode", "sphinx.ext.autodoc", "sphinx.ext.autosummary"]
 
 templates_path = ["_templates"]
 exclude_patterns = []
@@ -32,5 +28,5 @@ exclude_patterns = []
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "alabaster"
+html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
