@@ -1,4 +1,4 @@
-EyeOn Modules
+EyeON Modules
 ================
 
 .. toctree::
