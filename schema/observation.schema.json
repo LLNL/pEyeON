@@ -57,10 +57,8 @@
       "description": "Operating system of target machine"
     },
     "config": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
+      "type": "object",
+      "additionalProperties": true,
       "description": "List of attributes from the configuration file"
     }
   }
