@@ -5,15 +5,12 @@ import json
 
 def ConfigRead(file:str) -> dict:
     configparse_odj= configparser.ConfigParser()
-    dir_path=os.getcwd()+"/"
+    # dir_path=os.getcwd()+"/"
+    # config_file_path=dir_path+file
+    baseFileName=os.path.basename(file)
 
-    config_file_path=dir_path+file
-    baseFileName=os.path.basename(config_file_path)
-
-    configparse_odj.read(config_file_path)
-
+    configparse_odj.read(file)
     config_data={}
-
     #itereate through conf sections
     for section in configparse_odj.sections():
         # print(f"Section: {section}")
@@ -28,5 +25,4 @@ def ConfigRead(file:str) -> dict:
         config_data[section]=section_data
 
     Config_Info={baseFileName:config_data}
-    json_data=json.dumps(Config_Info, indent=2)
-    print(json_data)
+    return Config_Info
