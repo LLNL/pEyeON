@@ -62,12 +62,6 @@ class CommandLine:
         )
         parse_parser.set_defaults(func=self.parse)
 
-
-        # Create parser for config file
-        config_parser = subparsers.add_parser("config", help="config help")
-        config_parser.add_argument("config_file", help="Name of config file")
-        config_parser.set_defaults(func=self.config)
-
         # new
         if testargs:
             self.args = parser.parse_args(testargs)
@@ -96,14 +90,6 @@ class CommandLine:
 
         p = eyeon.parse.Parse(args.dir, args.log_level, args.log_file)
         p(result_path=args.output_dir, threads=args.threads)
-
-
-    def config(self, args) -> None:
-        """
-        Allows for the reading of specified config file
-        """
-        conf=eyeon.config.ConfigRead(args.config_file)
-
 
 
 def main():
