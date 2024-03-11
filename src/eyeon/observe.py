@@ -11,6 +11,7 @@ import os
 import pprint
 import subprocess
 import eyeon.config
+import re
 from pathlib import Path
 
 import lief
@@ -66,7 +67,7 @@ class Observe:
             Fuzzy hash used by VirusTotal to match similar binaries.
         config : dict
             toml configuration file elements
-            
+
     Optional Attributes:
     -----------------------
         compiler : str
@@ -77,11 +78,11 @@ class Observe:
             Either Import hash for Windows binaries or telfhash for ELF Linux binaries.
         # die : str
             #Detect-It-Easy output.
-        # {signature: [cert1, ...]}
-
         signatures : dict
             Descriptors of signature information, including signatures and certificates. Only
             valid for Windows
+        metadata : dict
+            Windows File Properties -- OS, Architecture, File Info, etc.
     """
 
     def __init__(self, file: str, log_level: int = logging.ERROR, log_file: str = None) -> None:
@@ -101,6 +102,7 @@ class Observe:
             self.set_imphash(file)
             self.certs = {}
             self.set_signatures(file)
+            self.set_windows_metadata(file)
         elif lief.is_elf(file):
             self.set_telfhash(file)
         else:
@@ -118,13 +120,12 @@ class Observe:
         self.sha256 = Observe.create_hash(file, "sha256")
         self.set_ssdeep(file)
 
-        
-        configfile=self.find_config()
+        configfile = self.find_config()
         if configfile:
-            self.config=eyeon.config.ConfigRead(configfile)
+            self.config = eyeon.config.ConfigRead(configfile)
         else:
             log.info("toml config not found")
-            self.config={}
+            self.config = {}
 
         log.debug("end of init")
 
@@ -179,6 +180,18 @@ class Observe:
         except Exception as E:
             log.error(E)
 
+    @staticmethod
+    def _cert_parser(cert: str) -> dict:
+        """lief certs are messy. convert to json data"""
+        crt = cert.split("\n")
+        cert_d = {}
+        for line in crt:
+            if line:  # catch empty string
+                k, v = re.split("\s+: ", line)  # noqa: W605
+                k = "_".join(k.split())  # replace space with underscore
+                cert_d[k] = v
+        return cert_d
+
     def set_signatures(self, file: str) -> None:
         """
         Runs LIEF signature validation and collects certificate chain.
@@ -196,18 +209,7 @@ class Observe:
             # signinfo = sig.SignerInfo
             # this thing is documented but has no constructor defined
             self.signatures["signatures"][sig.content_info.digest.hex()] = {
-                # """
-                #  "certs": [{
-                #     "version": c.version,
-                #     "serial_number": c.serial_number,
-                #     "issuer": c.issuer_name,
-                #     "subject": c.subject,
-                #     "valid_from": c.valid_from,
-                #     "valid_to": c.valid_to,
-                #     "algorithm": c.signature_algorithm,  # OID format...
-                #  } for c in sig.certificates],
-                # """
-                "certs": [str(c) for c in sig.certificates],
+                "certs": [self._cert_parser(str(c)) for c in sig.certificates],
                 "signers": str(sig.signers[0]),
                 "digest_algorithm": str(sig.digest_algorithm),
                 "verification": str(sig.check())
@@ -248,7 +250,7 @@ class Observe:
         out = out.split(",")[0]  # hash/filename
         self.ssdeep = out
 
-    def find_config(self, dir:str="."):
+    def find_config(self, dir: str = "."):
         """
         Looks for the toml config file starting in the current directory the tool is run from
         """
@@ -257,6 +259,12 @@ class Observe:
                 if file.endswith(".toml") and not file.startswith("pyproject"):
                     return os.path.join(dirpath, file)
         return None
+
+    def set_windows_metadata(self, file: str) -> None:
+        """Finds the metadata from surfactant"""
+        from surfactant.infoextractors.pe_file import extract_pe_info
+
+        self.metadata = extract_pe_info(file)
 
     def _safe_serialize(self, obj) -> str:
         """
