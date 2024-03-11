@@ -7,6 +7,7 @@ import argparse
 
 import eyeon.observe
 import eyeon.parse
+import eyeon.config
 import logging
 
 

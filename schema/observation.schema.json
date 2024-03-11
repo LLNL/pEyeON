@@ -55,6 +55,11 @@
     "target_os": {
       "type": "string",
       "description": "Operating system of target machine"
+    },
+    "config": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "List of attributes from the configuration file"
     }
   }
 }

@@ -10,6 +10,7 @@ import json
 import os
 import pprint
 import subprocess
+import eyeon.config
 import re
 from pathlib import Path
 
@@ -64,7 +65,8 @@ class Observe:
             ``sha256sum`` of file
         ssdeep : str
             Fuzzy hash used by VirusTotal to match similar binaries.
-
+        config : dict
+            toml configuration file elements
 
     Optional Attributes:
     -----------------------
@@ -117,6 +119,13 @@ class Observe:
         self.sha1 = Observe.create_hash(file, "sha1")
         self.sha256 = Observe.create_hash(file, "sha256")
         self.set_ssdeep(file)
+
+        configfile = self.find_config()
+        if configfile:
+            self.config = eyeon.config.ConfigRead(configfile)
+        else:
+            log.info("toml config not found")
+            self.config = {}
 
         log.debug("end of init")
 
@@ -240,6 +249,16 @@ class Observe:
         out = out.split("\n")[1]  # header/hash/emptystring
         out = out.split(",")[0]  # hash/filename
         self.ssdeep = out
+
+    def find_config(self, dir: str = "."):
+        """
+        Looks for the toml config file starting in the current directory the tool is run from
+        """
+        for dirpath, _, filenames in os.walk(dir):
+            for file in filenames:
+                if file.endswith(".toml") and not file.startswith("pyproject"):
+                    return os.path.join(dirpath, file)
+        return None
 
     def set_windows_metadata(self, file: str) -> None:
         """Finds the metadata from surfactant"""
