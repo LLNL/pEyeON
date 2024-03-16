@@ -209,18 +209,21 @@ class Observe:
             # signinfo = sig.SignerInfo
             # this thing is documented but has no constructor defined
             self.signatures["signatures"][sig.content_info.digest.hex()] = {
-                "certs": [self._cert_parser(str(c)) for c in sig.certificates],
+                "certs": {self.hashit(c): self._cert_parser(str(c)) for c in sig.certificates},
                 "signers": str(sig.signers[0]),
                 "digest_algorithm": str(sig.digest_algorithm),
                 "verification": str(sig.check())
                 # "sections": [s.__str__() for s in pe.sections]
                 # **signinfo,
             }
-            for c in sig.certificates:
-                hc = hashlib.sha256()
-                hc.update(c.raw)
-                hc = hc.hexdigest()
-                self.certs[hc] = c.raw
+
+    def hashit(self, c):
+        hc = hashlib.sha256()
+        hc.update(c.raw)
+        hc = hc.hexdigest()
+        self.certs[hc] = c.raw
+
+        return hc
 
     def set_telfhash(self, file: str) -> None:
         """
