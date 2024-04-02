@@ -72,12 +72,6 @@
       "type": "string",
       "description": "Authentihash of signatures"
     },
-    "signatures": {
-      "type": "object",
-      "items": {
-        "$ref": "#/$defs/signature_block"
-      }
-    },
     "metadata": {
       "type": "object",
       "properties": {
@@ -128,8 +122,13 @@
         }
         
       }
+    },
+    "signatures": {
+      "type": "object",
+      "items": {
+        "$ref": "#/$defs/signature_block"
+      }
     }
-
   },
   "$defs": {
     "signature_block": {
