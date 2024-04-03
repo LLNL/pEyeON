@@ -73,6 +73,49 @@
       "description": "Authentihash of signatures"
     },
     "metadata": {
+      "$ref": "#/$defs/metadata"
+    },
+    "defaults": {
+      "$ref": "#/$defs/defaults"
+    },
+    "signatures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "certs": {
+            "$ref": "#/$defs/certs"
+          },
+          "signers": { "type": "string" },
+          "digest_algorithm": { "type": "string" },
+          "verification": { "type": "boolean" },
+          "sha1": { "type": "string" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "certs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "cert._version": { "type": "string" },
+          "serial_number": { "type": "string" },
+          "issuer_name": { "type": "string" },
+          "subject_name": { "type": "string" },
+          "issued_on": { "type": "string"},
+          "expires_on": { "type": "string"},
+          "signed_using": { "type": "string" },
+          "RSA_key_size": { "type": "string" },
+          "basic_constraints": { "type": "string" },
+          "key_usage": { "type": "string" },
+          "ext_key_usage": { "type": "string" },
+          "certificate_policies": { "type": "string" }
+       }
+     }
+    },
+    "metadata": {
       "type": "object",
       "properties": {
         "OS": { "type": "string" },
@@ -98,71 +141,29 @@
         }, 
         "dllRedirectionLocal": { "type": "boolean" }
       }
+
     },
     "defaults": {
       "type": "object",
       "properties": {
-        "default_filename": "string",
-        "manufacturer_org": "string",
+        "default_filename": { "type": "string" },
+        "manufacturer_org": { "type": "string" },
         "location": {
           "type": "object",
           "properties": {
-            "location": "string",
-            "filelocation": "string"
-          },
-          "machines": {
-            "type": "object",
-            "properties": {
-              "machines": "string",
-              "os": "string",
-              "version": "string",
-              "x-version": "string"
-            }
+            "location": { "type": "string" },
+            "filelocation": { "type": "string" }
           }
-        }
-        
-      }
-    },
-    "signatures": {
-      "type": "object",
-      "items": {
-        "$ref": "#/$defs/signature_block"
-      }
-    }
-  },
-  "$defs": {
-    "signature_block": {
-      "type": "object",
-      "properties": {
-        "valid": { "type": "string" },
-        "signatures": [ {
-          "type": "array",
+        },
+        "machines": {
+          "type": "object",
           "properties": {
-            "certs": {
-              "type": "array",
-              "properties": {
-                "cert._version": { "type": "string" },
-                "serial_number": { "type": "string" },
-                "issuer_name": { "type": "string" },
-                "subject_name": { "type": "string" },
-                "issued_on": { "type": "string"},
-                "expires_on": { "type": "string"},
-                "signed_using": { "type": "string" },
-                "RSA_key_size": { "type": "string" },
-                "basic_constraints": { "type": "string" },
-                "key_usage": { "type": "string" },
-                "ext_key_usage": { "type": "string" },
-                "certificate_policies": { "type": "string" }
-              }
-            },
-            "signers": "string",
-            "digest_algorithm": "string",
-            "verification": "boolean",
-            "sha1": "string"
+            "machines": { "type": "string" },
+            "os": { "type": "string" },
+            "version": { "type": "string" },
+            "x-version": { "type": "string" }
           }
         }
-
-        ]
       }
     }
   }
