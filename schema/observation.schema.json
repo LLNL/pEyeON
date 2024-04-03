@@ -100,6 +100,7 @@
       "items": {
         "type": "object",
         "properties": {
+	  "sha256": { "type": "string" }, 
           "cert._version": { "type": "string" },
           "serial_number": { "type": "string" },
           "issuer_name": { "type": "string" },
@@ -124,7 +125,9 @@
         "peSubsystemVersion": { "type": "string" },
         "peSubsystem": { "type": "string" },
         "peLinkerVersion": { "type": "string" },
-        "peImport": { "type": "string" },
+        "peImport": { "type": "array",
+            "items": { "type": "string" }
+        },
         "peIsExe": { "type": "boolean" }, 
         "peIsDll": { "type": "boolean" }, 
         "peIsClr": { "type": "boolean" }, 

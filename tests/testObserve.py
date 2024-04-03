@@ -12,49 +12,49 @@ from eyeon import observe
 import jsonschema
 
 
-# class ObservationTestCase(unittest.TestCase):
-#     @classmethod
-#     def setUp(self) -> None:
-#         self.OBS = observe.Observe("./Obsidian.1.1.9.exe")
+class ObservationTestCase(unittest.TestCase):
+    @classmethod
+    def setUp(self) -> None:
+        self.OBS = observe.Observe("./Obsidian.1.1.9.exe")
 
-#     def testVarsExe(self) -> None:
-#         self.assertEqual(self.OBS.bytecount, 72690816)
-#         self.assertEqual(self.OBS.filename, "Obsidian.1.1.9.exe")
-#         self.assertEqual(self.OBS.md5, "52880858a43613dc8b2011f7f1c84ec8")
-#         self.assertEqual(self.OBS.sha1, "3c45505db042068f22caee4fbb5fef0a102100bb")
-#         self.assertEqual(
-#             self.OBS.sha256, "8759af1eb38bd975c52dcf31f4ce185b3adcef0baf1a4677b51065ea9eb1e7d4"
-#         )
-#         try:
-#             dt.datetime.strptime(self.OBS.modtime, "%Y-%m-%d %H:%M:%S")
-#         except ValueError:
-#             self.fail()
-#         self.assertIsInstance(self.OBS.observation_ts, str)
-#         self.assertEqual(self.OBS.permissions, "0o100755")
-#         self.assertEqual(
-#             self.OBS.magic,
-#             "PE32 executable (GUI) Intel 80386, for MS Windows, Nullsoft Installer self-extracting archive",  # noqa: E501
-#         )
-#         self.assertEqual(
-#             self.OBS.ssdeep,
-#             "1572864:ZVBOHCnuy3zotWQbHr3DRYt3bVTBmoURPljZKT8RnmY:TnDPQjvytRQouimh",  # noqa: E501
-#         )
+    def testVarsExe(self) -> None:
+        self.assertEqual(self.OBS.bytecount, 72690816)
+        self.assertEqual(self.OBS.filename, "Obsidian.1.1.9.exe")
+        self.assertEqual(self.OBS.md5, "52880858a43613dc8b2011f7f1c84ec8")
+        self.assertEqual(self.OBS.sha1, "3c45505db042068f22caee4fbb5fef0a102100bb")
+        self.assertEqual(
+            self.OBS.sha256, "8759af1eb38bd975c52dcf31f4ce185b3adcef0baf1a4677b51065ea9eb1e7d4"
+        )
+        try:
+            dt.datetime.strptime(self.OBS.modtime, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            self.fail()
+        self.assertIsInstance(self.OBS.observation_ts, str)
+        self.assertEqual(self.OBS.permissions, "0o100755")
+        self.assertEqual(
+            self.OBS.magic,
+            "PE32 executable (GUI) Intel 80386, for MS Windows, Nullsoft Installer self-extracting archive",  # noqa: E501
+        )
+        self.assertEqual(
+            self.OBS.ssdeep,
+            "1572864:ZVBOHCnuy3zotWQbHr3DRYt3bVTBmoURPljZKT8RnmY:TnDPQjvytRQouimh",  # noqa: E501
+        )
 
-#     def testWriteJson(self) -> None:
-#         try:
-#             for j in glob("*.json"):
-#                 os.remove(j)
-#         except FileNotFoundError:
-#             pass
-#         # self.OBS.write_json()
-#         # unittest.mock?
+    def testWriteJson(self) -> None:
+        try:
+            for j in glob("*.json"):
+                os.remove(j)
+        except FileNotFoundError:
+            pass
+        # self.OBS.write_json()
+        # unittest.mock?
 
-#     def testValidateJson(self) -> None:
-#         with open("../schema/observation.schema.json") as schem:
-#             schema = json.loads(schem.read())
-#         vs = vars(self.OBS)
-#         obs_json = json.loads(self.OBS._safe_serialize(vs))
-#         print(jsonschema.validate(instance=obs_json, schema=schema))
+    def testValidateJson(self) -> None:
+        with open("../schema/observation.schema.json") as schem:
+            schema = json.loads(schem.read())
+        vs = vars(self.OBS)
+        obs_json = json.loads(self.OBS._safe_serialize(vs))
+        print(jsonschema.validate(instance=obs_json, schema=schema))
 
 
 class ObservationTestCase2(unittest.TestCase):

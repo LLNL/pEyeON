@@ -97,7 +97,7 @@ class Observe:
         stat = os.stat(file)
         self.bytecount = stat.st_size
         self.filename = os.path.basename(file)  # TODO: split into absolute path maybe?
-        self.signatures = {}
+        self.signatures = []
         if lief.is_pe(file):
             self.set_imphash(file)
             self.certs = {}
@@ -107,7 +107,6 @@ class Observe:
             self.set_telfhash(file)
         else:
             self.imphash = "N/A"
-            self.signatures = {"valid": "N/A"}
         self.set_magic(file)
         self.modtime = datetime.datetime.utcfromtimestamp(stat.st_mtime).strftime(
             "%Y-%m-%d %H:%M:%S"
@@ -122,10 +121,10 @@ class Observe:
 
         configfile = self.find_config()
         if configfile:
-            self.config = eyeon.config.ConfigRead(configfile)
+            self.defaults = eyeon.config.ConfigRead(configfile)
         else:
             log.info("toml config not found")
-            self.config = {}
+            self.default = {}
 
         log.debug("end of init")
 
@@ -181,15 +180,16 @@ class Observe:
             log.error(E)
 
     @staticmethod
-    def _cert_parser(cert: str) -> dict:
+    def _cert_parser(cert: lief.PE.x509) -> dict:
         """lief certs are messy. convert to json data"""
-        crt = cert.split("\n")
+        crt = str(cert).split("\n")
         cert_d = {}
         for line in crt:
             if line:  # catch empty string
                 k, v = re.split("\s+: ", line)  # noqa: W605
                 k = "_".join(k.split())  # replace space with underscore
                 cert_d[k] = v
+            cert_d["sha256"] = Observe.hashit(cert)
         return cert_d
 
     def set_signatures(self, file: str) -> None:
@@ -199,29 +199,30 @@ class Observe:
         pe = lief.parse(file)
         if len(pe.signatures) > 1:
             log.info("file has multiple signatures")
-        self.signatures["valid"] = str(pe.verify_signature())
-        self.signatures["signatures"] = {}
+        self.signatures = []
         if not pe.signatures:
             log.info(f"file {file} has no signatures.")
             return
         self.authentihash = pe.signatures[0].content_info.digest.hex()
-        for sig in pe.signatures:
             # signinfo = sig.SignerInfo
             # this thing is documented but has no constructor defined
-            self.signatures["signatures"][sig.content_info.digest.hex()] = {
-                "certs": {self.hashit(c): self._cert_parser(str(c)) for c in sig.certificates},
+        self.signatures = [
+            {
+                "certs": [self._cert_parser(c) for c in sig.certificates],
                 "signers": str(sig.signers[0]),
                 "digest_algorithm": str(sig.digest_algorithm),
-                "verification": str(sig.check())
+                "verification": str(sig.check()) == "OK",
+                "sha1": sig.content_info.digest.hex()
                 # "sections": [s.__str__() for s in pe.sections]
                 # **signinfo,
-            }
+            } for sig in pe.signatures
+        ]
 
-    def hashit(self, c):
+    @staticmethod
+    def hashit(c: lief.PE.x509):
         hc = hashlib.sha256()
         hc.update(c.raw)
         hc = hc.hexdigest()
-        self.certs[hc] = c.raw
 
         return hc
 
