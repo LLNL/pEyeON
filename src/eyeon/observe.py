@@ -124,7 +124,7 @@ class Observe:
             self.defaults = eyeon.config.ConfigRead(configfile)
         else:
             log.info("toml config not found")
-            self.default = {}
+            self.defaults = {}
 
         log.debug("end of init")
 
@@ -179,8 +179,8 @@ class Observe:
         except Exception as E:
             log.error(E)
 
-    @staticmethod
-    def _cert_parser(cert: lief.PE.x509) -> dict:
+    # @staticmethod
+    def _cert_parser(self, cert: lief.PE.x509) -> dict:
         """lief certs are messy. convert to json data"""
         crt = str(cert).split("\n")
         cert_d = {}
@@ -189,7 +189,7 @@ class Observe:
                 k, v = re.split("\s+: ", line)  # noqa: W605
                 k = "_".join(k.split())  # replace space with underscore
                 cert_d[k] = v
-            cert_d["sha256"] = Observe.hashit(cert)
+            cert_d["sha256"] = self.hashit(cert)
         return cert_d
 
     def set_signatures(self, file: str) -> None:
@@ -218,12 +218,12 @@ class Observe:
             } for sig in pe.signatures
         ]
 
-    @staticmethod
-    def hashit(c: lief.PE.x509):
+    # @staticmethod
+    def hashit(self, c: lief.PE.x509):
         hc = hashlib.sha256()
         hc.update(c.raw)
         hc = hc.hexdigest()
-
+        self.certs[hc] = c.raw
         return hc
 
     def set_telfhash(self, file: str) -> None:
@@ -306,6 +306,7 @@ class Observe:
                 with open(f"{os.path.join(outdir, 'certs', c)}.crt", "wb") as cert_out:
                     cert_out.write(b)
         outfile = f"{os.path.join(outdir, self.filename)}.{self.md5}.json"
+        vs = {k: v for k, v in vs.items() if k != "certs"}
         with open(outfile, "w") as f:
             f.write(self._safe_serialize(vs))
 
