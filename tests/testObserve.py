@@ -4,7 +4,6 @@ import unittest
 from glob import glob
 import datetime as dt
 
-# import StringIO
 import json
 
 from eyeon import observe
@@ -55,6 +54,11 @@ class ObservationTestCase(unittest.TestCase):
         vs = vars(self.OBS)
         obs_json = json.loads(self.OBS._safe_serialize(vs))
         print(jsonschema.validate(instance=obs_json, schema=schema))
+
+    def testConfigJson(self) -> None:
+        vs = vars(self.OBS)
+        obs_json = json.loads(self.OBS._safe_serialize(vs))
+        assert 'defaults' in obs_json, "defaults not in json"
 
 
 class ObservationTestCase2(unittest.TestCase):
