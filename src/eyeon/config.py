@@ -11,6 +11,7 @@ def ConfigRead(file:str) -> dict:
 
     configparse_odj.read(file)
     config_data={}
+    config_data["default_filename"] = baseFileName
     #itereate through conf sections
     for section in configparse_odj.sections():
         # print(f"Section: {section}")
@@ -24,5 +25,4 @@ def ConfigRead(file:str) -> dict:
         
         config_data[section]=section_data
 
-    Config_Info={baseFileName:config_data}
-    return Config_Info
+    return config_data
