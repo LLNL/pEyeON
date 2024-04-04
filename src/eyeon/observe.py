@@ -186,7 +186,14 @@ class Observe:
         cert_d = {}
         for line in crt:
             if line:  # catch empty string
-                k, v = re.split("\s+: ", line)  # noqa: W605
+                try:
+                    k, v = re.split("\s+: ", line)  # noqa: W605
+                except ValueError:  # not enough values to unpack
+                    k = re.split("\s+: ", line)[0]  # noqa: W605
+                    v = ""
+                except Exception as e:
+                    print(line)
+                    raise (e)
                 k = "_".join(k.split())  # replace space with underscore
                 cert_d[k] = v
             cert_d["sha256"] = self.hashit(cert)
