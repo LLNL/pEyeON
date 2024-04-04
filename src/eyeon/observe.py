@@ -204,8 +204,8 @@ class Observe:
             log.info(f"file {file} has no signatures.")
             return
         self.authentihash = pe.signatures[0].content_info.digest.hex()
-            # signinfo = sig.SignerInfo
-            # this thing is documented but has no constructor defined
+        # signinfo = sig.SignerInfo
+        # this thing is documented but has no constructor defined
         self.signatures = [
             {
                 "certs": [self._cert_parser(c) for c in sig.certificates],
@@ -215,7 +215,8 @@ class Observe:
                 "sha1": sig.content_info.digest.hex()
                 # "sections": [s.__str__() for s in pe.sections]
                 # **signinfo,
-            } for sig in pe.signatures
+            }
+            for sig in pe.signatures
         ]
 
     # @staticmethod
