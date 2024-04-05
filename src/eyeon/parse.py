@@ -40,9 +40,13 @@ class Parse:
         file, result_path = file_and_path
         try:
             o = Observe(file)
-            o.write_json(result_path)
         except PermissionError:  # cannot open file, permission denied
-            print(file, "cannot be opened")
+            # print(file, "cannot be opened")
+            return
+        except Exception as e:
+            print(file, e)
+            return
+        o.write_json(result_path)
 
     def __call__(self, result_path: str = "./results", threads: int = 1) -> Any:
         files = [

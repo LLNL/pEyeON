@@ -276,7 +276,11 @@ class Observe:
         """Finds the metadata from surfactant"""
         from surfactant.infoextractors.pe_file import extract_pe_info
 
-        self.metadata = extract_pe_info(file)
+        try:
+            self.metadata = extract_pe_info(file)
+        except Exception as e:
+            print(file, e)
+            self.metadata = {}
 
     def _safe_serialize(self, obj) -> str:
         """
