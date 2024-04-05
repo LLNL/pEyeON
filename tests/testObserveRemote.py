@@ -1,5 +1,4 @@
 # import tempfile
-# native python libs
 import os
 import unittest
 from glob import glob
@@ -7,10 +6,8 @@ import datetime as dt
 
 import json
 
-# this program
 from eyeon import observe
 
-# have to pip install
 import jsonschema
 
 
@@ -48,6 +45,11 @@ class ObservationTestCase(unittest.TestCase):
         obs_json = json.loads(self.OBS._safe_serialize(vs))
         print(jsonschema.validate(instance=obs_json, schema=schema))
 
+    def testConfigJson(self) -> None:
+        vs = vars(self.OBS)
+        obs_json = json.loads(self.OBS._safe_serialize(vs))
+        assert 'defaults' in obs_json, "defaults not in json"
+
 
 class ObservationTestCase2(unittest.TestCase):
     @classmethod
@@ -81,6 +83,15 @@ class ObservationTestCase2(unittest.TestCase):
             schema = json.loads(schem.read())
         obs_json = json.loads(json.dumps(vars(self.OBS)))
         print(jsonschema.validate(instance=obs_json, schema=schema))
+
+    def testValidateSchema(self) -> None:
+        with open("../schema/observation.schema.json") as schem:
+            schema = json.loads(schem.read())
+
+        with open("../schema/meta.schema.json") as schem:
+            meta = json.loads(schem.read())
+
+        print(jsonschema.validate(instance=schema, schema=meta))
 
 
 if __name__ == "__main__":

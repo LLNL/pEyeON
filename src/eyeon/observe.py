@@ -1,7 +1,7 @@
 """
 eyeon.observe.Observe makes an observation of a file.
 An observation will output a json file containing unique identifying information
-  such as hashes, modify date, certificate info, etc.
+such as hashes, modify date, certificate info, etc.
 See the Observe class doc for full details.
 """
 import datetime
@@ -10,6 +10,8 @@ import json
 import os
 import pprint
 import subprocess
+import eyeon.config
+import re
 from pathlib import Path
 
 import lief
@@ -36,31 +38,51 @@ log = logging.getLogger("eyeon.observe")
 class Observe:
     """
     Class to create an Observation of a file.
+
     Parameters:
     -----------
         file (str): Path to file to be scanned.
 
     Required Attributes:
-        bytecount (int): sizeof file
-        filename (str): File name
-        magic (str): Magic byte descriptor
-        md5 (str): ``md5sum`` of file
-        modtime (str): Datetime string of last modified time
-        observation_ts (str): Datetime string of time of scan
-        permissions (str): Octet string of file permission value
-        sha1 (str): ``sha1sum`` of file
-        sha256 (str): ``sha256sum`` of file
-        ssdeep: Fuzzy hash used by VirusTotal to match similar binaries.
-
+    ----------------------
+        bytecount : int
+            size of file
+        filename : str
+            File name
+        magic : str
+            Magic byte descriptor
+        md5 : str
+            ``md5sum`` of file
+        modtime : str
+            Datetime string of last modified time
+        observation_ts : str
+            Datetime string of time of scan
+        permissions : str
+            Octet string of file permission value
+        sha1 : str
+            ``sha1sum`` of file
+        sha256 : str
+            ``sha256sum`` of file
+        ssdeep : str
+            Fuzzy hash used by VirusTotal to match similar binaries.
+        config : dict
+            toml configuration file elements
 
     Optional Attributes:
-        compiler (str): String describing compiler, compiler version, flags, etc.
-        host (str): csv string containing intended install locations
-        imphash (str): Either Import hash for Windows binaries or telfhash for ELF Linux binaries.
-        # die (str): Detect-It-Easy output.
-        # {signature: [cert1, ...]}
-        signatures (dict): Descriptors of signature information,
-            including signatures and certificates. Only valid for Windows
+    -----------------------
+        compiler : str
+            String describing compiler, compiler version, flags, etc.
+        host : str
+            csv string containing intended install locations
+        imphash : str
+            Either Import hash for Windows binaries or telfhash for ELF Linux binaries.
+        # die : str
+            #Detect-It-Easy output.
+        signatures : dict
+            Descriptors of signature information, including signatures and certificates. Only
+            valid for Windows
+        metadata : dict
+            Windows File Properties -- OS, Architecture, File Info, etc.
     """
 
     def __init__(self, file: str, log_level: int = logging.ERROR, log_file: str = None) -> None:
@@ -75,16 +97,16 @@ class Observe:
         stat = os.stat(file)
         self.bytecount = stat.st_size
         self.filename = os.path.basename(file)  # TODO: split into absolute path maybe?
-        self.signatures = {}
+        self.signatures = []
         if lief.is_pe(file):
             self.set_imphash(file)
             self.certs = {}
             self.set_signatures(file)
+            self.set_windows_metadata(file)
         elif lief.is_elf(file):
             self.set_telfhash(file)
         else:
             self.imphash = "N/A"
-            self.signatures = {"valid": "N/A"}
         self.set_magic(file)
         self.modtime = datetime.datetime.utcfromtimestamp(stat.st_mtime).strftime(
             "%Y-%m-%d %H:%M:%S"
@@ -96,6 +118,13 @@ class Observe:
         self.sha1 = Observe.create_hash(file, "sha1")
         self.sha256 = Observe.create_hash(file, "sha256")
         self.set_ssdeep(file)
+
+        configfile = self.find_config()
+        if configfile:
+            self.defaults = eyeon.config.ConfigRead(configfile)
+        else:
+            log.info("toml config not found")
+            self.defaults = {}
 
         log.debug("end of init")
 
@@ -127,8 +156,7 @@ class Observe:
     def set_imphash(self, file: str) -> None:
         """
         Sets import hash for PE files.
-        See
-         https://www.mandiant.com/resources/blog/tracking-malware-import-hashing.
+        See https://www.mandiant.com/resources/blog/tracking-malware-import-hashing.
         """
         import pefile
 
@@ -151,6 +179,19 @@ class Observe:
         except Exception as E:
             log.error(E)
 
+    # @staticmethod
+    def _cert_parser(self, cert: lief.PE.x509) -> dict:
+        """lief certs are messy. convert to json data"""
+        crt = str(cert).split("\n")
+        cert_d = {}
+        for line in crt:
+            if line:  # catch empty string
+                k, v = re.split("\s+: ", line)  # noqa: W605
+                k = "_".join(k.split())  # replace space with underscore
+                cert_d[k] = v
+            cert_d["sha256"] = self.hashit(cert)
+        return cert_d
+
     def set_signatures(self, file: str) -> None:
         """
         Runs LIEF signature validation and collects certificate chain.
@@ -158,39 +199,33 @@ class Observe:
         pe = lief.parse(file)
         if len(pe.signatures) > 1:
             log.info("file has multiple signatures")
-        self.signatures["valid"] = str(pe.verify_signature())
-        self.signatures["signatures"] = {}
+        self.signatures = []
         if not pe.signatures:
             log.info(f"file {file} has no signatures.")
             return
         self.authentihash = pe.signatures[0].content_info.digest.hex()
-        for sig in pe.signatures:
-            # signinfo = sig.SignerInfo
-            # this thing is documented but has no constructor defined
-            self.signatures["signatures"][sig.content_info.digest.hex()] = {
-                # """
-                #  "certs": [{
-                #     "version": c.version,
-                #     "serial_number": c.serial_number,
-                #     "issuer": c.issuer_name,
-                #     "subject": c.subject,
-                #     "valid_from": c.valid_from,
-                #     "valid_to": c.valid_to,
-                #     "algorithm": c.signature_algorithm,  # OID format...
-                #  } for c in sig.certificates],
-                # """
-                "certs": [str(c) for c in sig.certificates],
+        # signinfo = sig.SignerInfo
+        # this thing is documented but has no constructor defined
+        self.signatures = [
+            {
+                "certs": [self._cert_parser(c) for c in sig.certificates],
                 "signers": str(sig.signers[0]),
                 "digest_algorithm": str(sig.digest_algorithm),
-                "verification": str(sig.check())
+                "verification": str(sig.check()) == "OK",
+                "sha1": sig.content_info.digest.hex()
                 # "sections": [s.__str__() for s in pe.sections]
                 # **signinfo,
             }
-            for c in sig.certificates:
-                hc = hashlib.sha256()
-                hc.update(c.raw)
-                hc = hc.hexdigest()
-                self.certs[hc] = c.raw
+            for sig in pe.signatures
+        ]
+
+    # @staticmethod
+    def hashit(self, c: lief.PE.x509):
+        hc = hashlib.sha256()
+        hc.update(c.raw)
+        hc = hc.hexdigest()
+        self.certs[hc] = c.raw
+        return hc
 
     def set_telfhash(self, file: str) -> None:
         """
@@ -220,13 +255,33 @@ class Observe:
         out = out.split(",")[0]  # hash/filename
         self.ssdeep = out
 
+    def find_config(self, dir: str = "."):
+        """
+        Looks for the toml config file starting in the current directory the tool is run from
+        """
+        for dirpath, _, filenames in os.walk(dir):
+            for file in filenames:
+                if file.endswith(".toml") and not file.startswith("pyproject"):
+                    return os.path.join(dirpath, file)
+        return None
+
+    def set_windows_metadata(self, file: str) -> None:
+        """Finds the metadata from surfactant"""
+        from surfactant.infoextractors.pe_file import extract_pe_info
+
+        self.metadata = extract_pe_info(file)
+
     def _safe_serialize(self, obj) -> str:
         """
         Certs are byte objects, not json.
         This function gives a default value to unserializable data.
-        :param obj: object to serialize
-        :returns: json encoded string where the non-serializable bits are
-            a string saying not serializable
+        Returns json encoded string where the non-serializable bits are
+        a string saying not serializable.
+
+        Parameters:
+        -----------
+            obj : dict
+                Object to serialize.
 
         """
 
@@ -238,7 +293,11 @@ class Observe:
     def write_json(self, outdir: str = ".") -> None:
         """
         Writes observation to json file.
-        :param outdir: output directory prefix. Defaults to local directory.
+
+        Parameters:
+        -----------
+            outdir : str
+                Output directory prefix. Defaults to local directory.
         """
         os.makedirs(outdir, exist_ok=True)
         vs = vars(self)
@@ -248,6 +307,7 @@ class Observe:
                 with open(f"{os.path.join(outdir, 'certs', c)}.crt", "wb") as cert_out:
                     cert_out.write(b)
         outfile = f"{os.path.join(outdir, self.filename)}.{self.md5}.json"
+        vs = {k: v for k, v in vs.items() if k != "certs"}
         with open(outfile, "w") as f:
             f.write(self._safe_serialize(vs))
 
