@@ -90,7 +90,8 @@
           "digest_algorithm": { "type": "string" },
           "verification": { "type": "boolean" },
           "sha1": { "type": "string" }
-        }
+        },
+        "required": ["signers", "digest_algorithm"]
       }
     }
   },
