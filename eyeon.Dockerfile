@@ -9,6 +9,7 @@ RUN apt update \
     && useradd -ms /bin/bash $OUN -u $USER_ID -g $USER_ID \
     && pip3 install build sphinx pre-commit black
 
+
 RUN echo "alias build='python3 -m build'" >> /home/$OUN/.bashrc \
     && echo "alias clean='rm -rf /workdir/dist'" >> /home/$OUN/.bashrc \
     && echo "alias rein='build && pip uninstall -y eyeon && pip install /workdir/dist/eyeon*.whl'" >> /home/$OUN/.bashrc 
