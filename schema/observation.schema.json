@@ -95,6 +95,7 @@
       }
     }
   },
+  "additionalProperties": false,
   "$defs": {
     "certs": {
       "type": "array",

@@ -58,7 +58,7 @@ class ObservationTestCase(unittest.TestCase):
     def testConfigJson(self) -> None:
         vs = vars(self.OBS)
         obs_json = json.loads(self.OBS._safe_serialize(vs))
-        assert 'defaults' in obs_json, "defaults not in json"
+        assert "defaults" in obs_json, "defaults not in json"
 
 
 class ObservationTestCase2(unittest.TestCase):
@@ -110,6 +110,96 @@ class ObservationTestCase2(unittest.TestCase):
             meta = json.loads(schem.read())
 
         print(jsonschema.validate(instance=schema, schema=meta))
+
+
+with open("../schema/observation.schema.json") as schem:
+    schema = json.loads(schem.read())
+
+
+class ObservationTestCase3(unittest.TestCase):
+    def test_json_valid_required_properties(self) -> None:
+        valid_data = {
+            "filename": "Obsidian.1.1.9.exe",
+            "bytecount": 72690816,
+            "magic": "PE32 executable (GUI) Intel 80386, for MS Windows, Nullsoft Installer self-extracting archive",  # noqa: E501
+            "md5": "52880858a43613dc8b2011f7f1c84ec8",
+            "observation_ts": "2024-04-15 18:47:21",
+            "sha1": "3c45505db042068f22caee4fbb5fef0a102100bb",
+            "sha256": "8759af1eb38bd975c52dcf31f4ce185b3adcef0baf1a4677b51065ea9eb1e7d4",
+        }
+        assert jsonschema.validate(instance=valid_data, schema=schema) is None
+
+    def test_json_invalid_required_properties(self) -> None:
+        valid_data = {
+            "wangmo": "sd",
+            "filename": "Obsidian.1.1.9.exe",
+            "bytecount": 72690816,
+            "magic": "PE32 executable (GUI) Intel 80386, for MS Windows, Nullsoft Installer self-extracting archive",  # noqa: E501
+            "md5": "52880858a43613dc8b2011f7f1c84ec8",
+            "observation_ts": "2024-04-15 18:47:21",
+            "sha1": "3c45505db042068f22caee4fbb5fef0a102100bb",
+            "sha256": "8759af1eb38bd975c52dcf31f4ce185b3adcef0baf1a4677b51065ea9eb1e7d4",
+        }
+        assert jsonschema.validate(instance=valid_data, schema=schema) is None
+
+    def test_type_mismatch(self) -> None:
+        invalid_type_data = {
+            "filename": 37,
+            "bytecount": 72690816,
+            "magic": "PE32 executable (GUI) Intel 80386, for MS Windows, Nullsoft Installer self-extracting archive",  # noqa: E501
+            "md5": "52880858a43613dc8b2011f7f1c84ec8",
+            "observation_ts": "2024-04-15 18:47:21",
+            "sha1": "3c45505db042068f22caee4fbb5fef0a102100bb",
+            "sha256": "8759af1eb38bd975c52dcf31f4ce185b3adcef0baf1a4677b51065ea9eb1e7d4",
+        }
+        assert jsonschema.validate(instance=invalid_type_data, schema=schema) is None
+
+    def test_missing_required_fields(self) -> None:
+        missing_data = {
+            "filename": 37,
+            "bytecount": 72690816,
+            "md5": "52880858a43613dc8b2011f7f1c84ec8",
+            "observation_ts": "2024-04-15 18:47:21",
+            "sha1": "3c45505db042068f22caee4fbb5fef0a102100bb",
+            "sha256": "8759af1eb38bd975c52dcf31f4ce185b3adcef0baf1a4677b51065ea9eb1e7d4",
+        }
+        assert jsonschema.validate(instance=missing_data, schema=schema) is None
+
+    def test_additional_properties(self) -> None:
+        additional_data = {
+            "deleteMe": "string",
+            "filename": "Obsidian.1.1.9.exe",
+            "bytecount": 72690816,
+            "magic": "PE32 executable (GUI) Intel 80386, for MS Windows, Nullsoft Installer self-extracting archive",  # noqa: E501
+            "md5": "52880858a43613dc8b2011f7f1c84ec8",
+            "observation_ts": "2024-04-15 18:47:21",
+            "sha1": "3c45505db042068f22caee4fbb5fef0a102100bb",
+            "sha256": "8759af1eb38bd975c52dcf31f4ce185b3adcef0baf1a4677b51065ea9eb1e7d4",
+        }
+        assert jsonschema.validate(instance=additional_data, schema=schema) is None
+
+
+# class TestFilePermissions(unittest.TestCase):
+#     def test_read_file_as_owner(self):
+#         # Assuming you're the owner of the file
+#         with open("Obsidian.1.1.9.exe", "rb") as file:
+#             content = file.read()
+#             self.assertIsNotNone(content)
+
+#     def test_read_file_as_other_user(self):
+#         # need to change to different user
+#         with self.assertRaises(PermissionError):
+#             with open("Obsidian.1.1.9.exe", "rb") as file:
+#                 content = file.read()
+
+#     def test_read_file_as_root(self):
+#         # Simulate reading the file as root
+#         if os.geteuid() == 0:  # Check if running as root
+#             with open("Obsidian.1.1.9.exe", "rb") as file:
+#                 content = file.read()
+#                 self.assertIsNotNone(content)
+#         else:
+#             self.skipTest("Test requires root privileges.")
 
 
 if __name__ == "__main__":
