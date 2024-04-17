@@ -9,6 +9,7 @@ import json
 from eyeon import observe
 
 import jsonschema
+import lief
 
 
 class ObservationTestCase(unittest.TestCase):
@@ -179,27 +180,71 @@ class ObservationTestCase3(unittest.TestCase):
         assert jsonschema.validate(instance=additional_data, schema=schema) is None
 
 
-# class TestFilePermissions(unittest.TestCase):
-#     def test_read_file_as_owner(self):
-#         # Assuming you're the owner of the file
-#         with open("Obsidian.1.1.9.exe", "rb") as file:
-#             content = file.read()
-#             self.assertIsNotNone(content)
+class TestFilePermissions(unittest.TestCase):
+    def test_read_file_as_owner(self):
+        # Do I need to test as owner?
 
-#     def test_read_file_as_other_user(self):
-#         # need to change to different user
-#         with self.assertRaises(PermissionError):
-#             with open("Obsidian.1.1.9.exe", "rb") as file:
-#                 content = file.read()
+        os.chmod("Obsidian.1.1.9.exe", 0o400)
+        with open("Obsidian.1.1.9.exe", "rb") as file:
+            content = file.read()
+            self.assertIsNotNone(content)
 
-#     def test_read_file_as_root(self):
-#         # Simulate reading the file as root
-#         if os.geteuid() == 0:  # Check if running as root
-#             with open("Obsidian.1.1.9.exe", "rb") as file:
-#                 content = file.read()
-#                 self.assertIsNotNone(content)
-#         else:
-#             self.skipTest("Test requires root privileges.")
+    # def test_read_file_as_owner(self):
+    #     # Current file permissions are 755, need to change to 0o400
+    #     os.chmod("Obsidian.1.1.9.exe", 0o040)  # Sets read-only permission for owner
+
+    #     # Test whether PermissionError is raised
+    #     with self.assertRaises(PermissionError):
+    #         with open("Obsidian.1.1.9.exe", "rb") as file:
+    #             content = file.read()
+
+    # def test_read_file_as_group(self):
+    #     # Change to different user
+    #     os.chmod("Obsidian.1.1.9.exe", 0o040)
+    #     with self.assertRaises(PermissionError):
+    #         with open("Obsidian.1.1.9.exe", "rb") as file:
+    #             content = file.read()
+
+    # def test_read_file_as_other_user(self):
+    #     # need to change to different user and set permissions to 0o004
+    #     os.chmod("Obsidian.1.1.9.exe", 0o004)
+    #     with self.assertRaises(PermissionError):
+    #         with open("Obsidian.1.1.9.exe", "rb") as file:
+    #             content = file.read()
+
+    def test_read_file_as_root(self):
+        # Change to root, currently not root
+
+        if os.geteuid() == 0:  # Check if running as root
+            with open("Obsidian.1.1.9.exe", "rb") as file:
+                content = file.read()
+                self.assertIsNotNone(content)
+        else:
+            self.skipTest("Test requires root privileges.")
+
+    # Change file permissions back to 0o400
+
+
+class ModifyMetadata(unittest.TestCase):
+    def setUp(self) -> None:
+        self.binary_path = "Obsidian.1.1.9.exe"
+        self.binary = lief.PE.parse(self.binary_path)
+
+        # Save original value of peMachine--should be I386
+        self.orig_peMachine = self.binary.header.machine
+
+    def test_modify_metadata(self) -> None:
+        pe_header = self.binary.header
+
+        # Modify peMachine to AMD64
+        pe_header.machine = lief.PE.MACHINE.AMD64
+
+        # Verify that the peMachine property has been changed
+        self.assertEqual(pe_header.machine, lief.PE.MACHINE.AMD64)
+
+    def tearDown(self):
+        # Revert the changes back to the original value
+        self.binary.header.machine = self.original_pe_machine
 
 
 if __name__ == "__main__":
