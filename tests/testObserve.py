@@ -225,26 +225,30 @@ class TestFilePermissions(unittest.TestCase):
     # Change file permissions back to 0o400
 
 
-class ModifyMetadata(unittest.TestCase):
+class TestSignatureValidity(unittest.TestCase):
     def setUp(self) -> None:
         self.binary_path = "Obsidian.1.1.9.exe"
         self.binary = lief.PE.parse(self.binary_path)
 
-        # Save original value of peMachine--should be I386
-        self.orig_peMachine = self.binary.header.machine
+        # Save original value of modtime
+        self.orig_modtime = os.path.getmtime(self.binary_path)
 
-    def test_modify_metadata(self) -> None:
-        pe_header = self.binary.header
+    def test_modify_modtime(self) -> None:
+        # Add 1800 seconds to old modtime
+        new_modtime = self.orig_modtime + 1800
+        os.utime(self.binary_path, (new_modtime, new_modtime))
 
-        # Modify peMachine to AMD64
-        pe_header.machine = lief.PE.MACHINE.AMD64
+        # Verify modtime has been changed
+        modified_modtime = os.path.getmtime(self.binary_path)
+        self.assertNotEqual(self.orig_modtime, modified_modtime)
 
-        # Verify that the peMachine property has been changed
-        self.assertEqual(pe_header.machine, lief.PE.MACHINE.AMD64)
+        # Verify digital signature
+        is_valid = lief.PE.verify_signature(self.binary)
+        self.assertTrue(is_valid, "Digital signature is valid.")
 
     def tearDown(self):
         # Revert the changes back to the original value
-        self.binary.header.machine = self.original_pe_machine
+        os.utime(self.binary_path, (self.orig_modtime, self.orig_modtime))
 
 
 if __name__ == "__main__":
