@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name="eyeon"
-version="0.2"
+version="1.0"
 description="EyeON update tracking utility"
 requires-python=">=3.9"
 # author="LLNL"
@@ -15,7 +15,7 @@ dependencies=[
     "pefile == 2023.2.7",
     # "unblob == 23.8.11",
     "telfhash == 0.9.8",
-    "surfactant == 0.0.0rc0"
+    "surfactant == 0.0.0rc4"
 ]
 
 [project.scripts]
