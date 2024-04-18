@@ -228,7 +228,7 @@ class TestFilePermissions(unittest.TestCase):
 class TestSignatureValidity(unittest.TestCase):
     def setUp(self) -> None:
         self.binary_path = "Obsidian.1.1.9.exe"
-        self.binary = lief.PE.parse(self.binary_path)
+        self.binary = lief.parse(self.binary_path)
 
         # Save original value of modtime
         self.orig_modtime = os.path.getmtime(self.binary_path)
@@ -236,6 +236,8 @@ class TestSignatureValidity(unittest.TestCase):
     def test_modify_modtime(self) -> None:
         # Add 1800 seconds to old modtime
         new_modtime = self.orig_modtime + 1800
+
+        # Modify the metadata of Obsidian
         os.utime(self.binary_path, (new_modtime, new_modtime))
 
         # Verify modtime has been changed
