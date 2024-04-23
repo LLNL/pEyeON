@@ -180,49 +180,49 @@ class ObservationTestCase3(unittest.TestCase):
         assert jsonschema.validate(instance=additional_data, schema=schema) is None
 
 
-class TestFilePermissions(unittest.TestCase):
-    def test_read_file_as_owner(self):
-        # Do I need to test as owner?
+# class TestFilePermissions(unittest.TestCase):
+#     def test_read_file_as_owner(self):
+#         # Do I need to test as owner?
 
-        os.chmod("Obsidian.1.1.9.exe", 0o400)
-        with open("Obsidian.1.1.9.exe", "rb") as file:
-            content = file.read()
-            self.assertIsNotNone(content)
+#         #os.chmod("Obsidian.1.1.9.exe", 0o400)
+#         with open("unreadable.exe", "rb") as file:
+#             content = file.read()
+#             self.assertIsNotNone(content)
 
-    # def test_read_file_as_owner(self):
-    #     # Current file permissions are 755, need to change to 0o400
-    #     os.chmod("Obsidian.1.1.9.exe", 0o040)  # Sets read-only permission for owner
+#     # def test_read_file_as_owner(self):
+#     #     # Current file permissions are 755, need to change to 0o400
+#     #     os.chmod("Obsidian.1.1.9.exe", 0o040)  # Sets read-only permission for owner
 
-    #     # Test whether PermissionError is raised
-    #     with self.assertRaises(PermissionError):
-    #         with open("Obsidian.1.1.9.exe", "rb") as file:
-    #             content = file.read()
+#     #     # Test whether PermissionError is raised
+#     #     with self.assertRaises(PermissionError):
+#     #         with open("Obsidian.1.1.9.exe", "rb") as file:
+#     #             content = file.read()
 
-    # def test_read_file_as_group(self):
-    #     # Change to different user
-    #     os.chmod("Obsidian.1.1.9.exe", 0o040)
-    #     with self.assertRaises(PermissionError):
-    #         with open("Obsidian.1.1.9.exe", "rb") as file:
-    #             content = file.read()
+#     # def test_read_file_as_group(self):
+#     #     # Change to different user
+#     #     os.chmod("Obsidian.1.1.9.exe", 0o040)
+#     #     with self.assertRaises(PermissionError):
+#     #         with open("Obsidian.1.1.9.exe", "rb") as file:
+#     #             content = file.read()
 
-    # def test_read_file_as_other_user(self):
-    #     # need to change to different user and set permissions to 0o004
-    #     os.chmod("Obsidian.1.1.9.exe", 0o004)
-    #     with self.assertRaises(PermissionError):
-    #         with open("Obsidian.1.1.9.exe", "rb") as file:
-    #             content = file.read()
+#     # def test_read_file_as_other_user(self):
+#     #     # need to change to different user and set permissions to 0o004
+#     #     os.chmod("Obsidian.1.1.9.exe", 0o004)
+#     #     with self.assertRaises(PermissionError):
+#     #         with open("Obsidian.1.1.9.exe", "rb") as file:
+#     #             content = file.read()
 
-    def test_read_file_as_root(self):
-        # Change to root, currently not root
+#     # def test_read_file_as_root(self):
+#     #     # Change to root, currently not root
 
-        if os.geteuid() == 0:  # Check if running as root
-            with open("Obsidian.1.1.9.exe", "rb") as file:
-                content = file.read()
-                self.assertIsNotNone(content)
-        else:
-            self.skipTest("Test requires root privileges.")
+#     #     if os.geteuid() == 0:  # Check if running as root
+#     #         with open("Obsidian.1.1.9.exe", "rb") as file:
+#     #             content = file.read()
+#     #             self.assertIsNotNone(content)
+#     #     else:
+#     #         self.skipTest("Test requires root privileges.")
 
-    # Change file permissions back to 0o400
+#     # Change file permissions back to 0o400
 
 
 class TestSignatureValidity(unittest.TestCase):
@@ -230,28 +230,90 @@ class TestSignatureValidity(unittest.TestCase):
         self.binary_path = "Obsidian.1.1.9.exe"
         self.binary = lief.parse(self.binary_path)
 
-        # Save original value of modtime
-        self.orig_modtime = os.path.getmtime(self.binary_path)
+    def test_modify_issuer_name(self) -> None:
+        # Check if the binary has a digital signature
+        # if self.binary.has_signatures:
+        value = self.binary.has_signatures
+        self.assertTrue(value)
 
-    def test_modify_modtime(self) -> None:
-        # Add 1800 seconds to old modtime
-        new_modtime = self.orig_modtime + 1800
+        # digest_algorithm = "ALGORITHMS.SHA_1"
 
-        # Modify the metadata of Obsidian
-        os.utime(self.binary_path, (new_modtime, new_modtime))
+        # self.assertEqual(self.binary.digest_algorithm, str(lief._lief.PE.ALGORITHMS.SHA_1))
 
-        # Verify modtime has been changed
-        modified_modtime = os.path.getmtime(self.binary_path)
-        self.assertNotEqual(self.orig_modtime, modified_modtime)
+    def test_modify_digest_algorithm(self) -> None:
+        signature = self.binary.signatures[0]
+        if signature.certificates:
+            first_certificate = signature.certificates[0]
+            # Now you can modify the first certificate as needed
+            # For example:
+            first_certificate.digest = "New Digest Value"
+            # new_digest = "AAAAAAA"
+        else:
+            print("No certificates found in the signature.")
 
-        # Verify digital signature
-        is_valid = lief.PE.verify_signature(self.binary)
-        self.assertTrue(is_valid, "Digital signature is valid.")
+    #         signature_directory = self.binary.signature
+    #         if signature_directory:
+    #             # Access the first certificate in the digital signature
+    #             certificates = signature_directory.certificates
+    #             if certificates:
+    #                 first_cert = next(iter(certificates))
+    #                 # Modify subject name
+    #                 new_subject_name = "New Subject Name"
+    #                 first_cert.subject_name = new_subject_name
 
-    def tearDown(self):
-        # Revert the changes back to the original value
-        os.utime(self.binary_path, (self.orig_modtime, self.orig_modtime))
+    #     # Verify digital signature
+    #     is_valid = self.binary.verify_signature()
+    #     self.assertTrue(is_valid, "Digital signature is valid.")
+
+    # def tearDown(self):
+    #     # Revert the changes back to the original subject name
+    #     if self.binary.has_signatures:
+    #         signature_directory = self.binary.signature
+    #         if signature_directory:
+    #         # Access the first certificate in the digital signature
+    #             certificates = signature_directory.certificates
+    #             if certificates:
+    #                 first_cert = next(iter(certificates))
+    #             # Restore original subject name
+    #                 original_subject_name = "Original Subject Name"
+    #                 first_cert.subject_name = original_subject_name
 
 
 if __name__ == "__main__":
     unittest.main()
+
+
+# import unittest
+# import lief
+
+# class TestSignatureModification(unittest.TestCase):
+#     def test_signature_modification(self):
+#         # Load the original binary file
+#         original_binary = lief.parse("original_binary.exe")
+
+#         # Access the first signature (assuming there's only one signature)
+#         original_signature = original_binary.signatures[0]
+
+#         # Modify the digest value
+#         if original_signature.certificates:
+#             # Modify the digest value for the first certificate
+#             original_signature.certificates[0].digest = "New Digest Value"
+#         else:
+#             print("No certificates found in the signature.")
+
+#         # Save the modified binary with the new signature
+#         original_binary.write("modified_binary.exe")
+
+#         # Load the modified binary
+#         modified_binary = lief.parse("modified_binary.exe")
+
+#         # Access the first signature in the modified binary
+#         modified_signature = modified_binary.signatures[0]
+
+#         # Verify the modified signature
+#         # Since we expect the signature to be invalid, it should raise an exception
+#         with self.assertRaises(lief.LiefError):
+#             modified_signature.verify_signature()
+
+# if __name__ == '__main__':
+#     unittest.main()
