@@ -180,49 +180,10 @@ class ObservationTestCase3(unittest.TestCase):
         assert jsonschema.validate(instance=additional_data, schema=schema) is None
 
 
-# class TestFilePermissions(unittest.TestCase):
-#     def test_read_file_as_owner(self):
-#         # Do I need to test as owner?
-
-#         #os.chmod("Obsidian.1.1.9.exe", 0o400)
-#         with open("unreadable.exe", "rb") as file:
-#             content = file.read()
-#             self.assertIsNotNone(content)
-
-#     # def test_read_file_as_owner(self):
-#     #     # Current file permissions are 755, need to change to 0o400
-#     #     os.chmod("Obsidian.1.1.9.exe", 0o040)  # Sets read-only permission for owner
-
-#     #     # Test whether PermissionError is raised
-#     #     with self.assertRaises(PermissionError):
-#     #         with open("Obsidian.1.1.9.exe", "rb") as file:
-#     #             content = file.read()
-
-#     # def test_read_file_as_group(self):
-#     #     # Change to different user
-#     #     os.chmod("Obsidian.1.1.9.exe", 0o040)
-#     #     with self.assertRaises(PermissionError):
-#     #         with open("Obsidian.1.1.9.exe", "rb") as file:
-#     #             content = file.read()
-
-#     # def test_read_file_as_other_user(self):
-#     #     # need to change to different user and set permissions to 0o004
-#     #     os.chmod("Obsidian.1.1.9.exe", 0o004)
-#     #     with self.assertRaises(PermissionError):
-#     #         with open("Obsidian.1.1.9.exe", "rb") as file:
-#     #             content = file.read()
-
-#     # def test_read_file_as_root(self):
-#     #     # Change to root, currently not root
-
-#     #     if os.geteuid() == 0:  # Check if running as root
-#     #         with open("Obsidian.1.1.9.exe", "rb") as file:
-#     #             content = file.read()
-#     #             self.assertIsNotNone(content)
-#     #     else:
-#     #         self.skipTest("Test requires root privileges.")
-
-#     # Change file permissions back to 0o400
+class TestFilePermissions(unittest.TestCase):
+    def test_nonreadble_file(self):
+        # Check to see if permission error is raised
+        self.assertRaises(PermissionError, observe.Observe, "Obsidian.noread.exe")
 
 
 class TestSignatureValidity(unittest.TestCase):
@@ -281,39 +242,3 @@ class TestSignatureValidity(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-
-# import unittest
-# import lief
-
-# class TestSignatureModification(unittest.TestCase):
-#     def test_signature_modification(self):
-#         # Load the original binary file
-#         original_binary = lief.parse("original_binary.exe")
-
-#         # Access the first signature (assuming there's only one signature)
-#         original_signature = original_binary.signatures[0]
-
-#         # Modify the digest value
-#         if original_signature.certificates:
-#             # Modify the digest value for the first certificate
-#             original_signature.certificates[0].digest = "New Digest Value"
-#         else:
-#             print("No certificates found in the signature.")
-
-#         # Save the modified binary with the new signature
-#         original_binary.write("modified_binary.exe")
-
-#         # Load the modified binary
-#         modified_binary = lief.parse("modified_binary.exe")
-
-#         # Access the first signature in the modified binary
-#         modified_signature = modified_binary.signatures[0]
-
-#         # Verify the modified signature
-#         # Since we expect the signature to be invalid, it should raise an exception
-#         with self.assertRaises(lief.LiefError):
-#             modified_signature.verify_signature()
-
-# if __name__ == '__main__':
-#     unittest.main()
