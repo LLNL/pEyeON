@@ -13,6 +13,7 @@ import subprocess
 import eyeon.config
 import re
 from pathlib import Path
+from uuid import uuid4
 
 import lief
 import logging
@@ -94,6 +95,7 @@ class Observe:
             logging.getLogger().handlers.clear()  # remove console log
             log.addHandler(fh)
         logging.getLogger().setLevel(log_level)
+        self.uuid = str(uuid4())
         stat = os.stat(file)
         self.bytecount = stat.st_size
         self.filename = os.path.basename(file)  # TODO: split into absolute path maybe?
