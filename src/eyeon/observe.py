@@ -110,9 +110,9 @@ class Observe:
         else:
             self.imphash = "N/A"
         self.set_magic(file)
-        self.modtime = datetime.datetime.utcfromtimestamp(stat.st_mtime).strftime(
-            "%Y-%m-%d %H:%M:%S"
-        )
+        self.modtime = datetime.datetime.fromtimestamp(
+            stat.st_mtime, tz=datetime.timezone.utc
+        ).strftime("%Y-%m-%d %H:%M:%S")
         self.observation_ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.permissions = oct(stat.st_mode)
 
@@ -120,14 +120,12 @@ class Observe:
         self.sha1 = Observe.create_hash(file, "sha1")
         self.sha256 = Observe.create_hash(file, "sha256")
         self.set_ssdeep(file)
-
         configfile = self.find_config()
         if configfile:
             self.defaults = eyeon.config.ConfigRead(configfile)
         else:
             log.info("toml config not found")
             self.defaults = {}
-
         log.debug("end of init")
 
     @staticmethod
