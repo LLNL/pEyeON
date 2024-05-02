@@ -14,29 +14,29 @@ import jsonschema
 class ObservationTestCase(unittest.TestCase):
     @classmethod
     def setUp(self) -> None:
-        self.OBS = observe.Observe("./Obsidian.1.1.9.exe")
+        self.OBS = observe.Observe("./notepad++/notepad++/notepad++.exe")
 
     def testVarsExe(self) -> None:
-        self.assertEqual(self.OBS.bytecount, 72690816)
-        self.assertEqual(self.OBS.filename, "Obsidian.1.1.9.exe")
-        self.assertEqual(self.OBS.md5, "52880858a43613dc8b2011f7f1c84ec8")
-        self.assertEqual(self.OBS.sha1, "3c45505db042068f22caee4fbb5fef0a102100bb")
+        self.assertEqual(self.OBS.bytecount, 6390616)
+        self.assertEqual(self.OBS.filename, "notepad++.exe")
+        self.assertEqual(self.OBS.md5, "0ec33611cb6594903ff88d47c78dcdab")
+        self.assertEqual(self.OBS.sha1, "28a2a37cf2e9550a699b138dddba4b8067c8e1b1")
         self.assertEqual(
-            self.OBS.sha256, "8759af1eb38bd975c52dcf31f4ce185b3adcef0baf1a4677b51065ea9eb1e7d4"
+            self.OBS.sha256, "ccb4ff6b20689d948233807a67d9de9666229625aa6682466ef01917b01ccd3b"
         )
         try:
             dt.datetime.strptime(self.OBS.modtime, "%Y-%m-%d %H:%M:%S")
         except ValueError:
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
-        self.assertEqual(self.OBS.permissions, "0o100755")
+        self.assertEqual(self.OBS.permissions, "0o100644")
         self.assertEqual(
             self.OBS.magic,
-            "PE32 executable (GUI) Intel 80386, for MS Windows, Nullsoft Installer self-extracting archive",  # noqa: E501
+            "PE32 executable (GUI) Intel 80386, for MS Windows",  # noqa: E501
         )
         self.assertEqual(
             self.OBS.ssdeep,
-            "1572864:ZVBOHCnuy3zotWQbHr3DRYt3bVTBmoURPljZKT8RnmY:TnDPQjvytRQouimh",  # noqa: E501
+            "98304:kq6vzyzgvZe2fwa5T3CWxeKNn5pRD4RnzY/moFJ:V6vzhUfa5fnws5",  # noqa: E501
         )
 
     def testWriteJson(self) -> None:
@@ -58,7 +58,7 @@ class ObservationTestCase(unittest.TestCase):
     def testConfigJson(self) -> None:
         vs = vars(self.OBS)
         obs_json = json.loads(self.OBS._safe_serialize(vs))
-        assert 'defaults' in obs_json, "defaults not in json"
+        assert "defaults" in obs_json, "defaults not in json"
 
 
 class ObservationTestCase2(unittest.TestCase):
