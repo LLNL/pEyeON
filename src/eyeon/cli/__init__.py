@@ -7,7 +7,7 @@ import argparse
 
 import eyeon.observe
 import eyeon.parse
-import eyeon.config
+import eyeon.checksum
 import logging
 
 
@@ -62,6 +62,14 @@ class CommandLine:
         )
         parse_parser.set_defaults(func=self.parse)
 
+
+        # Create parser for checksum command
+        parse_parser = subparsers.add_parser("checksum", help="checksum help")
+        parse_parser.add_argument("file", help="file you want to checksum")
+        parse_parser.add_argument("cksum", help="expected md5 checksum of file")
+        parse_parser.set_defaults(func=self.checksum)
+
+
         # new
         if testargs:
             self.args = parser.parse_args(testargs)
@@ -90,6 +98,13 @@ class CommandLine:
 
         p = eyeon.parse.Parse(args.dir, args.log_level, args.log_file)
         p(result_path=args.output_dir, threads=args.threads)
+
+
+    def checksum(self, args) -> None:
+        "verify checksum against provided value"
+
+        c=eyeon.checksum.Checksum(args.file, "md5", args.cksum)
+
 
 
 def main():
