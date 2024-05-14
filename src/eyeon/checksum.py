@@ -11,5 +11,5 @@ def Checksum(file:str, hash:str, expected_checksum:str):
     if fileHash == expected_checksum:
         print("Checksum verification pass")
     else:
-        print("Checksum verification fail, double check the expected md5 checksum provided. Otherwise file may have been modified")
+        print("Checksum verification fail, double check the expected checksum provided. Otherwise file may have been modified")
 
