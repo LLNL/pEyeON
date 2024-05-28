@@ -1,0 +1,176 @@
+{
+    "$id": "observation.schema.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "EyeON Observation",
+    "type": "object",
+    "required": ["bytecount", "filename", "magic", "md5", "observation_ts", "sha1", "sha256"],
+    "properties": {
+      "bytecount": {
+        "type":"integer",
+        "description": "Size of file in bytes"
+      },
+      "compiler": {
+        "type": "string",
+        "description": "Compiler Identifier"
+      },
+      "filename": {
+        "type": "string",
+        "description": "Basename of file"
+      },
+      "hosts": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "List of hosts file will target"
+      },
+      "imphash": {
+        "type": "string",
+        "description": "Import Hash calculated via pefile"
+      },
+      "magic": {
+        "type": "string",
+        "description": "`file` Magic output for given file"
+      },
+      "md5": {
+        "type": "string",
+        "description": "MD5 of file"
+      },
+      "observation_ts": {
+        "type": "string",
+        "description": "Date and time file was scanned"
+      },
+      "parent": {
+        "type": "string",
+        "description": "Some yet-to-be-determined pointer to a parent file or something"
+      },
+      "sha1": {
+        "type": "string",
+        "description": "Sha1 of file"
+      },
+      "sha256": {
+        "type": "string",
+        "description": "Sha256 of file"
+      },
+      "target_os": {
+        "type": "string",
+        "description": "Operating system of target machine"
+      },
+      "ssdeep": {
+        "type": "string",
+        "description": "Ssdeep of file"
+      },
+      "modtime": {
+        "type": "string",
+        "description": "Last modified date"
+      },
+      "permissions": {
+        "type": "string",
+        "description": "Permissions of file"
+      },
+      "authentihash": {
+        "type": "string",
+        "description": "Authentihash of signatures"
+      },
+      "metadata": {
+        "$ref": "#/$defs/metadata"
+      },
+      "defaults": {
+        "$ref": "#/$defs/defaults"
+      },
+      "signatures": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "certs": {
+              "$ref": "#/$defs/certs"
+            },
+            "signers": { "type": "string" },
+            "digest_algorithm": { "type": "string" },
+            "verification": { "type": "boolean" },
+            "sha1": { "type": "string" }
+          },
+          "required": ["signers", "digest_algorithm"]
+        }
+      }
+    },
+    "additionalProperties": false,
+    "$defs": {
+      "certs": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+        "sha256": { "type": "string" }, 
+            "cert._version": { "type": "string" },
+            "serial_number": { "type": "string" },
+            "issuer_name": { "type": "string" },
+            "subject_name": { "type": "string" },
+            "issued_on": { "type": "string"},
+            "expires_on": { "type": "string"},
+            "signed_using": { "type": "string" },
+            "RSA_key_size": { "type": "string" },
+            "basic_constraints": { "type": "string" },
+            "key_usage": { "type": "string" },
+            "ext_key_usage": { "type": "string" },
+            "certificate_policies": { "type": "string" }
+         }
+       }
+      },
+      "metadata": {
+        "type": "object",
+        "properties": {
+          "OS": { "type": "string" },
+          "peMachine": { "type": "string" },
+          "peOperatingSystemVersion": { "type": "string" },
+          "peSubsystemVersion": { "type": "string" },
+          "peSubsystem": { "type": "string" },
+          "peLinkerVersion": { "type": "string" },
+          "peImport": { "type": "array",
+              "items": { "type": "string" }
+          },
+          "peIsExe": { "type": "boolean" }, 
+          "peIsDll": { "type": "boolean" }, 
+          "peIsClr": { "type": "boolean" }, 
+          "FileInfo": { 
+            "type": "object",
+            "properties": {
+              "CompanyName": { "type": "string" },
+              "FileDescription": { "type": "string" },
+              "FileVersion": { "type": "string" },
+              "LegalCopyright": { "type": "string" },
+              "ProductName": { "type": "string" },
+              "ProductVersion": { "type": "string" }
+            } 
+          }, 
+          "dllRedirectionLocal": { "type": "boolean" }
+        }
+  
+      },
+      "defaults": {
+        "type": "object",
+        "properties": {
+          "default_filename": { "type": "string" },
+          "manufacturer_org": { "type": "string" },
+          "location": {
+            "type": "object",
+            "properties": {
+              "location": { "type": "string" },
+              "filelocation": { "type": "string" }
+            }
+          },
+          "machines": {
+            "type": "object",
+            "properties": {
+              "machines": { "type": "string" },
+              "os": { "type": "string" },
+              "version": { "type": "string" },
+              "x-version": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+  

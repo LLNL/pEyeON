@@ -112,5 +112,76 @@ class ObservationTestCase2(unittest.TestCase):
         print(jsonschema.validate(instance=schema, schema=meta))
 
 
+with open("../schema/observation.schema.json") as schem:
+    schema = json.loads(schem.read())
+
+
+class ObservationTestCase3(unittest.TestCase):
+    def test_json_valid_required_properties(self) -> None:
+        valid_data = {
+            "filename": "notepad++.exe",
+            "bytecount": 6390616,
+            "magic": "PE32 executable (GUI) Intel 80386, for MS Windows, 5 sections",  # noqa: E501
+            "md5": "0ec33611cb6594903ff88d47c78dcdab",
+            "observation_ts": "2024-05-28 15:55:15",
+            "sha1": "28a2a37cf2e9550a699b138dddba4b8067c8e1b1",
+            "sha256": "ccb4ff6b20689d948233807a67d9de9666229625aa6682466ef01917b01ccd3b",
+            "uuid": "a7b5ecd6-676a-40f1-bba6-8a3654007c1f",
+        }
+        assert jsonschema.validate(instance=valid_data, schema=schema) is None
+
+    def test_json_invalid_required_properties(self) -> None:
+        valid_data = {
+            "invalid": "invalid",
+            "filename": "notepad++.exe",
+            "bytecount": 6390616,
+            "magic": "PE32 executable (GUI) Intel 80386, for MS Windows, 5 sections",  # noqa: E501
+            "md5": "0ec33611cb6594903ff88d47c78dcdab",
+            "observation_ts": "2024-05-28 15:55:15",
+            "sha1": "28a2a37cf2e9550a699b138dddba4b8067c8e1b1",
+            "sha256": "ccb4ff6b20689d948233807a67d9de9666229625aa6682466ef01917b01ccd3b",
+            "uuid": "a7b5ecd6-676a-40f1-bba6-8a3654007c1f",
+        }
+        assert jsonschema.validate(instance=valid_data, schema=schema) is None
+
+    def test_type_mismatch(self) -> None:
+        invalid_type_data = {
+            "filename": 37,
+            "bytecount": 6390616,
+            "magic": "PE32 executable (GUI) Intel 80386, for MS Windows, 5 sections",  # noqa: E501
+            "md5": "0ec33611cb6594903ff88d47c78dcdab",
+            "observation_ts": "2024-05-28 15:55:15",
+            "sha1": "28a2a37cf2e9550a699b138dddba4b8067c8e1b1",
+            "sha256": "ccb4ff6b20689d948233807a67d9de9666229625aa6682466ef01917b01ccd3b",
+            "uuid": "a7b5ecd6-676a-40f1-bba6-8a3654007c1f",
+        }
+        assert jsonschema.validate(instance=invalid_type_data, schema=schema) is None
+
+    def test_missing_required_fields(self) -> None:
+        missing_data = {
+            "filename": 37,
+            "bytecount": 6390616,
+            "md5": "0ec33611cb6594903ff88d47c78dcdab",
+            "observation_ts": "2024-05-28 15:55:15",
+            "sha1": "28a2a37cf2e9550a699b138dddba4b8067c8e1b1",
+            "sha256": "ccb4ff6b20689d948233807a67d9de9666229625aa6682466ef01917b01ccd3b",
+        }
+        assert jsonschema.validate(instance=missing_data, schema=schema) is None
+
+    def test_additional_properties(self) -> None:
+        additional_data = {
+            "deleteMe": "string",
+            "filename": "notepad++.exe",
+            "bytecount": 72690816,
+            "magic": "PE32 executable (GUI) Intel 80386, for MS Windows, 5 sections",  # noqa: E501
+            "md5": "0ec33611cb6594903ff88d47c78dcdab",
+            "observation_ts": "2024-05-28 15:55:15",
+            "sha1": "28a2a37cf2e9550a699b138dddba4b8067c8e1b1",
+            "sha256": "ccb4ff6b20689d948233807a67d9de9666229625aa6682466ef01917b01ccd3b",
+            "uuid": "a7b5ecd6-676a-40f1-bba6-8a3654007c1f",
+        }
+        assert jsonschema.validate(instance=additional_data, schema=schema) is None
+
+
 if __name__ == "__main__":
     unittest.main()
