@@ -55,7 +55,7 @@ unittest:
     reports:
       coverage_report:
         coverage_format: cobertura
-        path: tests/coverage.xml
+        path: coverage.xml
 
 # sbom:  # put in artifacts instead
 #   stage: sbom
