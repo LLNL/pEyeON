@@ -24,7 +24,7 @@ RUN cd /opt && git clone https://github.com/trendmicro/tlsh.git \
     && cd /opt/tlsh \
     && ./make.sh
 
-RUN pip3 install telfhash coverage
+RUN pip3 install telfhash
 
 USER $OUN
 

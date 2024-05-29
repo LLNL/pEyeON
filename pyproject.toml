@@ -15,7 +15,8 @@ dependencies=[
     "pefile == 2023.2.7",
     # "unblob == 23.8.11",
     "telfhash == 0.9.8",
-    "surfactant == 0.0.0rc5"
+    "surfactant == 0.0.0rc5",
+    "coverage >= 7.5.3"
 ]
 
 [project.scripts]
@@ -28,3 +29,12 @@ eyeon="eyeon.cli:main"
 where = ["src"]
 # find = {}
 # packages = ["eyeon", "eyeon.cli", "eyeon.observe", "eyeon.parse"]
+
+[tool.coverage.run]
+omit = [
+    # omit anything in a .local directory anywhere
+    "*/.local/*",
+    # omit everything in /usr
+    "/usr/*",
+]
+
