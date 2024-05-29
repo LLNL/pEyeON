@@ -142,7 +142,8 @@ class ObservationTestCase3(unittest.TestCase):
             "sha256": "ccb4ff6b20689d948233807a67d9de9666229625aa6682466ef01917b01ccd3b",
             "uuid": "a7b5ecd6-676a-40f1-bba6-8a3654007c1f",
         }
-        assert jsonschema.validate(instance=valid_data, schema=schema) is None
+        with self.assertRaises(jsonschema.exceptions.ValidationError):
+            assert jsonschema.validate(instance=valid_data, schema=schema) is None
 
     def test_type_mismatch(self) -> None:
         invalid_type_data = {
@@ -155,7 +156,8 @@ class ObservationTestCase3(unittest.TestCase):
             "sha256": "ccb4ff6b20689d948233807a67d9de9666229625aa6682466ef01917b01ccd3b",
             "uuid": "a7b5ecd6-676a-40f1-bba6-8a3654007c1f",
         }
-        assert jsonschema.validate(instance=invalid_type_data, schema=schema) is None
+        with self.assertRaises(jsonschema.exceptions.ValidationError):
+            assert jsonschema.validate(instance=invalid_type_data, schema=schema) is None
 
     def test_missing_required_fields(self) -> None:
         missing_data = {
@@ -166,11 +168,12 @@ class ObservationTestCase3(unittest.TestCase):
             "sha1": "28a2a37cf2e9550a699b138dddba4b8067c8e1b1",
             "sha256": "ccb4ff6b20689d948233807a67d9de9666229625aa6682466ef01917b01ccd3b",
         }
-        assert jsonschema.validate(instance=missing_data, schema=schema) is None
+        with self.assertRaises(jsonschema.exceptions.ValidationError):
+            assert jsonschema.validate(instance=missing_data, schema=schema) is None
 
     def test_additional_properties(self) -> None:
         additional_data = {
-            "deleteMe": "string",
+            "OS_version": "Sonoma",
             "filename": "notepad++.exe",
             "bytecount": 72690816,
             "magic": "PE32 executable (GUI) Intel 80386, for MS Windows, 5 sections",  # noqa: E501
@@ -180,7 +183,8 @@ class ObservationTestCase3(unittest.TestCase):
             "sha256": "ccb4ff6b20689d948233807a67d9de9666229625aa6682466ef01917b01ccd3b",
             "uuid": "a7b5ecd6-676a-40f1-bba6-8a3654007c1f",
         }
-        assert jsonschema.validate(instance=additional_data, schema=schema) is None
+        with self.assertRaises(jsonschema.exceptions.ValidationError):
+            assert jsonschema.validate(instance=additional_data, schema=schema) is None
 
 
 if __name__ == "__main__":
