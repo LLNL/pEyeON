@@ -1,4 +1,4 @@
-FROM ubuntu
+FROM ubuntu:22.04
 
 ARG USER_ID
 ARG OUN
@@ -24,7 +24,7 @@ RUN cd /opt && git clone https://github.com/trendmicro/tlsh.git \
     && cd /opt/tlsh \
     && ./make.sh
 
-RUN pip3 install telfhash
+RUN pip3 install telfhash coverage
 
 USER $OUN
 
