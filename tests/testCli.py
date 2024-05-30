@@ -13,6 +13,10 @@ class CliTestCase(unittest.TestCase):
             f"--output-dir ./outputs --log-file file.log --log-level {logging.DEBUG} parse tests -t 2 ".split()  # noqa: E501
         )
 
+        self.cli3 = CommandLine(
+            "checksum notepad++.exe -a sha1 28a2a37cf2e9550a699b138dddba4b8067c8e1b1".split()
+        )
+
     def testObserveArgs(self) -> None:
         self.assertEqual(self.cli1.args.filename, "demo.ipynb")
         self.assertEqual(self.cli1.args.output_dir, "./outputs")
@@ -28,6 +32,13 @@ class CliTestCase(unittest.TestCase):
         self.assertEqual(self.cli2.args.log_level, logging.DEBUG)
         self.assertEqual(self.cli2.args.threads, 2)
         self.assertEqual(self.cli2.args.func, self.cli2.parse)
+
+    def testChecksumArgs(self):
+        self.assertEqual(self.cli3.args.file, "notepad++.exe")
+        self.assertEqual(self.cli3.args.algorithm, "sha1")
+        self.assertEqual(self.cli3.args.cksum, "28a2a37cf2e9550a699b138dddba4b8067c8e1b1")
+        self.assertEqual(self.cli3.args.func, self.cli3.checksum)
+        
 
 
 if __name__ == "__main__":
