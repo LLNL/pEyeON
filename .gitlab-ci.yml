@@ -47,7 +47,7 @@ unittest:
     - python3 testObserveRemote.py
     - python3 testParse.py
     - python3 testCli.py
-    - coverage run --source eyeon -m unittest discover
+    - coverage run --source eyeon -m unittest testObserveRemote.py testParse.py testCli.py
     - coverage xml
   dependencies:
     - build
