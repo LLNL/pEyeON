@@ -49,6 +49,8 @@ unittest:
     - python3 testCli.py
     - coverage run --source eyeon -m unittest testObserveRemote.py testParse.py testCli.py
     - coverage xml
+    - coverage report --precision=2
+  coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   dependencies:
     - build
   artifacts:
