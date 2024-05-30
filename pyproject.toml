@@ -31,8 +31,5 @@ where = ["src"]
 # packages = ["eyeon", "eyeon.cli", "eyeon.observe", "eyeon.parse"]
 
 [tool.coverage.run]
-omit = [
-    # omit everything in /usr
-    "/usr/*"
-]
+omit =["/usr/*"] # omit code coverage scans for /usr/*
 
