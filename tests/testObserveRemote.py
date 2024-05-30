@@ -19,6 +19,7 @@ class ObservationTestCase(unittest.TestCase):
     def testVarsExe(self) -> None:
         self.assertEqual(self.OBS.bytecount, 6390616)
         self.assertEqual(self.OBS.filename, "notepad++.exe")
+        self.assertEqual(self.OBS.filename, "FAIL++.exe")
         self.assertEqual(self.OBS.md5, "0ec33611cb6594903ff88d47c78dcdab")
         self.assertEqual(self.OBS.sha1, "28a2a37cf2e9550a699b138dddba4b8067c8e1b1")
         self.assertEqual(
