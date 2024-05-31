@@ -187,5 +187,19 @@ class ObservationTestCase3(unittest.TestCase):
             assert jsonschema.validate(instance=additional_data, schema=schema) is None
 
 
+class TestFilePermissions(unittest.TestCase):
+    def test_nonreadable_file(self):
+        # Check to see if permission error is raised
+        self.assertRaises(
+            PermissionError, observe.Observe, "notepad++/notepad++/notepad++_noread.exe"
+        )
+
+
+# class TestDiffArchitecture(unittest.TestCase):
+#     def test_i386_ls(self):
+#         # Check to see if permission error is raised
+#         self.assertRaises(PermissionError, observe.Observe, "ls/i386-ls")
+
+
 if __name__ == "__main__":
     unittest.main()
