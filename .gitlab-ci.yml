@@ -44,11 +44,17 @@ unittest:
     - ls
     - pip install dist/eyeon-*.whl
     - cd tests/
-    - python3 testObserveRemote.py
-    - python3 testParse.py
-    - python3 testCli.py
+    - coverage run --source eyeon -m unittest testObserveRemote.py testParse.py testCli.py
+    - coverage xml
+    - coverage report --precision=2
+  coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   dependencies:
     - build
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: 'tests/coverage.xml'
 
 # sbom:  # put in artifacts instead
 #   stage: sbom
