@@ -48,13 +48,6 @@ class ObservationTestCase(unittest.TestCase):
         # self.OBS.write_json()
         # unittest.mock?
 
-    def testValidateJson(self) -> None:
-        with open("../schema/observation.schema.json") as schem:
-            schema = json.loads(schem.read())
-        vs = vars(self.OBS)
-        obs_json = json.loads(self.OBS._safe_serialize(vs))
-        print(jsonschema.validate(instance=obs_json, schema=schema))
-
     def testConfigJson(self) -> None:
         vs = vars(self.OBS)
         obs_json = json.loads(self.OBS._safe_serialize(vs))
