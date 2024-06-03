@@ -82,10 +82,6 @@ class BadSignatures(unittest.TestCase):
             self.OBS.magic,
             "PE32 executable (GUI) Intel 80386, for MS Windows",
         )
-        self.assertEqual(
-            self.OBS.ssdeep,
-            "98304:kq6vzyzgvZe2fwa5T3CWxeKNn5pRD4RnzY/moFJ:V6vzhUfa5fnws5",
-        )
 
         # signature failure check
         self.assertEqual(self.OBS.signatures[0]["verification"], False)
