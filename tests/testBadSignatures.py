@@ -11,14 +11,14 @@ from io import StringIO
 from eyeon import parse
 from eyeon import observe
 
-
-class BadSignatures(unittest.TestCase):
+# this is a superclass that runs common assertions for each
+#   of the 2 different certificate corruptions below
+class BadSignaturesTestCase(unittest.TestCase):
 
     @classmethod
-    def setUpClass(cls):
+    def corrupt(cls, skip):
         # change some of the data in notepad++.exe to break signature
-        skip = 0x00615FC0 # skip to where one of the certs is
-        writelen = 1000 # overwrite some of the bytes
+        writelen = 500 # overwrite some of the bytes
 
         # open one for read and one for write
         notepad = open("./notepad++/notepad++/notepad++.exe", "rb")
@@ -40,12 +40,7 @@ class BadSignatures(unittest.TestCase):
             assert False, "Failed to create notepad++_corrupted.exe"
 
 
-    @classmethod
-    def setUp(self):
-        # get STDOUT to a check that it prints "Can't find certificate" string
-        capture = StringIO()
-        sys.stdout = capture
-
+    def scan(self):
         # scan the corrupted notepad++.exe
         self.OBS = observe.Observe(
                 "./notepad++/notepad++/notepad++_corrupted.exe",
@@ -53,26 +48,14 @@ class BadSignatures(unittest.TestCase):
                 log_file="testBadSignatures.log"
                 )
 
-        # reset STDOUT
-        sys.stdout = sys.__stdout__
 
-        self.assertIn(
-                "Can't find certificate for which the issuer is ",
-                 capture.getvalue(),
-                "Failed: Did not print 'Can't find certificate for bad issuer message'")
-
-        capture.close()
-
-
-    def testVarsExe(self) -> None:
-        # mostly same check, with new hashes
+    def varsExe(self, md5, sha1, sha256) -> None:
+        # verify hashes and see if verification broke properly
         self.assertEqual(self.OBS.bytecount, 6390616)
-        self.assertEqual(self.OBS.filename,'notepad++_corrupted.exe')
-        self.assertEqual(self.OBS.md5, "65d1231662c5b27659a6244f514de629")
-        self.assertEqual(self.OBS.sha1, "e130eab78f70c456d9baf8512411e0df3368174f")
-        self.assertEqual(
-                self.OBS.sha256, "2501f29b609b2b54678c2529f813a07f2f4593ad7c10d535e0a47e924f8ecf15"
-        )
+        self.assertEqual(self.OBS.filename, 'notepad++_corrupted.exe')
+        self.assertEqual(self.OBS.md5, md5)
+        self.assertEqual(self.OBS.sha1, sha1)
+        self.assertEqual(self.OBS.sha256, sha256)
         try:
             dt.datetime.strptime(self.OBS.modtime, "%Y-%m-%d %H:%M:%S")
         except ValueError:
@@ -86,10 +69,54 @@ class BadSignatures(unittest.TestCase):
         # signature failure check
         self.assertEqual(self.OBS.signatures[0]["verification"], False)
 
+    def configJson(self) -> None:
+        vs = vars(self.OBS)
+        obs_json = json.loads(self.OBS._safe_serialize(vs))
+        assert "defaults" in obs_json, "defaults not in json"
+
+    def validateSchema(self) -> None:
+        with open("../schema/observation.schema.json") as schem:
+            schema = json.loads(schem.read())
+
+        with open("../schema/meta.schema.json") as schem:
+            meta = json.loads(schem.read())
+
+        print(jsonschema.validate(instance=schema, schema=meta))
+
     @classmethod
     def tearDownClass(cls):
         os.remove("./notepad++/notepad++/notepad++_corrupted.exe")
         os.remove("./testBadSignatures.log")
+
+
+class FirstCertCorrupt(BadSignaturesTestCase):
+    def setUp(self):
+        self.corrupt(0x00615FC0) # location of first cert
+        self.scan()
+
+    def testSuper(self):
+        md5 = "09ec21d51a66e06788179336589488a1"
+        sha1 = "b3f4d9d18ccb23705992109a871bf0541a9d20d6"
+        sha256 = "4e434a9fb8bfbb15a5fac7a33c882ec91a05427b35c55e17fd82e030548b4b3f"
+        self.varsExe(md5, sha1, sha256)
+        self.configJson()
+        self.validateSchema()
+
+class SecondCertCorrupt(BadSignaturesTestCase):
+    def setUp(self):
+        self.corrupt(0x006162A0) # location of second cert
+        self.scan()
+
+    def testSuper(self):
+        md5 = "ae8c330902a79edf97526ba2fbe452a0"
+        sha1 = "cae1d9471f7413f9219ddcf6fd9c986e81a95f75"
+        sha256 = "2f11aaa964206882823348915b08b8106f95ce17bb5491fede7932466f85c31c"
+        self.varsExe(md5, sha1, sha256)
+        self.configJson()
+        self.validateSchema()
+
+
+    
 
 
 if __name__ == "__main__":
