@@ -21,19 +21,19 @@ class BadSignaturesTestCase(unittest.TestCase):
         writelen = 500 # overwrite some of the bytes
 
         # open one for read and one for write
-        notepad = open(binpath, "rb")
+        binary = open(binpath, "rb")
         corrupted = open(badbinpath, "wb")
 
         # get the first chunk and write to corrupted file
-        chunk1 = notepad.read(skip)
+        chunk1 = binary.read(skip)
         corrupted.write(chunk1)
         corrupted.write(bytes([0x33] * writelen)) # overwrite some bytes
 
         # write rest of file
-        notepad.seek(skip+writelen)
-        corrupted.write(notepad.read())
+        binary.seek(skip+writelen)
+        corrupted.write(binary.read())
 
-        notepad.close()
+        binary.close()
         corrupted.close()
 
         if not os.path.exists(badbinpath):
@@ -49,9 +49,9 @@ class BadSignaturesTestCase(unittest.TestCase):
                 )
 
 
-    def varsExe(self, md5, sha1, sha256, filename, magic) -> None:
+    def varsExe(self, md5, sha1, sha256, filename, magic, bytecount) -> None:
         # verify hashes and see if verification broke properly
-        self.assertEqual(self.OBS.bytecount, 6390616)
+        self.assertEqual(self.OBS.bytecount, bytecount)
         self.assertEqual(self.OBS.filename, filename)
         self.assertEqual(self.OBS.md5, md5)
         self.assertEqual(self.OBS.sha1, sha1)
@@ -82,11 +82,11 @@ class BadSignaturesTestCase(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        os.remove("./binaries/x86/notepad++/notepad++_corrupted.exe")
         os.remove("./testBadSignatures.log")
 
 
-class FirstCertCorrupt(BadSignaturesTestCase):
+class NotepadFirstCertCorrupt(BadSignaturesTestCase):
+
     def setUp(self):
         # path for reading original, and path for writing exe with broken cert
         self.binpath = "./binaries/x86/notepad++/notepad++.exe"
@@ -101,12 +101,17 @@ class FirstCertCorrupt(BadSignaturesTestCase):
         sha1 = "b3f4d9d18ccb23705992109a871bf0541a9d20d6"
         sha256 = "4e434a9fb8bfbb15a5fac7a33c882ec91a05427b35c55e17fd82e030548b4b3f"
         magic = "PE32 executable (GUI) Intel 80386, for MS Windows"
+        bytecount = 6390616
         filename = self.badbinpath.rsplit('/', maxsplit=1)[-1]
-        self.varsExe(md5, sha1, sha256, filename, magic)
+        self.varsExe(md5, sha1, sha256, filename,  magic, bytecount)
         self.configJson()
         self.validateSchema()
 
-class SecondCertCorrupt(BadSignaturesTestCase):
+    def tearDown(self):
+        os.remove(self.badbinpath)
+
+
+class NotepadSecondCertCorrupt(BadSignaturesTestCase):
     def setUp(self):
         self.binpath = "./binaries/x86/notepad++/notepad++.exe"
         self.badbinpath = "./binaries/x86/notepad++/notepad++_corrupted.exe"
@@ -118,14 +123,36 @@ class SecondCertCorrupt(BadSignaturesTestCase):
         sha1 = "cae1d9471f7413f9219ddcf6fd9c986e81a95f75"
         sha256 = "2f11aaa964206882823348915b08b8106f95ce17bb5491fede7932466f85c31c"
         magic = "PE32 executable (GUI) Intel 80386, for MS Windows"
+        bytecount = 6390616
         filename = self.badbinpath.rsplit('/', maxsplit=1)[-1]
-        self.varsExe(md5, sha1, sha256, filename, magic)
+        self.varsExe(md5, sha1, sha256, filename, magic, bytecount)
         self.configJson()
         self.validateSchema()
 
+    def tearDown(self):
+        os.remove(self.badbinpath)
 
-    
 
+class CurlFirstCertCorrupt(BadSignaturesTestCase):
+    def setUp(self):
+        self.binpath = "./binaries/arm/curl-8.8.0_1-win64arm-mingw.exe"
+        self.badbinpath = "./binaries/arm/curl-8.8.0_1-win64arm-mingw_corrupted.exe"
+        self.corrupt(0x00315BB0, self.binpath, self.badbinpath) # location of first cert
+        self.scan(self.badbinpath)
+
+    def testSuper(self):
+        md5 = "33ab10b10a9270c61dfb9df2e1e71413"
+        sha1 = "68c4acb734d0cfdde2b75020e5fd1a64e91553b2"
+        sha256 = "34985fc11dc4875c0d7f6b03be601225e99b527202e34ec3ceef6cd270b30c3c"
+        magic = "PE32+ executable (console) Aarch64, for MS Windows"
+        bytecount = 3237992
+        filename = self.badbinpath.rsplit('/', maxsplit=1)[-1]
+        self.varsExe(md5, sha1, sha256, filename, magic, bytecount)
+        self.configJson()
+        self.validateSchema()
+
+    def tearDown(self):
+        os.remove(self.badbinpath)
 
 if __name__ == "__main__":
     unittest.main()
