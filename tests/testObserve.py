@@ -57,7 +57,7 @@ class ObservationTestCase(unittest.TestCase):
 class ObservationTestCase2(unittest.TestCase):
     @classmethod
     def setUp(self) -> None:
-        self.OBS = observe.Observe("./ls")
+        self.OBS = observe.Observe("./binaries/elf/ls")
 
     def testVarsElf(self) -> None:
         self.assertEqual(self.OBS.bytecount, 138208)
