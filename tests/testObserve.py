@@ -14,7 +14,7 @@ import jsonschema
 class ObservationTestCase(unittest.TestCase):
     @classmethod
     def setUp(self) -> None:
-        self.OBS = observe.Observe("./notepad++/notepad++/notepad++.exe")
+        self.OBS = observe.Observe("./binaries/x86/notepad++/notepad++.exe")
 
     def testVarsExe(self) -> None:
         self.assertEqual(self.OBS.bytecount, 6390616)
@@ -184,7 +184,7 @@ class TestFilePermissions(unittest.TestCase):
     def test_nonreadable_file(self):
         # Check to see if permission error is raised
         self.assertRaises(
-            PermissionError, observe.Observe, "notepad++/notepad++/notepad++_noread.exe"
+            PermissionError, observe.Observe, "binaries/x86/notepad++/notepad++_noread.exe"
         )
 
 

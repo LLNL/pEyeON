@@ -35,7 +35,7 @@ class ParseTestCase(unittest.TestCase):
 class SinglethreadTest(ParseTestCase):
     @classmethod
     def setUpClass(self) -> None:
-        self.PRS = parse.Parse("./notepad++",
+        self.PRS = parse.Parse("./binaries/x86/notepad++/",
                                logging.WARNING,
                                "./testParse.log")
         self.PRS() # run scan
@@ -53,7 +53,7 @@ class SinglethreadTest(ParseTestCase):
 class MultithreadedTest(ParseTestCase):
     @classmethod
     def setUpClass(self) -> None:
-        self.PRS = parse.Parse("./notepad++")
+        self.PRS = parse.Parse("./binaries/x86/notepad++")
         self.PRS(threads=2) # run scan with 2 threads
 
     def testCommon(self):

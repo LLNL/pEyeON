@@ -16,13 +16,13 @@ from eyeon import observe
 class BadSignaturesTestCase(unittest.TestCase):
 
     @classmethod
-    def corrupt(cls, skip):
+    def corrupt(cls, skip, binpath, badbinpath):
         # change some of the data in notepad++.exe to break signature
         writelen = 500 # overwrite some of the bytes
 
         # open one for read and one for write
-        notepad = open("./notepad++/notepad++/notepad++.exe", "rb")
-        corrupted = open("./notepad++/notepad++/notepad++_corrupted.exe", "wb")
+        notepad = open(binpath, "rb")
+        corrupted = open(badbinpath, "wb")
 
         # get the first chunk and write to corrupted file
         chunk1 = notepad.read(skip)
@@ -36,23 +36,23 @@ class BadSignaturesTestCase(unittest.TestCase):
         notepad.close()
         corrupted.close()
 
-        if not os.path.exists("./notepad++/notepad++/notepad++_corrupted.exe"):
-            assert False, "Failed to create notepad++_corrupted.exe"
+        if not os.path.exists(badbinpath):
+            assert False, f"Failed to create {badbinpath}"
 
 
-    def scan(self):
+    def scan(self, badbinpath):
         # scan the corrupted notepad++.exe
         self.OBS = observe.Observe(
-                "./notepad++/notepad++/notepad++_corrupted.exe",
+                badbinpath,
                 log_level=logging.INFO,
                 log_file="testBadSignatures.log"
                 )
 
 
-    def varsExe(self, md5, sha1, sha256) -> None:
+    def varsExe(self, md5, sha1, sha256, filename, magic) -> None:
         # verify hashes and see if verification broke properly
         self.assertEqual(self.OBS.bytecount, 6390616)
-        self.assertEqual(self.OBS.filename, 'notepad++_corrupted.exe')
+        self.assertEqual(self.OBS.filename, filename)
         self.assertEqual(self.OBS.md5, md5)
         self.assertEqual(self.OBS.sha1, sha1)
         self.assertEqual(self.OBS.sha256, sha256)
@@ -61,10 +61,7 @@ class BadSignaturesTestCase(unittest.TestCase):
         except ValueError:
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
-        self.assertEqual(
-            self.OBS.magic,
-            "PE32 executable (GUI) Intel 80386, for MS Windows",
-        )
+        self.assertEqual(self.OBS.magic, magic)
 
         # signature failure check
         self.assertEqual(self.OBS.signatures[0]["verification"], False)
@@ -85,33 +82,44 @@ class BadSignaturesTestCase(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        os.remove("./notepad++/notepad++/notepad++_corrupted.exe")
+        os.remove("./binaries/x86/notepad++/notepad++_corrupted.exe")
         os.remove("./testBadSignatures.log")
 
 
 class FirstCertCorrupt(BadSignaturesTestCase):
     def setUp(self):
-        self.corrupt(0x00615FC0) # location of first cert
-        self.scan()
+        # path for reading original, and path for writing exe with broken cert
+        self.binpath = "./binaries/x86/notepad++/notepad++.exe"
+        self.badbinpath = "./binaries/x86/notepad++/notepad++_corrupted.exe" 
+
+        # corrupt the first cert, write bad binary, and scan
+        self.corrupt(0x00615FC0, self.binpath, self.badbinpath) # location of first cert
+        self.scan(self.badbinpath)
 
     def testSuper(self):
         md5 = "09ec21d51a66e06788179336589488a1"
         sha1 = "b3f4d9d18ccb23705992109a871bf0541a9d20d6"
         sha256 = "4e434a9fb8bfbb15a5fac7a33c882ec91a05427b35c55e17fd82e030548b4b3f"
-        self.varsExe(md5, sha1, sha256)
+        magic = "PE32 executable (GUI) Intel 80386, for MS Windows"
+        filename = self.badbinpath.rsplit('/', maxsplit=1)[-1]
+        self.varsExe(md5, sha1, sha256, filename, magic)
         self.configJson()
         self.validateSchema()
 
 class SecondCertCorrupt(BadSignaturesTestCase):
     def setUp(self):
-        self.corrupt(0x006162A0) # location of second cert
-        self.scan()
+        self.binpath = "./binaries/x86/notepad++/notepad++.exe"
+        self.badbinpath = "./binaries/x86/notepad++/notepad++_corrupted.exe"
+        self.corrupt(0x006162A0, self.binpath, self.badbinpath) # location of second cert
+        self.scan(self.badbinpath)
 
     def testSuper(self):
         md5 = "ae8c330902a79edf97526ba2fbe452a0"
         sha1 = "cae1d9471f7413f9219ddcf6fd9c986e81a95f75"
         sha256 = "2f11aaa964206882823348915b08b8106f95ce17bb5491fede7932466f85c31c"
-        self.varsExe(md5, sha1, sha256)
+        magic = "PE32 executable (GUI) Intel 80386, for MS Windows"
+        filename = self.badbinpath.rsplit('/', maxsplit=1)[-1]
+        self.varsExe(md5, sha1, sha256, filename, magic)
         self.configJson()
         self.validateSchema()
 

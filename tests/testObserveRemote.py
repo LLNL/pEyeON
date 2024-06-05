@@ -14,7 +14,7 @@ import jsonschema
 class ObservationTestCase(unittest.TestCase):
     @classmethod
     def setUp(self) -> None:
-        self.OBS = observe.Observe("./notepad++/notepad++/notepad++.exe")
+        self.OBS = observe.Observe("./binaries/x86/notepad++/notepad++.exe")
 
     def testVarsExe(self) -> None:
         self.assertEqual(self.OBS.bytecount, 6390616)
