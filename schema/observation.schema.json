@@ -104,7 +104,8 @@
       "items": {
         "type": "object",
         "properties": {
-	  "sha256": { "type": "string" }, 
+          "sha256": { "type": "string" }, 
+          "issuer_sha256": { "type": "string" }, 
           "cert._version": { "type": "string" },
           "serial_number": { "type": "string" },
           "issuer_name": { "type": "string" },
