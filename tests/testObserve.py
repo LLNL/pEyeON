@@ -188,6 +188,83 @@ class TestFilePermissions(unittest.TestCase):
         )
 
 
+class ObservationTestCaseArm(unittest.TestCase):
+    @classmethod
+    def setUp(self) -> None:
+        self.OBS = observe.Observe("./binaries/arm/curl-8.8.0_1-win64arm-mingw.exe")
+
+    def testVarsExe(self) -> None:
+        self.assertEqual(self.OBS.bytecount, 3237992)
+        self.assertEqual(self.OBS.filename, "curl-8.8.0_1-win64arm-mingw.exe")
+        self.assertEqual(self.OBS.md5, "c4062346970bfe1e99dac115aca41845")
+        self.assertEqual(self.OBS.sha1, "e0a60241ae6c4450da3547b76eb0d35d6876f80e")
+        self.assertEqual(
+            self.OBS.sha256, "678400429ccbfd5935f9253754203b824500469f79d30bc6a27674d2840551c7"
+        )
+        try:
+            dt.datetime.strptime(self.OBS.modtime, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            self.fail()
+        self.assertIsInstance(self.OBS.observation_ts, str)
+        self.assertEqual(self.OBS.permissions, "0o100644")
+        self.assertEqual(
+            self.OBS.ssdeep,
+            "24576:ZwNqyhCkb9KkPhiN3Uo84/rwAejGQePOqw+1UMXW8NossRK9fvYGHNucilZOAI7K:ZVwnbJLAGjGdP31UMXIh4gGH9ily7b8d"  # noqa: E501
+        )
+
+    def testWriteJson(self) -> None:
+        try:
+            for j in glob("*.json"):
+                os.remove(j)
+        except FileNotFoundError:
+            pass
+        # self.OBS.write_json()
+        # unittest.mock?
+
+    def testConfigJson(self) -> None:
+        vs = vars(self.OBS)
+        obs_json = json.loads(self.OBS._safe_serialize(vs))
+        assert "defaults" in obs_json, "defaults not in json"
+
+
+class ObservationTestCasePowerPC(unittest.TestCase):
+    @classmethod
+    def setUp(self) -> None:
+        self.OBS = observe.Observe("./binaries/powerpc/rustup-init")
+
+    def testVarsExe(self) -> None:
+        self.assertEqual(self.OBS.bytecount, 14585464)
+        self.assertEqual(self.OBS.filename, "rustup-init")
+        self.assertEqual(self.OBS.md5, "3e7704532c1cafb02244fc7e4308ec3d")
+        self.assertEqual(self.OBS.sha1, "05324fd5db3da42bc53794614738643942d12d54")
+        self.assertEqual(
+            self.OBS.sha256, "ad4463793c6d545b8f86fff8dd24e80ced9573eb20b9849fd9bd47818e2e4598"
+        )
+        try:
+            dt.datetime.strptime(self.OBS.modtime, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            self.fail()
+        self.assertIsInstance(self.OBS.observation_ts, str)
+        self.assertEqual(self.OBS.permissions, "0o100644")
+        self.assertEqual(
+            self.OBS.ssdeep,
+            "196608:j45VWK0byrgGFes2xTMRgWx3XHUuHzsOyHShHK9Xp440Cfo:j4Gb+BhRpkuYOyyBy440Cfo"  # noqa: E501
+        )
+
+    def testWriteJson(self) -> None:
+        try:
+            for j in glob("*.json"):
+                os.remove(j)
+        except FileNotFoundError:
+            pass
+        # self.OBS.write_json()
+        # unittest.mock?
+
+    def testConfigJson(self) -> None:
+        vs = vars(self.OBS)
+        obs_json = json.loads(self.OBS._safe_serialize(vs))
+        assert "defaults" in obs_json, "defaults not in json"
+
 # class TestDiffArchitecture(unittest.TestCase):
 #     def test_i386_ls(self):
 #         # Check to see if permission error is raised
