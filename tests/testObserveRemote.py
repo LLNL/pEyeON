@@ -31,6 +31,15 @@ class ObservationTestCase(unittest.TestCase):
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100600")
 
+        self.assertNotIn(  # check that the first cert has no issuer in the chain
+                "issuer_sha256",
+                self.OBS.signatures[0]["certs"][0]
+                )
+        self.assertEqual(  # check that the second cert has the first issuer's sha
+                self.OBS.signatures[0]["certs"][1]["issuer_sha256"],
+                "46011ede1c147eb2bc731a539b7c047b7ee93e48b9d3c3ba710ce132bbdfac6b"
+                )
+
     def testWriteJson(self) -> None:
         try:
             for j in glob("*.json"):
@@ -70,6 +79,7 @@ class ObservationTestCase2(unittest.TestCase):
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100700")
+        self.assertEqual(len(self.OBS.signatures), 0)  # ls is unsigned, should have no signatures
 
     def testWriteJson(self) -> None:
         try:
