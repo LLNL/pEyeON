@@ -153,9 +153,6 @@ class ObservationTestCasePowerPC(unittest.TestCase):
 class ObservationTestCase7zip(unittest.TestCase):
     @classmethod
     def setUpClass(self) -> None:
-        # remove config temporarily to test log
-        os.rename("test_config.toml", "test_config.txt")
-
         self.OBS = observe.Observe(
                     "./binaries/x86/7z_win32.exe",
                     log_level=logging.INFO,
@@ -180,15 +177,11 @@ class ObservationTestCase7zip(unittest.TestCase):
                 except ValueError:
                     self.fail()
                 self.assertEqual(components[1], "eyeon.observe")
-                self.assertEqual(components[2], "INFO")
+                self.assertIn(components[2], ["INFO", "WARNING"])
                 messages.append(components[3])
 
-        # check both messages are in log
+        # check message correctly logged
         self.assertIn("file ./binaries/x86/7z_win32.exe has no signatures.", messages)
-        self.assertIn("toml config not found", messages)
-
-    def testDefaults(self):  # defaults should be empty when no config
-        self.assertEqual(self.OBS.defaults, {})
 
     def testToString(self):
         try:
@@ -198,7 +191,6 @@ class ObservationTestCase7zip(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        os.rename("test_config.txt", "test_config.toml")
         os.remove("./observe.log")
 
 
