@@ -172,6 +172,7 @@ class ObservationTestCase7zip(unittest.TestCase):
             # check log formatting is correct for each line
             if line:
                 components = line.split(' - ')  # seperator defined in observe
+                print(components)
 
                 # order should be a datetime, then name, then loglevel
                 try:
