@@ -1,5 +1,6 @@
 # import tempfile
 import os
+import logging
 import unittest
 from glob import glob
 import datetime as dt
@@ -264,6 +265,59 @@ class ObservationTestCasePowerPC(unittest.TestCase):
         vs = vars(self.OBS)
         obs_json = json.loads(self.OBS._safe_serialize(vs))
         assert "defaults" in obs_json, "defaults not in json"
+
+
+# 7zip is a PE with 0 signatures, so we can test some of the logging functions
+class ObservationTestCase7zip(unittest.TestCase):
+    @classmethod
+    def setUpClass(self) -> None:
+        # remove config temporarily to test log
+        os.rename("test_config.toml", "test_config.txt")
+
+        self.OBS = observe.Observe(
+                    "./binaries/x86/7z_win32.exe",
+                    log_level=logging.INFO,
+                    log_file="./observe.log"
+                )
+
+    def testLog(self):  # check log is created and correct info logged
+        self.assertTrue(os.path.exists("./observe.log"))
+        with open("./observe.log", "r") as f:
+            log = f.read()
+
+        messages = []
+        for line in log.split('\n'):
+            # check log formatting is correct for each line
+            if line:
+                components = line.split(' - ', maxsplit=3)  # seperator defined in observe
+
+                # order should be a datetime, then name, then loglevel
+                try:
+                    dt.datetime.strptime(components[0], "%Y-%m-%d %H:%M:%S,%f")
+                except ValueError:
+                    self.fail()
+                self.assertEqual(components[1], "eyeon.observe")
+                self.assertEqual(components[2], "INFO")
+                messages.append(components[3])
+
+        # check both messages are in log
+        self.assertIn("file ./binaries/x86/7z_win32.exe has no signatures.", messages)
+        self.assertIn("toml config not found", messages)
+
+    def testDefaults(self):  # defaults should be empty when no config
+        self.assertEqual(self.OBS.defaults, {})
+
+    def testToString(self):
+        try:
+            str(self.OBS)
+        except Exception as e:
+            self.fail(f"Observe.__str__ raised exception {e} unexpectedly!")
+
+    @classmethod
+    def tearDownClass(self):
+        os.rename("test_config.txt", "test_config.toml")
+        os.remove("./observe.log")
+
 
 # class TestDiffArchitecture(unittest.TestCase):
 #     def test_i386_ls(self):
