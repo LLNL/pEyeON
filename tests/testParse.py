@@ -10,7 +10,7 @@ from eyeon import parse
 
 class ParseTestCase(unittest.TestCase):
 
-    def testScan(self) -> None: # these files + paths should be created by parse
+    def testScan(self) -> None:  # these files + paths should be created by parse
         self.assertTrue(os.path.exists("./results"))
         self.assertTrue(os.path.exists("./results/certs"))
         self.assertTrue(os.path.exists
@@ -24,7 +24,7 @@ class ParseTestCase(unittest.TestCase):
         with open("./results/notepad++.exe.0ec33611cb6594903ff88d47c78dcdab.json") as schem:
             schema = json.loads(schem.read())
         self.assertEqual(schema['bytecount'], 6390616)
-        self.assertEqual(schema['filename'],'notepad++.exe')
+        self.assertEqual(schema['filename'], 'notepad++.exe')
         self.assertEqual(schema['md5'], "0ec33611cb6594903ff88d47c78dcdab")
         self.assertEqual(schema['sha1'], "28a2a37cf2e9550a699b138dddba4b8067c8e1b1")
         self.assertEqual(
@@ -38,7 +38,7 @@ class SinglethreadTest(ParseTestCase):
         self.PRS = parse.Parse("./binaries/x86/notepad++/",
                                logging.WARNING,
                                "./testParse.log")
-        self.PRS() # run scan
+        self.PRS()  # run scan
 
     def testCommon(self):
         self.testScan()
@@ -48,13 +48,16 @@ class SinglethreadTest(ParseTestCase):
     def testLogCreated(self):
         self.assertTrue(os.path.exists("./testParse.log"))
 
+    @classmethod
+    def tearDownClass(self) -> None:
+        os.remove("./testParse.log")
 
 
 class MultithreadedTest(ParseTestCase):
     @classmethod
     def setUpClass(self) -> None:
         self.PRS = parse.Parse("./binaries/x86/notepad++")
-        self.PRS(threads=2) # run scan with 2 threads
+        self.PRS(threads=2)  # run scan with 2 threads
 
     def testCommon(self):
         self.testScan()
