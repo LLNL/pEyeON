@@ -17,8 +17,8 @@ class ParseTestCase(unittest.TestCase):
                         ("./results/notepad++.exe.0ec33611cb6594903ff88d47c78dcdab.json"))
 
     def testCertExtracted(self) -> None:
-        self.assertTrue(os.path.exists("./results/certs/46011ede1c147eb2bc731a539b7c047b7ee93e48b9d3c3ba710ce132bbdfac6b.crt"))
-        self.assertTrue(os.path.exists("./results/certs/866b46dc0876c0b9c85afe6569e49352a021c255c8e7680df6ac1fdbad677033.crt"))
+        self.assertTrue(os.path.exists("./results/certs/46011ede1c147eb2bc731a539b7c047b7ee93e48b9d3c3ba710ce132bbdfac6b.crt"))  # noqa: E501
+        self.assertTrue(os.path.exists("./results/certs/866b46dc0876c0b9c85afe6569e49352a021c255c8e7680df6ac1fdbad677033.crt"))  # noqa: E501
 
     def testValidateJson(self) -> None:
         with open("./results/notepad++.exe.0ec33611cb6594903ff88d47c78dcdab.json") as schem:

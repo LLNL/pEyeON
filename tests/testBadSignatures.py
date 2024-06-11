@@ -11,6 +11,7 @@ from io import StringIO
 from eyeon import parse
 from eyeon import observe
 
+
 # this is a superclass that runs common assertions for each
 #   of the 2 different certificate corruptions below
 class BadSignaturesTestCase(unittest.TestCase):
@@ -18,7 +19,7 @@ class BadSignaturesTestCase(unittest.TestCase):
     @classmethod
     def corrupt(cls, skip, binpath, badbinpath):
         # change some of the data in notepad++.exe to break signature
-        writelen = 500 # overwrite some of the bytes
+        writelen = 500  # overwrite some of the bytes
 
         # open one for read and one for write
         binary = open(binpath, "rb")
@@ -27,7 +28,7 @@ class BadSignaturesTestCase(unittest.TestCase):
         # get the first chunk and write to corrupted file
         chunk1 = binary.read(skip)
         corrupted.write(chunk1)
-        corrupted.write(bytes([0x33] * writelen)) # overwrite some bytes
+        corrupted.write(bytes([0x33] * writelen))  # overwrite some bytes
 
         # write rest of file
         binary.seek(skip+writelen)
@@ -37,8 +38,7 @@ class BadSignaturesTestCase(unittest.TestCase):
         corrupted.close()
 
         if not os.path.exists(badbinpath):
-            assert False, f"Failed to create {badbinpath}"
-
+            cls.fail(f"Failed to create {badbinpath}")
 
     def scan(self, badbinpath):
         # scan the corrupted notepad++.exe
@@ -47,7 +47,6 @@ class BadSignaturesTestCase(unittest.TestCase):
                 log_level=logging.INFO,
                 log_file="testBadSignatures.log"
                 )
-
 
     def varsExe(self, md5, sha1, sha256, filename, bytecount, magic=None) -> None:
         # verify hashes and see if verification broke properly
@@ -62,7 +61,7 @@ class BadSignaturesTestCase(unittest.TestCase):
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
 
-        if magic: # magic bytes may change during gitlab job, can't always test
+        if magic:  # magic bytes may change during gitlab job, can't always test
             self.assertEqual(self.OBS.magic, magic)
 
         # signature failure check
@@ -92,10 +91,10 @@ class NotepadFirstCertCorrupt(BadSignaturesTestCase):
     def setUp(self):
         # path for reading original, and path for writing exe with broken cert
         self.binpath = "./binaries/x86/notepad++/notepad++.exe"
-        self.badbinpath = "./binaries/x86/notepad++/notepad++_corrupted.exe" 
+        self.badbinpath = "./binaries/x86/notepad++/notepad++_corrupted.exe"
 
         # corrupt the first cert, write bad binary, and scan
-        self.corrupt(0x00615FC0, self.binpath, self.badbinpath) # location of first cert
+        self.corrupt(0x00615FC0, self.binpath, self.badbinpath)  # location of first cert
         self.scan(self.badbinpath)
 
     def testSuper(self):
@@ -117,7 +116,7 @@ class NotepadSecondCertCorrupt(BadSignaturesTestCase):
     def setUp(self):
         self.binpath = "./binaries/x86/notepad++/notepad++.exe"
         self.badbinpath = "./binaries/x86/notepad++/notepad++_corrupted.exe"
-        self.corrupt(0x006162A0, self.binpath, self.badbinpath) # location of second cert
+        self.corrupt(0x006162A0, self.binpath, self.badbinpath)  # location of second cert
         self.scan(self.badbinpath)
 
     def testSuper(self):
@@ -139,7 +138,7 @@ class CurlFirstCertCorrupt(BadSignaturesTestCase):
     def setUp(self):
         self.binpath = "./binaries/arm/curl-8.8.0_1-win64arm-mingw.exe"
         self.badbinpath = "./binaries/arm/curl-8.8.0_1-win64arm-mingw_corrupted.exe"
-        self.corrupt(0x00315BB0, self.binpath, self.badbinpath) # location of first cert
+        self.corrupt(0x00315BB0, self.binpath, self.badbinpath)  # location of first cert
         self.scan(self.badbinpath)
 
     def testSuper(self):
@@ -154,6 +153,7 @@ class CurlFirstCertCorrupt(BadSignaturesTestCase):
 
     def tearDown(self):
         os.remove(self.badbinpath)
+
 
 if __name__ == "__main__":
     unittest.main()
