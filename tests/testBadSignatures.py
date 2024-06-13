@@ -4,11 +4,6 @@ import os
 import json
 import jsonschema
 import logging
-import lief
-import sys
-from io import StringIO
-
-from eyeon import parse
 from eyeon import observe
 
 
