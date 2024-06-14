@@ -4,23 +4,24 @@ import shutil
 import json
 import jsonschema
 import logging
+import time
 
 from eyeon import parse
 
 
 class ParseTestCase(unittest.TestCase):
 
-    def testScan(self) -> None:  # these files + paths should be created by parse
+    def checkOutputs(self) -> None:  # these files + paths should be created by parse
         self.assertTrue(os.path.exists("./results"))
         self.assertTrue(os.path.exists("./results/certs"))
         self.assertTrue(os.path.exists
                         ("./results/notepad++.exe.0ec33611cb6594903ff88d47c78dcdab.json"))
 
-    def testCertExtracted(self) -> None:
+    def certExtracted(self) -> None:
         self.assertTrue(os.path.exists("./results/certs/46011ede1c147eb2bc731a539b7c047b7ee93e48b9d3c3ba710ce132bbdfac6b.crt"))  # noqa: E501
         self.assertTrue(os.path.exists("./results/certs/866b46dc0876c0b9c85afe6569e49352a021c255c8e7680df6ac1fdbad677033.crt"))  # noqa: E501
 
-    def testValidateJson(self) -> None:
+    def validateJson(self) -> None:
         with open("./results/notepad++.exe.0ec33611cb6594903ff88d47c78dcdab.json") as schem:
             schema = json.loads(schem.read())
         self.assertEqual(schema['bytecount'], 6390616)
@@ -41,9 +42,9 @@ class SinglethreadTest(ParseTestCase):
         self.PRS()  # run scan
 
     def testCommon(self):
-        self.testScan()
-        self.testCertExtracted()
-        self.testValidateJson()
+        self.checkOutputs()
+        self.certExtracted()
+        self.validateJson()
 
     def testLogCreated(self):
         self.assertTrue(os.path.exists("./testParse.log"))
@@ -58,11 +59,12 @@ class TwoThreadTestCase(ParseTestCase):
     def setUpClass(self) -> None:
         self.PRS = parse.Parse("./binaries/x86/notepad++")
         self.PRS(threads=2)
+        time.sleep(1)  # these multithreaded tests create a race condition
 
     def testCommon(self):
-        self.testScan()
-        self.testCertExtracted()
-        self.testValidateJson()
+        self.checkOutputs()
+        self.certExtracted()
+        self.validateJson()
 
 
 class ThreeThreadTestCase(ParseTestCase):
@@ -70,11 +72,12 @@ class ThreeThreadTestCase(ParseTestCase):
     def setUpClass(self) -> None:
         self.PRS = parse.Parse("./binaries/x86/notepad++")
         self.PRS(threads=3)
+        time.sleep(1)
 
     def testCommon(self):
-        self.testScan()
-        self.testCertExtracted()
-        self.testValidateJson()
+        self.checkOutputs()
+        self.certExtracted()
+        self.validateJson()
 
 
 if __name__ == "__main__":
