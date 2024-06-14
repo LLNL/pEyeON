@@ -149,6 +149,12 @@ class ObservationTestCasePowerPC(unittest.TestCase):
         self.assertIsInstance(self.OBS.observation_ts, str)
 
 
+class TestFilePermissions(unittest.TestCase):
+    def test_nonreadable_file(self):
+        # Check to see if permission error is raised
+        self.assertRaises(PermissionError, observe.Observe, "/etc/shadow")
+
+
 # 7zip is a PE with 0 signatures, so we can test some of the logging functions
 class ObservationTestCase7zip(unittest.TestCase):
     @classmethod

@@ -53,11 +53,23 @@ class SinglethreadTest(ParseTestCase):
         os.remove("./testParse.log")
 
 
-class MultithreadedTest(ParseTestCase):
+class TwoThreadTestCase(ParseTestCase):
     @classmethod
     def setUpClass(self) -> None:
         self.PRS = parse.Parse("./binaries/x86/notepad++")
-        self.PRS(threads=2)  # run scan with 2 threads
+        self.PRS(threads=2)
+
+    def testCommon(self):
+        self.testScan()
+        self.testCertExtracted()
+        self.testValidateJson()
+
+
+class ThreeThreadTestCase(ParseTestCase):
+    @classmethod
+    def setUpClass(self) -> None:
+        self.PRS = parse.Parse("./binaries/x86/notepad++")
+        self.PRS(threads=3)
 
     def testCommon(self):
         self.testScan()

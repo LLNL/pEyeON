@@ -184,9 +184,7 @@ class ObservationTestCase3(unittest.TestCase):
 class TestFilePermissions(unittest.TestCase):
     def test_nonreadable_file(self):
         # Check to see if permission error is raised
-        self.assertRaises(
-            PermissionError, observe.Observe, "binaries/x86/notepad++/notepad++_noread.exe"
-        )
+        self.assertRaises(PermissionError, observe.Observe, "/etc/shadow")
 
 
 class ObservationTestCaseArm(unittest.TestCase):
