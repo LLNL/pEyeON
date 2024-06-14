@@ -4,7 +4,6 @@ import shutil
 import json
 import jsonschema
 import logging
-import time
 
 from eyeon import parse
 
@@ -64,7 +63,6 @@ class TwoThreadTestCase(ParseTestCase):
     def setUpClass(self) -> None:
         self.PRS = parse.Parse("./binaries/x86/notepad++")
         self.PRS(threads=2)
-        time.sleep(1)  # these multithreaded tests create a race condition
 
     def testCommon(self):
         self.checkOutputs()
@@ -77,7 +75,6 @@ class ThreeThreadTestCase(ParseTestCase):
     def setUpClass(self) -> None:
         self.PRS = parse.Parse("./binaries/x86/notepad++")
         self.PRS(threads=3)
-        time.sleep(1)
 
     def testCommon(self):
         self.checkOutputs()
