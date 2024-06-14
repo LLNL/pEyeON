@@ -32,6 +32,10 @@ class ParseTestCase(unittest.TestCase):
             schema['sha256'], "ccb4ff6b20689d948233807a67d9de9666229625aa6682466ef01917b01ccd3b"
         )
 
+    @classmethod
+    def tearDownClass(self) -> None:
+        shutil.rmtree("./results")
+
 
 class SinglethreadTest(ParseTestCase):
     @classmethod
@@ -51,6 +55,7 @@ class SinglethreadTest(ParseTestCase):
 
     @classmethod
     def tearDownClass(self) -> None:
+        shutil.rmtree("./results")
         os.remove("./testParse.log")
 
 
