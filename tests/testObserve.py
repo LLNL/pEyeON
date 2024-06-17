@@ -279,7 +279,7 @@ class ObservationTestCase7zip(unittest.TestCase):
                 )
 
     def testLog(self):  # check log is created and correct info logged
-        self.assertTrue(os.path.exists("./observe.log"))
+        self.assertTrue(os.path.isfile("./observe.log"))
         with open("./observe.log", "r") as f:
             log = f.read()
 

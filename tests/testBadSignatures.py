@@ -33,7 +33,7 @@ class BadSignaturesTestCase(unittest.TestCase):
         binary.close()
         corrupted.close()
 
-        if not os.path.exists(badbinpath):
+        if not os.path.isfile(badbinpath):
             self.fail(f"Failed to create {badbinpath}")
 
     def scan(self, badbinpath):
@@ -44,7 +44,7 @@ class BadSignaturesTestCase(unittest.TestCase):
                 log_file="testBadSignatures.log"
                 )
 
-        self.assertTrue(os.path.exists("testBadSignatures.log"))
+        self.assertTrue(os.path.isfile("testBadSignatures.log"))
 
     def varsExe(self, md5, sha1, sha256, filename, bytecount, magic=None) -> None:
         # verify hashes and see if verification broke properly
