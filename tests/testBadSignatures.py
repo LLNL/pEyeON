@@ -12,7 +12,8 @@ from eyeon import observe
 class BadSignaturesTestCase(unittest.TestCase):
 
     @classmethod
-    def corrupt(cls, skip, binpath, badbinpath):
+    def corrupt(self, skip, binpath, badbinpath):
+        self.badbinpath = badbinpath
         # change some of the data in notepad++.exe to break signature
         writelen = 500  # overwrite some of the bytes
 
@@ -33,7 +34,7 @@ class BadSignaturesTestCase(unittest.TestCase):
         corrupted.close()
 
         if not os.path.exists(badbinpath):
-            cls.fail(f"Failed to create {badbinpath}")
+            self.fail(f"Failed to create {badbinpath}")
 
     def scan(self, badbinpath):
         # scan the corrupted notepad++.exe
@@ -42,6 +43,8 @@ class BadSignaturesTestCase(unittest.TestCase):
                 log_level=logging.INFO,
                 log_file="testBadSignatures.log"
                 )
+
+        self.assertTrue(os.path.exists("testBadSignatures.log"))
 
     def varsExe(self, md5, sha1, sha256, filename, bytecount, magic=None) -> None:
         # verify hashes and see if verification broke properly
@@ -77,8 +80,9 @@ class BadSignaturesTestCase(unittest.TestCase):
         print(jsonschema.validate(instance=schema, schema=meta))
 
     @classmethod
-    def tearDownClass(cls):
+    def tearDownClass(self):
         os.remove("./testBadSignatures.log")
+        os.remove(self.badbinpath)
 
 
 class NotepadFirstCertCorrupt(BadSignaturesTestCase):
@@ -92,7 +96,7 @@ class NotepadFirstCertCorrupt(BadSignaturesTestCase):
         self.corrupt(0x00615FC0, self.binpath, self.badbinpath)  # location of first cert
         self.scan(self.badbinpath)
 
-    def testSuper(self):
+    def testCommon(self):
         md5 = "09ec21d51a66e06788179336589488a1"
         sha1 = "b3f4d9d18ccb23705992109a871bf0541a9d20d6"
         sha256 = "4e434a9fb8bfbb15a5fac7a33c882ec91a05427b35c55e17fd82e030548b4b3f"
@@ -103,9 +107,6 @@ class NotepadFirstCertCorrupt(BadSignaturesTestCase):
         self.configJson()
         self.validateSchema()
 
-    def tearDown(self):
-        os.remove(self.badbinpath)
-
 
 class NotepadSecondCertCorrupt(BadSignaturesTestCase):
     def setUp(self):
@@ -114,7 +115,7 @@ class NotepadSecondCertCorrupt(BadSignaturesTestCase):
         self.corrupt(0x006162A0, self.binpath, self.badbinpath)  # location of second cert
         self.scan(self.badbinpath)
 
-    def testSuper(self):
+    def testCommon(self):
         md5 = "ae8c330902a79edf97526ba2fbe452a0"
         sha1 = "cae1d9471f7413f9219ddcf6fd9c986e81a95f75"
         sha256 = "2f11aaa964206882823348915b08b8106f95ce17bb5491fede7932466f85c31c"
@@ -125,9 +126,6 @@ class NotepadSecondCertCorrupt(BadSignaturesTestCase):
         self.configJson()
         self.validateSchema()
 
-    def tearDown(self):
-        os.remove(self.badbinpath)
-
 
 class CurlFirstCertCorrupt(BadSignaturesTestCase):
     def setUp(self):
@@ -136,7 +134,7 @@ class CurlFirstCertCorrupt(BadSignaturesTestCase):
         self.corrupt(0x00315BB0, self.binpath, self.badbinpath)  # location of first cert
         self.scan(self.badbinpath)
 
-    def testSuper(self):
+    def testCommon(self):
         md5 = "33ab10b10a9270c61dfb9df2e1e71413"
         sha1 = "68c4acb734d0cfdde2b75020e5fd1a64e91553b2"
         sha256 = "34985fc11dc4875c0d7f6b03be601225e99b527202e34ec3ceef6cd270b30c3c"
@@ -145,9 +143,6 @@ class CurlFirstCertCorrupt(BadSignaturesTestCase):
         self.varsExe(md5, sha1, sha256, filename, bytecount)
         self.configJson()
         self.validateSchema()
-
-    def tearDown(self):
-        os.remove(self.badbinpath)
 
 
 if __name__ == "__main__":
