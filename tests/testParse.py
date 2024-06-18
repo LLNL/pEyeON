@@ -30,6 +30,9 @@ class ParseTestCase(unittest.TestCase):
         self.assertEqual(
             schema['sha256'], "ccb4ff6b20689d948233807a67d9de9666229625aa6682466ef01917b01ccd3b"
         )
+        self.assertEqual(schema['authenticode_integrity'], "OK")
+        self.assertEqual(schema['signatures'][0]["verification"], "OK")
+        self.assertEqual(schema['authentihash'], schema['signatures'][0]["sha1"])
 
     @classmethod
     def tearDownClass(self) -> None:
