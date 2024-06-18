@@ -101,7 +101,11 @@ class CommandLine:
         """
 
         p = eyeon.parse.Parse(args.dir, args.log_level, args.log_file)
-        p(result_path=args.output_dir, threads=args.threads)
+        if args.output_dir:
+            p(result_path=args.output_dir, threads=args.threads)
+        else:
+            p(threads=args.threads)
+
 
 
     def checksum(self, args) -> None:
