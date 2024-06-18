@@ -40,6 +40,10 @@ class ObservationTestCase(unittest.TestCase):
             "98304:kq6vzyzgvZe2fwa5T3CWxeKNn5pRD4RnzY/moFJ:V6vzhUfa5fnws5",  # noqa: E501
         )
 
+        self.assertEqual(self.OBS.authenticode_integrity, "OK")
+        self.assertEqual(self.OBS.signatures[0]["verification"], "OK")
+        self.assertEqual(self.OBS.authentihash, self.OBS.signatures[0]["sha1"])
+
     def testWriteJson(self) -> None:
         try:
             for j in glob("*.json"):
@@ -210,6 +214,9 @@ class ObservationTestCaseArm(unittest.TestCase):
             self.OBS.ssdeep,
             "24576:ZwNqyhCkb9KkPhiN3Uo84/rwAejGQePOqw+1UMXW8NossRK9fvYGHNucilZOAI7K:ZVwnbJLAGjGdP31UMXIh4gGH9ily7b8d"  # noqa: E501
         )
+        self.assertEqual(self.OBS.authenticode_integrity, "OK")
+        self.assertEqual(self.OBS.signatures[0]["verification"], "OK")
+        self.assertEqual(self.OBS.authentihash, self.OBS.signatures[0]["sha1"])
 
     def testWriteJson(self) -> None:
         try:

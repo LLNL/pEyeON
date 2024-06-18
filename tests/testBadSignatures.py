@@ -63,7 +63,7 @@ class BadSignaturesTestCase(unittest.TestCase):
             self.assertEqual(self.OBS.magic, magic)
 
         # signature failure check
-        self.assertEqual(self.OBS.signatures[0]["verification"], False)
+        self.assertEqual(self.OBS.signatures[0]["verification"], 'VERIFICATION_FLAGS.CERT_NOT_FOUND')
 
     def configJson(self) -> None:
         vs = vars(self.OBS)

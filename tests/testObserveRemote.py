@@ -31,6 +31,9 @@ class ObservationTestCase(unittest.TestCase):
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100600")
+        self.assertEqual(self.OBS.authenticode_integrity, "OK")
+        self.assertEqual(self.OBS.signatures[0]["verification"], "OK")
+        self.assertEqual(self.OBS.authentihash, self.OBS.signatures[0]["sha1"])
 
     def testWriteJson(self) -> None:
         try:
@@ -113,6 +116,9 @@ class ObservationTestCaseArm(unittest.TestCase):
         except ValueError:
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
+        self.assertEqual(self.OBS.authenticode_integrity, "OK")
+        self.assertEqual(self.OBS.signatures[0]["verification"], "OK")
+        self.assertEqual(self.OBS.authentihash, self.OBS.signatures[0]["sha1"])
 
     def testWriteJson(self) -> None:
         try:
