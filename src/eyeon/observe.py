@@ -238,6 +238,7 @@ class Observe:
             for cert in sig["certs"]:  # set mappings
                 subject_sha[cert["subject_name"].lower()] = cert["sha256"]
 
+        for sig in self.signatures:
             for cert in sig["certs"]:  # parse mappings, set issuer sha based on issuer name
                 if cert["issuer_name"].lower() in subject_sha:
                     cert["issuer_sha256"] = subject_sha[cert["issuer_name"].lower()]
