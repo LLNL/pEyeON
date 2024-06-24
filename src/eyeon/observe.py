@@ -230,15 +230,17 @@ class Observe:
     def set_issuer_sha256(self) -> None:
         """
         Parses the certificates to build issuer_sha256 chain
+        The match between issuer and subject name is case insensitive,
+         as per RFC 5280 §4.1.2.4 section 7.1
         """
         subject_sha = {}  # dictionary that maps subject to sha256
         for sig in self.signatures:
             for cert in sig["certs"]:  # set mappings
-                subject_sha[cert["subject_name"]] = cert["sha256"]
+                subject_sha[cert["subject_name"].lower()] = cert["sha256"]
 
             for cert in sig["certs"]:  # parse mappings, set issuer sha based on issuer name
-                if cert["issuer_name"] in subject_sha:
-                    cert["issuer_sha256"] = subject_sha[cert["issuer_name"]]
+                if cert["issuer_name"].lower() in subject_sha:
+                    cert["issuer_sha256"] = subject_sha[cert["issuer_name"].lower()]
 
     # @staticmethod
     def hashit(self, c: lief.PE.x509):
