@@ -185,11 +185,6 @@ class ObservationTestCase3(unittest.TestCase):
             assert jsonschema.validate(instance=additional_data, schema=schema) is None
 
 
-class TestFilePermissions(unittest.TestCase):
-    def test_nonreadable_file(self):
-        # Check to see if permission error is raised
-        self.assertRaises(PermissionError, observe.Observe, "/etc/shadow")
-
 
 class ObservationTestCaseArm(unittest.TestCase):
     @classmethod
@@ -323,6 +318,16 @@ class ObservationTestCase7zip(unittest.TestCase):
         os.rename("test_config.txt", "test_config.toml")
         os.remove("./observe.log")
 
+
+class TestFilePermissions(unittest.TestCase):
+    def test_nonreadable_file(self):
+        # Check to see if permission error is raised
+        self.assertRaises(PermissionError, observe.Observe, "/etc/shadow")
+
+
+class TestFolderPermissions(unittest.TestCase):
+    def test_nonreadable_folder(self):
+        self.assertRaises(PermissionError, observe.Observe, "/root")
 
 # class TestDiffArchitecture(unittest.TestCase):
 #     def test_i386_ls(self):
