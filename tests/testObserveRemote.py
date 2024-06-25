@@ -35,13 +35,6 @@ class ObservationTestCase(unittest.TestCase):
         self.assertEqual(self.OBS.signatures[0]["verification"], "OK")
         self.assertEqual(self.OBS.authentihash, self.OBS.signatures[0]["sha1"])
 
-    def testWriteJson(self) -> None:
-        try:
-            for j in glob("*.json"):
-                os.remove(j)
-        except FileNotFoundError:
-            pass
-
     # def testValidateJson(self) -> None:
     #     with open("../schema/observation.schema.json") as schem:
     #         schema = json.loads(schem.read())
@@ -53,6 +46,14 @@ class ObservationTestCase(unittest.TestCase):
         vs = vars(self.OBS)
         obs_json = json.loads(self.OBS._safe_serialize(vs))
         assert "defaults" in obs_json, "defaults not in json"
+
+    @classmethod
+    def tearDownClass(self) -> None:
+        try:
+            for j in glob("*.json"):
+                os.remove(j)
+        except FileNotFoundError:
+            pass
 
 
 class ObservationTestCase2(unittest.TestCase):
@@ -75,13 +76,6 @@ class ObservationTestCase2(unittest.TestCase):
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100700")
 
-    def testWriteJson(self) -> None:
-        try:
-            for j in glob("*.json"):
-                os.remove(j)
-        except FileNotFoundError:
-            pass
-
     def testValidateJson(self) -> None:
         with open("../schema/observation.schema.json") as schem:
             schema = json.loads(schem.read())
@@ -96,6 +90,14 @@ class ObservationTestCase2(unittest.TestCase):
             meta = json.loads(schem.read())
 
         print(jsonschema.validate(instance=schema, schema=meta))
+
+    @classmethod
+    def tearDownClass(self) -> None:
+        try:
+            for j in glob("*.json"):
+                os.remove(j)
+        except FileNotFoundError:
+            pass
 
 
 class ObservationTestCaseArm(unittest.TestCase):
@@ -120,7 +122,13 @@ class ObservationTestCaseArm(unittest.TestCase):
         self.assertEqual(self.OBS.signatures[0]["verification"], "OK")
         self.assertEqual(self.OBS.authentihash, self.OBS.signatures[0]["sha1"])
 
-    def testWriteJson(self) -> None:
+    def testConfigJson(self) -> None:
+        vs = vars(self.OBS)
+        obs_json = json.loads(self.OBS._safe_serialize(vs))
+        assert "defaults" in obs_json, "defaults not in json"
+
+    @classmethod
+    def tearDownClass(self) -> None:
         try:
             for j in glob("*.json"):
                 os.remove(j)
@@ -128,11 +136,6 @@ class ObservationTestCaseArm(unittest.TestCase):
             pass
         # self.OBS.write_json()
         # unittest.mock?
-
-    def testConfigJson(self) -> None:
-        vs = vars(self.OBS)
-        obs_json = json.loads(self.OBS._safe_serialize(vs))
-        assert "defaults" in obs_json, "defaults not in json"
 
 
 class ObservationTestCasePowerPC(unittest.TestCase):
