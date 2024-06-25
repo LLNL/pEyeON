@@ -211,7 +211,13 @@ class Observe:
         if not pe.signatures:
             log.info(f"file {file} has no signatures.")
             return
-        self.authentihash = pe.signatures[0].content_info.digest.hex()
+
+        # perform authentihash computation
+        self.authentihash = pe.authentihash(pe.signatures[0].digest_algorithm).hex()
+
+        # verifies signature digest vs the hashed code to validate code integrity 
+        self.authenticode_integrity = str(pe.verify_signature())
+
         # signinfo = sig.SignerInfo
         # this thing is documented but has no constructor defined
         self.signatures = [
@@ -219,7 +225,7 @@ class Observe:
                 "certs": [self._cert_parser(c) for c in sig.certificates],
                 "signers": str(sig.signers[0]),
                 "digest_algorithm": str(sig.digest_algorithm),
-                "verification": str(sig.check()) == "OK",
+                "verification": str(sig.check()), # gives us more info than a bool on fail
                 "sha1": sig.content_info.digest.hex()
                 # "sections": [s.__str__() for s in pe.sections]
                 # **signinfo,

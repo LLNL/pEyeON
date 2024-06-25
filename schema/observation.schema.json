@@ -74,7 +74,11 @@
     },
     "authentihash": {
       "type": "string",
-      "description": "Authentihash of signatures"
+      "description": "Authentihash computed from signature hashing algorithm"
+    },
+    "authenticode_integrity": {
+      "type": "string",
+      "description": "Checks if signatures are OK and if digest matches hashed authenticode"
     },
     "metadata": {
       "$ref": "#/$defs/metadata"
@@ -92,7 +96,7 @@
           },
           "signers": { "type": "string" },
           "digest_algorithm": { "type": "string" },
-          "verification": { "type": "boolean" },
+          "verification": { "type": "string" },
           "sha1": { "type": "string" }
         }
       }
