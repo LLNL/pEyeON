@@ -39,6 +39,14 @@ class ObservationTestCase(unittest.TestCase):
             self.OBS.ssdeep,
             "98304:kq6vzyzgvZe2fwa5T3CWxeKNn5pRD4RnzY/moFJ:V6vzhUfa5fnws5",  # noqa: E501
         )
+        self.assertNotIn(  # check that the first cert has no issuer in the chain
+                "issuer_sha256",
+                self.OBS.signatures[0]["certs"][0]
+                )
+        self.assertEqual(  # check that the second cert has the first issuer's sha
+                self.OBS.signatures[0]["certs"][1]["issuer_sha256"],
+                "46011ede1c147eb2bc731a539b7c047b7ee93e48b9d3c3ba710ce132bbdfac6b"
+                )
 
         self.assertEqual(self.OBS.authenticode_integrity, "OK")
         self.assertEqual(self.OBS.signatures[0]["verification"], "OK")
@@ -87,6 +95,7 @@ class ObservationTestCase2(unittest.TestCase):
             self.OBS.ssdeep,
             "1536:1QMY7SpeylTgzfbPlxjBG3PMyFESaZrOwWXKMk3NJvvsC7W+oVfuokwcLxIvOG0H:1Qp7SQDPlxjBiRhwukI+d5wLOne+",  # noqa: E501
         )
+        self.assertEqual(len(self.OBS.signatures), 0)  # ls is unsigned, should have no signatures
 
     def testValidateJson(self) -> None:
         with open("../schema/observation.schema.json") as schem:
