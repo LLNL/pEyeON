@@ -95,7 +95,7 @@ class ObservationTestCase2(unittest.TestCase):
             self.OBS.ssdeep,
             "1536:1QMY7SpeylTgzfbPlxjBG3PMyFESaZrOwWXKMk3NJvvsC7W+oVfuokwcLxIvOG0H:1Qp7SQDPlxjBiRhwukI+d5wLOne+",  # noqa: E501
         )
-        self.assertEqual(len(self.OBS.signatures), 0)  # ls is unsigned, should have no signatures
+        self.assertFalse(len(self.OBS.signatures))  # ls is unsigned, should have no signatures
 
     def testValidateJson(self) -> None:
         with open("../schema/observation.schema.json") as schem:
@@ -222,6 +222,10 @@ class ObservationTestCaseArm(unittest.TestCase):
         self.assertEqual(self.OBS.authenticode_integrity, "OK")
         self.assertEqual(self.OBS.signatures[0]["verification"], "OK")
         self.assertEqual(self.OBS.authentihash, self.OBS.signatures[0]["sha1"])
+        self.assertEqual(self.OBS.signatures[0]["certs"][0]["issuer_sha256"],
+                         "07821038ae6d90f2ea3bff5b6169ba0fb0b3b5cef57db18e7d48313da99e4a36")
+        self.assertEqual(self.OBS.signatures[0]["certs"][1]["issuer_sha256"],
+                         "07821038ae6d90f2ea3bff5b6169ba0fb0b3b5cef57db18e7d48313da99e4a36")
 
     def testConfigJson(self) -> None:
         vs = vars(self.OBS)
@@ -262,6 +266,12 @@ class ObservationTestCasePowerPC(unittest.TestCase):
             self.OBS.ssdeep,
             "196608:j45VWK0byrgGFes2xTMRgWx3XHUuHzsOyHShHK9Xp440Cfo:j4Gb+BhRpkuYOyyBy440Cfo"  # noqa: E501
         )
+        self.assertFalse(len(self.OBS.signatures))
+
+    def testConfigJson(self) -> None:
+        vs = vars(self.OBS)
+        obs_json = json.loads(self.OBS._safe_serialize(vs))
+        assert "defaults" in obs_json, "defaults not in json"
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -272,11 +282,6 @@ class ObservationTestCasePowerPC(unittest.TestCase):
             pass
         # self.OBS.write_json()
         # unittest.mock?
-
-    def testConfigJson(self) -> None:
-        vs = vars(self.OBS)
-        obs_json = json.loads(self.OBS._safe_serialize(vs))
-        assert "defaults" in obs_json, "defaults not in json"
 
 
 # 7zip is a PE with 0 signatures, so we can test some of the logging functions

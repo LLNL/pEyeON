@@ -145,6 +145,10 @@ class ObservationTestCaseArm(unittest.TestCase):
         self.assertEqual(self.OBS.authenticode_integrity, "OK")
         self.assertEqual(self.OBS.signatures[0]["verification"], "OK")
         self.assertEqual(self.OBS.authentihash, self.OBS.signatures[0]["sha1"])
+        self.assertEqual(self.OBS.signatures[0]["certs"][0]["issuer_sha256"],
+                         "07821038ae6d90f2ea3bff5b6169ba0fb0b3b5cef57db18e7d48313da99e4a36")
+        self.assertEqual(self.OBS.signatures[0]["certs"][1]["issuer_sha256"],
+                         "07821038ae6d90f2ea3bff5b6169ba0fb0b3b5cef57db18e7d48313da99e4a36")
 
     def testConfigJson(self) -> None:
         vs = vars(self.OBS)
