@@ -34,6 +34,15 @@ class ParseTestCase(unittest.TestCase):
         self.assertEqual(schema['signatures'][0]["verification"], "OK")
         self.assertEqual(schema['authentihash'], schema['signatures'][0]["sha1"])
 
+        self.assertNotIn(  # check that the first cert has no issuer in the chain
+                "issuer_sha256",
+                schema['signatures'][0]["certs"][0]
+                )
+        self.assertEqual(  # check that the second cert has the first issuer's sha
+                schema['signatures'][0]["certs"][1]["issuer_sha256"],
+                "46011ede1c147eb2bc731a539b7c047b7ee93e48b9d3c3ba710ce132bbdfac6b"
+                )
+
     @classmethod
     def tearDownClass(self) -> None:
         shutil.rmtree("./results")
