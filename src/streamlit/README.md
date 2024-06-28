@@ -22,4 +22,4 @@ At this point, it will run, but doesn't do much of anything but open the databas
 
 1. Add a new page to the `pages/` directory
 2. Ensure it implements a `__main__` function (use the example in `initial_page.py`)
-3. Add it to the navigation in `utils/utils.py`
+3. Add it to the navigation in `pages/pages.py`
