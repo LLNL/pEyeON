@@ -1,0 +1,6 @@
+[datasets]
+dataset_path = "/Users/johnson30/data"
+
+[app]
+page_title="EyeOn Explorer"
+logo="common/EyeON_Logo.png"
