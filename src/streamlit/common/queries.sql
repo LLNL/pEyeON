@@ -60,3 +60,24 @@ select
   count(distinct process_name) uniq_count, count(*) total_processes
 from process
 ;
+
+-- Cluster observations with certificates by time.
+select
+--# name: cert_observation_times
+time_bucket(INTERVAL '15 minutes', observation_ts) ObsTime, count(*) NumRows
+from raw_pf where ARRAY_LENGTH(signatures) > 0
+group by all order by all
+;
+
+-- Count different RSA Key sizes
+select
+--# name: rsa_key_sizes
+RSA_key_size, count(*) NumKeys from raw_uniq_certs group by all order by all
+;
+
+-- Cluster Expiration times by year
+select
+--# name: expiration_years
+time_bucket(INTERVAL '1 year', expires_on) ExpiryYear, count(*) NumRows
+from raw_uniq_certs group by all order by all
+;
