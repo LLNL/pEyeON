@@ -1,4 +1,5 @@
 import logging
+from tqdm import tqdm as progress_bar
 from typing import Any
 
 # from .setup_log import logger  # noqa: F401
@@ -57,8 +58,8 @@ class Parse:
             from multiprocessing import Pool
 
             with Pool(threads) as p:
-                p.map(self._observe, files)
+                progress_bar(p.imap(self._observe, files))  # imap returns an iterator
 
         else:
-            for filet in files:
+            for filet in progress_bar(files):
                 self._observe(filet)
