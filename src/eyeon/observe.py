@@ -104,6 +104,7 @@ class Observe:
             self.set_imphash(file)
             self.certs = {}
             self.set_signatures(file)
+            self.set_issuer_sha256()
             self.set_windows_metadata(file)
         elif lief.is_elf(file):
             self.set_telfhash(file)
@@ -231,6 +232,22 @@ class Observe:
             }
             for sig in pe.signatures
         ]
+
+    def set_issuer_sha256(self) -> None:
+        """
+        Parses the certificates to build issuer_sha256 chain
+        The match between issuer and subject name is case insensitive,
+         as per RFC 5280 §4.1.2.4 section 7.1
+        """
+        subject_sha = {}  # dictionary that maps subject to sha256
+        for sig in self.signatures:
+            for cert in sig["certs"]:  # set mappings
+                subject_sha[cert["subject_name"].casefold()] = cert["sha256"]
+
+        for sig in self.signatures:
+            for cert in sig["certs"]:  # parse mappings, set issuer sha based on issuer name
+                if cert["issuer_name"].casefold() in subject_sha:
+                    cert["issuer_sha256"] = subject_sha[cert["issuer_name"].casefold()]
 
     # @staticmethod
     def hashit(self, c: lief.PE.x509):
