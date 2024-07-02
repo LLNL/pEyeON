@@ -1,5 +1,5 @@
 import logging
-from tqdm import tqdm as progress_bar
+from alive_progress import alive_bar, alive_it
 from typing import Any
 
 # from .setup_log import logger  # noqa: F401
@@ -48,18 +48,24 @@ class Parse:
             log.warning(f"No such file {file}.")
 
     def __call__(self, result_path: str = "./results", threads: int = 1) -> Any:
-        files = [
-            (os.path.join(dir, file), result_path)
-            for dir, _, files in os.walk(self.path)
-            for file in files
-        ]
+        with alive_bar(bar=None, elapsed_end=False, monitor_end=False,
+                       stats_end=False, receipt_text=True, spinner="waves",
+                       title='Collecting files', stats=False, monitor=False) as bar:
+            files = [
+                (os.path.join(dir, file), result_path)
+                for dir, _, files in os.walk(self.path)
+                for file in files
+            ]
+            bar.text(f'{len(files)} files collected')
 
         if threads > 1:
             from multiprocessing import Pool
 
             with Pool(threads) as p:
-                progress_bar(p.imap(self._observe, files))  # imap returns an iterator
+                with alive_bar(len(files), title=f'Parsing with {threads} threads...') as bar:
+                    for _ in p.imap(self._observe, files):
+                        bar()  # update the bar when a thread finishes
 
         else:
-            for filet in progress_bar(files):
+            for filet in alive_it(files, title="Parsing files..."):
                 self._observe(filet)
