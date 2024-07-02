@@ -50,12 +50,14 @@ class Parse:
     def __call__(self, result_path: str = "./results", threads: int = 1) -> Any:
         with alive_bar(bar=None, elapsed_end=False, monitor_end=False,
                        stats_end=False, receipt_text=True, spinner="waves",
-                       title='Collecting files', stats=False, monitor=False) as bar:
+                       stats=False, monitor=False) as bar:
+            bar.title('Collecting Files... ')
             files = [
                 (os.path.join(dir, file), result_path)
                 for dir, _, files in os.walk(self.path)
                 for file in files
             ]
+            bar.title('')
             bar.text(f'{len(files)} files collected')
 
         if threads > 1:

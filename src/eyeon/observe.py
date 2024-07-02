@@ -275,7 +275,8 @@ class Observe:
         See https://ssdeep-project.github.io/ssdeep/index.html.
         """
         try:
-            out = subprocess.run(["ssdeep", "-b", file], stdout=subprocess.PIPE).stdout.decode(
+            out = subprocess.run(["ssdeep", "-b", file], stdout=subprocess.PIPE,
+                                 stderr=subprocess.DEVNULL).stdout.decode(
                 "utf-8"
             )
         except FileNotFoundError:
