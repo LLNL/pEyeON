@@ -64,10 +64,11 @@ class Parse:
             from multiprocessing import Pool
 
             with Pool(threads) as p:
-                with alive_bar(len(files), title=f'Parsing with {threads} threads...') as bar:
+                with alive_bar(len(files), spinner="waves",
+                               title=f'Parsing with {threads} threads...') as bar:
                     for _ in p.imap(self._observe, files):
                         bar()  # update the bar when a thread finishes
 
         else:
-            for filet in alive_it(files, title="Parsing files..."):
+            for filet in alive_it(files, spinner="waves", title="Parsing files..."):
                 self._observe(filet)
