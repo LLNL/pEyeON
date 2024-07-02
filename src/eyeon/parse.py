@@ -66,7 +66,7 @@ class Parse:
             with Pool(threads) as p:
                 with alive_bar(len(files), spinner="waves",
                                title=f'Parsing with {threads} threads...') as bar:
-                    for _ in p.imap(self._observe, files):
+                    for _ in p.imap_unordered(self._observe, files):
                         bar()  # update the bar when a thread finishes
 
         else:
