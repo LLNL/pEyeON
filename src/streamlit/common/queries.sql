@@ -88,3 +88,23 @@ select
 SUBSTRING(REGEXP_EXTRACT(subject_name, 'ST=([^,]+)'), 4) State, count(*) NumRows
 FROM raw_uniq_certs group by all order by NumRows DESC
 ;
+
+-- Get filesizes
+select 
+--# name: file_sizes
+bytecount FROM raw_pf
+;
+
+-- Cluter and count file extensions
+SELECT 
+--# name: file_extensions
+LOWER(SUBSTRING(REGEXP_EXTRACT(filename, '\.([^.]*)$'), 0)) file_extension, count(*) NumRows
+FROM raw_pf group by all order by NumRows DESC LIMIT 30
+;
+
+-- Cluter magic bytes
+SELECT 
+--# name: magic_bytes
+magic, count(*) NumRows
+FROM raw_pf group by all order by NumRows DESC LIMIT 30
+;
