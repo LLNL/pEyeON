@@ -40,7 +40,7 @@ def change_cur_ds():
 def change_cur_db():
     # Streamlit scopes widget bound keys to a page and we want the state maintained across the session, so sync here.
     st.session_state.curdb = st.session_state._curdb
-    if st.session_state.curdb != None:
+    if st.session_state.curdb is not None:
         print(f"on_change: opening db: {st.session_state.curdb}")
         du.opendb(get_allds()[st.session_state.curds].getdb(st.session_state.curdb))
 
@@ -48,7 +48,7 @@ def change_cur_db():
 def sidebar_db_chooser():
     with st.sidebar:
         # Index into options list. Default to None forces user to select one.
-        curds_idx = None
+        curds_idx = 0
         if "curds" in st.session_state:
             # Get index to set as default selections
             curds_idx = list(get_allds()).index(st.session_state.curds)
@@ -59,18 +59,22 @@ def sidebar_db_chooser():
             index=curds_idx,
             key="_curds",
             on_change=change_cur_ds,
-        )
+            )
+
+        # ensures the default selection populates correctly the first time
+        if "curds" not in st.session_state and curds_idx is not None:
+            change_cur_ds()  
+            change_cur_db()
+
         if "curds" in st.session_state:
             # With only 1 database, don't bother with the selectbox, just use it. And display as text.
             if len(get_allds()[st.session_state.curds].databases) == 1:
-                st.session_state._curdb = get_allds()[st.session_state.curds].databases[
-                    0
-                ]
+                st.session_state._curdb = get_allds()[st.session_state.curds].databases[0]
                 change_cur_db()
                 st.markdown(f"*{st.session_state.curdb}*")
             else:
                 curdb_idx = None
-                if "curdb" in st.session_state and st.session_state.curdb != None:
+                if "curdb" in st.session_state and st.session_state.curdb is not None:
                     curdb_idx = list(
                         get_allds()[st.session_state.curds].databases
                     ).index(st.session_state.curdb)

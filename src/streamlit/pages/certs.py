@@ -35,6 +35,11 @@ class LandingPage(BasePageLayout):
         exp_years_df['ExpiryYear'] = pd.DatetimeIndex(exp_years_df['ExpiryYear']).year
         st.bar_chart(exp_years_df, x="ExpiryYear", y="NumRows")
 
+        st.markdown("#### Certificate Locations")
+        states_df = du.getdatafor(du.getcon(), "subject_states")
+        states_df["State"] = states_df["State"].replace("", "Empty")
+        st.bar_chart(states_df, x="State", y="NumRows")
+
         # Proof-of-life debug info
         pf.debug_info()
 

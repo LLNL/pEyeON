@@ -8,7 +8,7 @@ def summary():
     summary = st.container(border=True)
     col1, col2, col3 = st.columns(3)
 
-    if du.getcon() != None:
+    if du.getcon() is not None:
         # High level stats: hosts, data range
         with summary:
             with col1:

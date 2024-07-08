@@ -75,9 +75,16 @@ select
 RSA_key_size, count(*) NumKeys from raw_uniq_certs group by all order by all
 ;
 
--- Cluster Expiration times by year
+-- Cluster expiration times by year
 select
 --# name: expiration_years
 time_bucket(INTERVAL '1 year', expires_on) ExpiryYear, count(*) NumRows
 from raw_uniq_certs group by all order by all
+;
+
+-- Gets the state from the subject name
+select 
+--# name: subject_states
+SUBSTRING(REGEXP_EXTRACT(subject_name, 'ST=([^,]+)'), 4) State, count(*) NumRows
+FROM raw_uniq_certs group by all order by NumRows DESC
 ;
