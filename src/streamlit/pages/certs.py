@@ -6,6 +6,7 @@ from utils.config import settings
 import pandas as pd
 import streamlit as st
 import common.dqautil as du
+import altair as alt
 
 
 class LandingPage(BasePageLayout):
@@ -28,7 +29,13 @@ class LandingPage(BasePageLayout):
         st.markdown("#### RSA Key Sizes")
         key_sizes_df = du.getdatafor(du.getcon(), "rsa_key_sizes")
         # This horizontal barchart needs at least streamlit v1.36 I think
-        st.bar_chart(key_sizes_df, x="RSA_key_size", y="NumKeys", horizontal=True)
+        # st.bar_chart(key_sizes_df, x="RSA_key_size", y="NumKeys", horizontal=True)
+        st.altair_chart(alt.Chart(key_sizes_df).mark_arc().encode(
+                theta=alt.Theta('NumKeys:Q'),
+                color=alt.Color('RSA_key_size:N')
+            ),
+            use_container_width=True
+        )
 
         st.markdown("#### Expiry Dates")
         exp_years_df = du.getdatafor(du.getcon(), "expiration_years")
