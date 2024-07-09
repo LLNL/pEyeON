@@ -33,7 +33,7 @@ class LandingPage(BasePageLayout):
         st.markdown("#### File extensions")
         extension_df = du.getdatafor(du.getcon(), "file_extensions")
         # This horizontal barchart needs at least streamlit v1.36 I think
-        st.write(alt.Chart(extension_df).mark_bar().encode(
+        st.altair_chart(alt.Chart(extension_df).mark_bar().encode(
                 x=alt.X('file_extension', sort=None),
                 y='NumRows',
             ),
@@ -43,7 +43,7 @@ class LandingPage(BasePageLayout):
         st.markdown("#### Magic Bytes")
         magic_df = du.getdatafor(du.getcon(), "magic_bytes")
         # st.bar_chart(magic_df, x="magic", y="NumRows")
-        st.write(alt.Chart(magic_df).mark_bar().encode(
+        st.altair_chart(alt.Chart(magic_df).mark_bar().encode(
                 x=alt.X('magic', sort=None),
                 y='NumRows',
             ),
