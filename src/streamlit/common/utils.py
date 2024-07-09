@@ -25,6 +25,7 @@ def sidebar_config(pages,logo=settings.app.logo, logo_width=120):
     st.sidebar.title(settings.app.page_title)
     st.sidebar.header("Menu")
     # Add all pages to the sidebar. They'll be listed in the order added.
+    st.sidebar.page_link("main.py", label="Home")
     for page in pages:
         st.sidebar.page_link(page.filename, label=page.label)
     sidebar_db_chooser()
