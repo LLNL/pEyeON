@@ -26,7 +26,7 @@ class LandingPage(BasePageLayout):
             alt.Chart(filesize_df).mark_bar().encode(
                 x=alt.X("bytecount:Q", bin=alt.Bin(maxbins=50, extent=(0, 30000000))),
                 y=alt.Y('count()').scale(type="log"),
-            ),
+            ).interactive(),
             use_container_width=True
         )
 
@@ -36,7 +36,7 @@ class LandingPage(BasePageLayout):
         st.altair_chart(alt.Chart(extension_df).mark_bar().encode(
                 x=alt.X('file_extension', sort=None),
                 y='NumRows',
-            ),
+            ).interactive(),
             use_container_width=True
         )
 
@@ -46,7 +46,7 @@ class LandingPage(BasePageLayout):
         st.altair_chart(alt.Chart(magic_df).mark_bar().encode(
                 x=alt.X('magic', sort=None),
                 y='NumRows',
-            ),
+            ).interactive(),
             use_container_width=True
         )
 

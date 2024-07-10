@@ -33,7 +33,7 @@ class LandingPage(BasePageLayout):
         st.altair_chart(alt.Chart(key_sizes_df).mark_arc().encode(
                 theta=alt.Theta('NumKeys:Q'),
                 color=alt.Color('RSA_key_size:N')
-            ),
+            ).interactive(),
             use_container_width=True
         )
 
@@ -44,7 +44,7 @@ class LandingPage(BasePageLayout):
         st.altair_chart(alt.Chart(exp_years_df).mark_line().encode(
                 x=alt.X('ExpiryYear:O', axis=alt.Axis(format='d')),
                 y='NumRows'
-            ),
+            ).interactive(),
             use_container_width=True
         )
 
