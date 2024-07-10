@@ -13,7 +13,7 @@ def app_pages():
     """
     return [
         Page("pages/initial_page.py", "Observations Summary"),
-        Page("pages/certs.py", "Certificate Stuff Page"),
-        Page("pages/metadata.py", "Metadata Stuff Page"),
-        Page("pages/debug_page.py", "Debug Stuff Page"),
+        Page("pages/certs.py", "Certificate Information"),
+        Page("pages/metadata.py", "Scanned File Metadata"),
+        Page("pages/debug_page.py", "Debug Page"),
     ]

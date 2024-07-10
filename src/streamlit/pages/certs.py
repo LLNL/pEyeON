@@ -37,10 +37,16 @@ class LandingPage(BasePageLayout):
             use_container_width=True
         )
 
-        st.markdown("#### Expiry Dates")
+        st.markdown("#### Certificate Expiry Dates")
         exp_years_df = du.getdatafor(du.getcon(), "expiration_years")
         exp_years_df['ExpiryYear'] = pd.DatetimeIndex(exp_years_df['ExpiryYear']).year
-        st.bar_chart(exp_years_df, x="ExpiryYear", y="NumRows")
+#        st.line_chart(exp_years_df, x="ExpiryYear", y="NumRows")
+        st.altair_chart(alt.Chart(exp_years_df).mark_line().encode(
+                x=alt.X('ExpiryYear:O', axis=alt.Axis(format='d')),
+                y='NumRows'
+            ),
+            use_container_width=True
+        )
 
         st.markdown("#### Certificate Locations")
         states_df = du.getdatafor(du.getcon(), "subject_states")
