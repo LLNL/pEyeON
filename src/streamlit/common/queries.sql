@@ -75,10 +75,17 @@ select
 RSA_key_size, count(*) NumKeys from raw_uniq_certs group by all order by all
 ;
 
--- Cluster expiration times by year
+-- Cluster cert expiration times by year
 select
 --# name: expiration_years
-time_bucket(INTERVAL '1 year', expires_on) ExpiryYear, count(*) NumRows
+time_bucket(INTERVAL '1 year', expires_on) ExpiryYear, count(*) "Expiring Certs"
+from raw_uniq_certs group by all order by all
+;
+
+-- Cluster cert issued_on time by year
+select
+--# name: issue_years
+time_bucket(INTERVAL '1 year', issued_on) IssueYear, count(*) "Issued Certs"
 from raw_uniq_certs group by all order by all
 ;
 
@@ -86,6 +93,13 @@ from raw_uniq_certs group by all order by all
 select 
 --# name: subject_states
 SUBSTRING(REGEXP_EXTRACT(subject_name, 'ST=([^,]+)'), 4) State, count(*) NumRows
+FROM raw_uniq_certs group by all order by NumRows DESC
+;
+
+-- Gets the organization from the subject name
+select 
+--# name: organizations
+SUBSTRING(REGEXP_EXTRACT(subject_name, 'O=([^,]+)'), 3) State, count(*) NumRows
 FROM raw_uniq_certs group by all order by NumRows DESC
 ;
 
