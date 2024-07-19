@@ -11,6 +11,9 @@ include:
   - project: 'lc-templates/id_tokens'
     file: 'id_tokens.yml'
 
+variables:
+    LLNL_SLURM_SCHEDULER_PARAMETERS: "--nodes=1 -p pdebug --userns --exclusive"
+
 stages:
   - build
   - test
@@ -21,6 +24,11 @@ stages:
     - shell
     - oslic
 
+.quartz:
+  tags:
+    - quartz
+    - batch
+
 before_script:
   - python3 -m venv eye  # Create venv
   - source eye/bin/activate
@@ -29,10 +37,10 @@ before_script:
 build:
   stage: build
   extends:
-   - .oslic
+   - .quartz
   script:
     - python3 -m build
-    - /collab/usr/gapps/lcweg/containers/scripts/enable-podman.sh overlay
+    - /collab/usr/gapps/lcweg/containers/scripts/enable-podman.sh
     - echo "${CI_REGISTRY_PASSWORD}" | podman login -u="$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
     - podman build --rm --pull-always --force-rm -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG" -f .trivy.Dockerfile .
     - podman push "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"
