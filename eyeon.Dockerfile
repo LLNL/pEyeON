@@ -20,12 +20,6 @@ RUN wget https://github.com/Kitware/CMake/releases/download/v3.27.4/cmake-3.27.4
     && rm cmake-3.27.4-linux-x86_64.sh \
     && ln -s /opt/cmake-3.27.4/bin/* /usr/local/bin
 
-RUN mkdir /opt/grype && cd /opt/grype \
-    && wget https://raw.githubusercontent.com/anchore/grype/main/install.sh -O grype-install.sh \
-    && chmod u+x grype-install.sh \
-    && ./grype-install.sh -b /usr/local/bin \
-    && rm grype-install.sh
-
 RUN cd /opt && git clone https://github.com/trendmicro/tlsh.git \
     && cd /opt/tlsh \
     && ./make.sh

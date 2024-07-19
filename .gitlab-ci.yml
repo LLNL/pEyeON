@@ -7,12 +7,14 @@
 #     - if: '$CI_COMMIT_BRANCH'
 
 include:
+  - template: Jobs/Container-Scanning.gitlab-ci.yml # template for trivy scan
   - project: 'lc-templates/id_tokens'
     file: 'id_tokens.yml'
 
 stages:
   - build
   - test
+  - trivy
 #   - sbom
 
 .oslic:
@@ -34,6 +36,7 @@ build:
   artifacts:
     paths:
       - dist/
+
 
 unittest:
   stage: test
@@ -58,6 +61,27 @@ unittest:
       coverage_report:
         coverage_format: cobertura
         path: 'tests/coverage.xml'
+
+
+container_scanning: #extends the template
+  variables:
+    CS_IMAGE: "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"  # sets the docker container to be scanned by trivy
+    CS_DISABLE_LANGUAGE_VULNERABILITY_SCAN: "false"  # tell trivy to scan pip packages 
+    LLNL_SLURM_SCHEDULER_PARAMETERS: "--nodes=1 -p pdebug --userns --exclusive"  # from LLNL example
+  stage: trivy
+  extends:
+    - .oslic
+  dependencies:
+    - build
+    - test
+  before_script:  # build dependencies, push container to registry so it can be scanned by trivy
+    - pip install dist/eyeon-*.whl
+    - /collab/usr/gapps/lcweg/containers/scripts/enable-podman.sh
+    - echo "${CI_REGISTRY_PASSWORD}" | podman login -u="$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+    - podman build --rm --pull-always --force-rm -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG" .
+    - podman push "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"
+    - podman push "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG" "$CI_REGISTRY_IMAGE:latest"
+    - podman logout $CI_REGISTRY
 
 # sbom:  # put in artifacts instead
 #   stage: sbom
