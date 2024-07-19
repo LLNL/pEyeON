@@ -32,7 +32,7 @@ build:
    - .oslic
   script:
     - python3 -m build
-    - /collab/usr/gapps/lcweg/containers/scripts/enable-podman.sh
+    - /collab/usr/gapps/lcweg/containers/scripts/enable-podman.sh overlay
     - echo "${CI_REGISTRY_PASSWORD}" | podman login -u="$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
     - podman build --rm --pull-always --force-rm -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG" -f .trivy.Dockerfile .
     - podman push "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"
