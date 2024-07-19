@@ -73,7 +73,7 @@ container_scanning: #extends the template
     - .oslic
   dependencies:
     - build
-    - test
+    - unittest
   before_script:  # build dependencies, push container to registry so it can be scanned by trivy
     - pip install dist/eyeon-*.whl
     - /collab/usr/gapps/lcweg/containers/scripts/enable-podman.sh
