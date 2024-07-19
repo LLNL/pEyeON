@@ -33,11 +33,9 @@ build:
    - .oslic
   script:
     - python3 -m build
-    - pip install dist/eyeon-*.whl # install dependencies to container so trivy can scan later
-    - echo ${CI_REGISTRY}
     - /collab/usr/gapps/lcweg/containers/scripts/enable-podman.sh
     - echo "${CI_REGISTRY_PASSWORD}" | podman login -u="$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
-    - podman build --rm --pull-always --force-rm -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG" .
+    - podman build --rm --pull-always --force-rm -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG" -f eyeon.Dockerfile .
     - podman push "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"
     - podman push "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG" "$CI_REGISTRY_IMAGE:latest"
     - podman logout $CI_REGISTRY
@@ -73,8 +71,13 @@ unittest:
 
 container_scanning: #extends the template
   variables:
-    CS_IMAGE: "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"  # sets the docker container to be scanned by trivy
+    CS_IMAGE: "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"  # container to be scanned by trivy
+    CS_REGISTRY_USER: "$CI_REGISTRY_USER"
+    CS_REGISTRY_PASSWORD: "$CI_REGISTRY_PASSWORD"
+    CS_DOCKERFILE_PATH: "eyeon.Dockerfile"
     CS_DISABLE_LANGUAGE_VULNERABILITY_SCAN: "false"  # tell trivy to scan pip packages 
+  before_script:
+    - echo "${CI_REGISTRY_PASSWORD}" | podman login -u="$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
   stage: trivy
   extends:
     - .oslic
