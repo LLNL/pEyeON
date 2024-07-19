@@ -3,11 +3,13 @@ FROM ubuntu:22.04
 ARG USER_ID
 ARG OUN
 
-RUN apt update \
-    && apt install -y python3 python3-pip python3-dev python3-venv libmagic1 git make wget unzip build-essential vim ssdeep jq \
-    && groupadd -g $USER_ID $OUN \
-    && useradd -ms /bin/bash $OUN -u $USER_ID -g $USER_ID \
-    && pip3 install build sphinx pre-commit black
+RUN echo $USER_ID
+RUN echo $OUN
+RUN apt update 
+RUN apt install -y python3 python3-pip python3-dev python3-venv libmagic1 git make wget unzip build-essential vim ssdeep jq 
+RUN groupadd -g $USER_ID $OUN 
+RUN useradd -ms /bin/bash $OUN -u $USER_ID -g $USER_ID 
+RUN pip3 install build sphinx pre-commit black
 
 RUN echo "alias build='python3 -m build'" >> /home/$OUN/.bashrc \
     && echo "alias clean='rm -rf /workdir/dist'" >> /home/$OUN/.bashrc \
