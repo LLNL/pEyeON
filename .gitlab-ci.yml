@@ -28,16 +28,13 @@ before_script:
   - pip3 install build
 
 build:
-  variables:
-      LLNL_SLURM_SCHEDULER_PARAMETERS: "--nodes=1 -p pdebug --userns --exclusive"
   stage: build
   extends:
    - .oslic
-  tags:
-    - batch
   script:
     - python3 -m build
     - pip install dist/eyeon-*.whl # install dependencies to container so trivy can scan later
+    - echo ${CI_REGISTRY}
     - /collab/usr/gapps/lcweg/containers/scripts/enable-podman.sh
     - echo "${CI_REGISTRY_PASSWORD}" | podman login -u="$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
     - podman build --rm --pull-always --force-rm -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG" .
