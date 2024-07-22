@@ -7,7 +7,7 @@
 #     - if: '$CI_COMMIT_BRANCH'
 
 include:
-  - template: Jobs/Container-Scanning.gitlab-ci.yml # template for trivy scan
+  #  - template: Jobs/Container-Scanning.gitlab-ci.yml # template for trivy scan
   - project: 'lc-templates/id_tokens'
     file: 'id_tokens.yml'
 
@@ -43,32 +43,33 @@ trivy:  # Build project deps, download and install trivy, then scans filesystem
     - .oslic
   dependencies:
     - build
-  before_script:
-    - python3 -m venv eye  # im overwriting the before_script inheritance, so I need this stuff again
-    - source eye/bin/activate
-    - pip3 install build
+  variables:
+    TRIVY_NO_PROGRESS: "true"
+    TRIVY_CACHE_DIR: ".trivycache/"
+  script:
     - pip install dist/eyeon-*.whl
 
-    - apt-get update  # update, install requirements, and install LLNL CSP Certs
-    - apt-get install -y wget ca-certificates apt-transport-https gnupg
-    - wget "https://www-csp.llnl.gov/content/assets/csoc/cspca.crt" -O /usr/local/share/ca-certificates/cspca.crt
-    - chmod 644 /usr/local/share/ca-certificates/cspca.crt && update-ca-certificates       
+    # Install trivy, using this guide: https://aquasecurity.github.io/trivy/v0.53/tutorials/integrations/gitlab-ci/
+    - export TRIVY_VERSION=$(wget -qO - "https://api.github.com/repos/aquasecurity/trivy/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+    - echo $TRIVY_VERSION
+    - wget --no-verbose "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" -O - | tar -zxvf -
 
-    # Install trivy
-    - wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | tee /usr/share/keyrings/trivy.gpg > /dev/null
-    - echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" | tee -a /etc/apt/sources.list.d/trivy.list
-    - apt-get update
-    - apt-get install -y trivy
+    # get the gitlab template
+    - wget "https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/gitlab.tpl" -O gitlab.tpl
+    - ls -la
 
-  script:
-    - trivy --version
-    - time trivy clean --scan-cache --cache-dir .trivycache
-    # make scan report and put it in the default workdir $CI_PROJECT_DIR, so 'artifacts:' can take it from there
-    - time trivy --cache-dir .trivycache --format json --output "$CI_PROJECT_DIR/gl-container-scanning-report.json" filesystem / 
+    - ./trivy --version        
+    # Build report
+    - time ./trivy filesystem --exit-code 0 --format template --template "@./gitlab.tpl" -o gl-container-scanning-report.json /
+    # Print report
+    - time ./trivy filesystem --exit-code 0 --severity HIGH /
+    # Fail on critical vulnerabilities
+    - time ./trivy filesystem --exit-code 1 --severity CRITICAL /
+
   cache:
     paths:
       - .trivycache/
-  # Enables https://docs.gitlab.com/ee/user/application_security/container_scanning/ (Container Scanning report is available on GitLab EE Ultimate or GitLab.com Gold)
+  # Enables https://docs.gitlab.com/ee/user/application_security/container_scanning/ integration with security dashboard 
   artifacts:
     when: always
     reports:
