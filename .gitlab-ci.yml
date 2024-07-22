@@ -12,7 +12,7 @@ include:
     file: 'id_tokens.yml'
 
 variables:  # these settings tell slurm to reserve a node for my job, in the pbatch partition
-    LLNL_SLURM_SCHEDULER_PARAMETERS: "--nodes=1 -p pbatch --userns --exclusive"
+LLNL_SLURM_SCHEDULER_PARAMETERS: "--nodes=1 -p pbatch --time=00:10:00 --userns"
 
 stages:
   - build
