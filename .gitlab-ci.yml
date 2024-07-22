@@ -44,8 +44,12 @@ trivy:  # Build project deps, download and install trivy, then scans filesystem
   dependencies:
     - build
   before_script:
+    - python3 -m venv eye  # im overwriting the before_script inheritance, so I need this stuff again
+    - source eye/bin/activate
+    - pip3 install build
     - pip install dist/eyeon-*.whl
-    - apt-get update  # install requirements, and install LLNL CSP Certs
+
+    - apt-get update  # update, install requirements, and install LLNL CSP Certs
     - apt-get install -y wget ca-certificates apt-transport-https gnupg
     - wget "https://www-csp.llnl.gov/content/assets/csoc/cspca.crt" -O /usr/local/share/ca-certificates/cspca.crt
     - chmod 644 /usr/local/share/ca-certificates/cspca.crt && update-ca-certificates       
