@@ -4,9 +4,9 @@ USER root
 RUN apt update 
 
 # Install LLNL CSP certs
-RUN apt-get install -y ca-certificates
-ADD https://www-csp.llnl.gov/content/assets/csoc/cspca.crt /usr/local/share/ca-certificates/cspca.crt
-RUN chmod 644 /usr/local/share/ca-certificates/cspca.crt && update-ca-certificates
+# RUN apt-get install -y ca-certificates
+# ADD https://www-csp.llnl.gov/content/assets/csoc/cspca.crt /usr/local/share/ca-certificates/cspca.crt
+# RUN chmod 644 /usr/local/share/ca-certificates/cspca.crt && update-ca-certificates
 
 RUN apt install -y python3 python3-pip python3-dev python3-venv libmagic1 git make wget unzip build-essential vim ssdeep jq \
     && pip3 install build sphinx pre-commit black
