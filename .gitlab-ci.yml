@@ -11,9 +11,6 @@ include:
   - project: 'lc-templates/id_tokens'
     file: 'id_tokens.yml'
 
-variables:  # these settings tell slurm to reserve a node for my job, in the pdebug partition
-    LLNL_SLURM_SCHEDULER_PARAMETERS: "--nodes=1 -p pdebug --time=00:10:00 --userns"
-
 stages:
   - build
   - test
@@ -23,11 +20,6 @@ stages:
   tags:
     - shell
     - oslic
-
-.borax:
-  tags:
-    - borax
-    - batch
 
 before_script:
   - python3 -m venv eye  # Create venv
@@ -45,17 +37,38 @@ build:
       - dist/
 
 
-push_container:  # builds and pushes the container to be scanned by trivy to the gitlab container repo
-  stage: build
+trivy:  # Build project deps, download and install trivy, then scans filesystem
+  stage: test
   extends:
-    - .borax
+    - .oslic
+  dependencies:
+    - build
+  before_script:
+    - pip install dist/eyeon-*.whl
+    - apt-get update  # install requirements, and install LLNL CSP Certs
+    - apt-get install -y wget ca-certificates apt-transport-https gnupg
+    - wget "https://www-csp.llnl.gov/content/assets/csoc/cspca.crt" -O /usr/local/share/ca-certificates/cspca.crt
+    - chmod 644 /usr/local/share/ca-certificates/cspca.crt && update-ca-certificates       
+
+    # Install trivy
+    - wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | tee /usr/share/keyrings/trivy.gpg > /dev/null
+    - echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" | tee -a /etc/apt/sources.list.d/trivy.list
+    - apt-get update
+    - apt-get install -y trivy
+
   script:
-    - /collab/usr/gapps/lcweg/containers/scripts/enable-podman.sh
-    - echo "${CI_REGISTRY_PASSWORD}" | podman login -u="$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
-    - podman build --rm --pull-always --force-rm -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG" -f .trivy.Dockerfile .
-    - podman push "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"
-    - podman push "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG" "$CI_REGISTRY_IMAGE:latest"
-    - podman logout $CI_REGISTRY
+    - trivy --version
+	- time trivy clean --scan-cache --cache-dir .trivycache
+    # make scan report and put it in the default workdir $CI_PROJECT_DIR, so 'artifacts:' can take it from there
+    - time trivy --cache-dir .trivycache --format json --output "$CI_PROJECT_DIR/gl-container-scanning-report.json" filesystem / 
+  cache:
+    paths:
+      - .trivycache/
+  # Enables https://docs.gitlab.com/ee/user/application_security/container_scanning/ (Container Scanning report is available on GitLab EE Ultimate or GitLab.com Gold)
+  artifacts:
+    when: always
+    reports:
+      container_scanning: gl-container-scanning-report.json
 
 
 unittest:
