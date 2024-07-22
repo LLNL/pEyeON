@@ -58,7 +58,7 @@ trivy:  # Build project deps, download and install trivy, then scans filesystem
 
   script:
     - trivy --version
-	- time trivy clean --scan-cache --cache-dir .trivycache
+    - time trivy clean --scan-cache --cache-dir .trivycache
     # make scan report and put it in the default workdir $CI_PROJECT_DIR, so 'artifacts:' can take it from there
     - time trivy --cache-dir .trivycache --format json --output "$CI_PROJECT_DIR/gl-container-scanning-report.json" filesystem / 
   cache:
