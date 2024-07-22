@@ -215,7 +215,7 @@ class Observe:
         # perform authentihash computation
         self.authentihash = pe.authentihash(pe.signatures[0].digest_algorithm).hex()
 
-        # verifies signature digest vs the hashed code to validate code integrity 
+        # verifies signature digest vs the hashed code to validate code integrity
         self.authenticode_integrity = str(pe.verify_signature())
 
         # signinfo = sig.SignerInfo
@@ -225,7 +225,7 @@ class Observe:
                 "certs": [self._cert_parser(c) for c in sig.certificates],
                 "signers": str(sig.signers[0]),
                 "digest_algorithm": str(sig.digest_algorithm),
-                "verification": str(sig.check()), # gives us more info than a bool on fail
+                "verification": str(sig.check()),  # gives us more info than a bool on fail
                 "sha1": sig.content_info.digest.hex()
                 # "sections": [s.__str__() for s in pe.sections]
                 # **signinfo,

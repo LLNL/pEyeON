@@ -98,10 +98,12 @@
           "digest_algorithm": { "type": "string" },
           "verification": { "type": "string" },
           "sha1": { "type": "string" }
-        }
+        },
+        "required": ["signers", "digest_algorithm"]
       }
     }
   },
+  "additionalProperties": false,
   "$defs": {
     "certs": {
       "type": "array",
