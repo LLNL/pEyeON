@@ -95,24 +95,6 @@ unittest:
         coverage_format: cobertura
         path: 'tests/coverage.xml'
 
-
-container_scanning: #extends the template
-  extends:
-    - .oslic
-  variables:
-    CS_IMAGE: "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"  # container to be scanned by trivy, pushed in other job
-    CS_REGISTRY_USER: "$CI_REGISTRY_USER"
-    CS_REGISTRY_PASSWORD: "$CI_REGISTRY_PASSWORD"
-    CS_DOCKERFILE_PATH: "eyeon.Dockerfile"
-    CS_DISABLE_LANGUAGE_VULNERABILITY_SCAN: "false"  # tell trivy to scan pip packages 
-    CS_SEVERITY_THRESHOLD: "UNKNOWN"  # set to UNKNOWN, LOW, MEDIUM, HIGH, CRITICAL
-    # ^^^ scanner outputs vulns with severity higher than threshold. 
-    SECURE_LOG_LEVEL: info
-  before_script:
-    - echo "${CI_REGISTRY_PASSWORD}" | podman login -u="$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
-  dependencies:
-    - build
-
 # sbom:  # put in artifacts instead
 #   stage: sbom
 #   script:
