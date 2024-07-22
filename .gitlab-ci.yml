@@ -36,8 +36,9 @@ before_script:
 
 build:
   stage: build
-  extends:
-   - .quartz
+  tags:
+    - oslic4
+    - batch
   script:
     - python3 -m build
     - /collab/usr/gapps/lcweg/containers/scripts/enable-podman.sh
@@ -83,6 +84,9 @@ container_scanning: #extends the template
     CS_REGISTRY_PASSWORD: "$CI_REGISTRY_PASSWORD"
     CS_DOCKERFILE_PATH: "eyeon.Dockerfile"
     CS_DISABLE_LANGUAGE_VULNERABILITY_SCAN: "false"  # tell trivy to scan pip packages 
+    CS_SEVERITY_THRESHOLD: "UNKNOWN"  # set to UNKNOWN, LOW, MEDIUM, HIGH, CRITICAL
+    # ^^^ scanner outputs vulns with severity higher than threshold. 
+    SECURE_LOG_LEVEL: info
   before_script:
     - echo "${CI_REGISTRY_PASSWORD}" | podman login -u="$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
   extends:
