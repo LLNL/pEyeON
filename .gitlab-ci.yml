@@ -11,8 +11,8 @@ include:
   - project: 'lc-templates/id_tokens'
     file: 'id_tokens.yml'
 
-variables:  # these settings tell slurm to reserve a node for my job, in the pbatch partition
-    LLNL_SLURM_SCHEDULER_PARAMETERS: "--nodes=1 -p pbatch --time=00:10:00 --userns"
+variables:  # these settings tell slurm to reserve a node for my job, in the pdebug partition
+    LLNL_SLURM_SCHEDULER_PARAMETERS: "--nodes=1 -p pdebug --time=00:10:00 --userns"
 
 stages:
   - build
@@ -24,9 +24,9 @@ stages:
     - shell
     - oslic
 
-.quartz:
+.borax:
   tags:
-    - quartz
+    - borax
     - batch
 
 before_script:
@@ -47,9 +47,8 @@ build:
 
 push_container:  # builds and pushes the container to be scanned by trivy to the gitlab container repo
   stage: build
-  tags:
-    - oslic4
-    - batch
+  extends:
+    - .borax
   script:
     - /collab/usr/gapps/lcweg/containers/scripts/enable-podman.sh
     - echo "${CI_REGISTRY_PASSWORD}" | podman login -u="$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
