@@ -57,11 +57,11 @@ trivy:  # Build project deps, download and install trivy, then scans filesystem
 
     - ./trivy --version        
     # Build report
-    - time ./trivy filesystem --scanners vuln --timeout=30m --exit-code 0 --format template --template "@./contrib/gitlab.tpl" -o gl-container-scanning-report.json /
+    - time ./trivy filesystem --scanners vuln --timeout=30m --exit-code 0 --format template --template "@./contrib/gitlab.tpl" -o gl-container-scanning-report.json .
     # Print report
-    - time ./trivy filesystem --exit-code 0 --severity HIGH /
+    - time ./trivy filesystem --exit-code 0 --severity HIGH .
     # Fail on critical vulnerabilities
-    - time ./trivy filesystem --exit-code 1 --severity CRITICAL /
+    - time ./trivy filesystem --exit-code 1 --severity CRITICAL .
 
   cache:
     paths:
