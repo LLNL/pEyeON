@@ -49,6 +49,7 @@ container_scanning:  # Build project deps, download and install trivy, then scan
   script:
     - pip install dist/eyeon-*.whl
     - pip freeze > requirements.txt  # this is the needed format for trivy to pick up dependencies
+    - cat requirements.txt 
 
     # Install trivy, using this guide: https://aquasecurity.github.io/trivy/v0.53/tutorials/integrations/gitlab-ci/
     - export TRIVY_VERSION=$(wget -qO - "https://api.github.com/repos/aquasecurity/trivy/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
