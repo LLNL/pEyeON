@@ -37,7 +37,7 @@ build:
       - dist/
 
 
-trivy:  # Build project deps, download and install trivy, then scans filesystem
+container_scanning:  # Build project deps, download and install trivy, then scans filesystem
   stage: test
   extends:
     - .oslic
@@ -48,6 +48,7 @@ trivy:  # Build project deps, download and install trivy, then scans filesystem
     TRIVY_CACHE_DIR: ".trivycache/"
   script:
     - pip install dist/eyeon-*.whl
+    - pip freeze > requirements.txt  # this is the needed format for trivy to pick up dependencies
 
     # Install trivy, using this guide: https://aquasecurity.github.io/trivy/v0.53/tutorials/integrations/gitlab-ci/
     - export TRIVY_VERSION=$(wget -qO - "https://api.github.com/repos/aquasecurity/trivy/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
@@ -56,12 +57,12 @@ trivy:  # Build project deps, download and install trivy, then scans filesystem
     - ls -la
 
     - ./trivy --version        
-    # Build report
-    - time ./trivy rootfs --timeout=30m --exit-code 0 --format template --template "@./contrib/gitlab.tpl" -o gl-container-scanning-report.json .
-    # Print report
-    - time ./trivy rootfs --exit-code 0 --severity HIGH .
+    # Build and save report
+    - time ./trivy filesystem --timeout=10m --exit-code 0 --format template --template "@./contrib/gitlab.tpl" -o gl-container-scanning-report.json .
+    # Print full report
+    - time ./trivy filesystem --exit-code 0 .
     # Fail on critical vulnerabilities
-    - time ./trivy rootfs --exit-code 1 --severity CRITICAL .
+    - time ./trivy filesystem --exit-code 1 --severity CRITICAL .
 
   cache:
     paths:
