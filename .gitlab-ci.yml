@@ -64,6 +64,9 @@ container_scanning:  # Build project deps, download and install trivy, then scan
     # Fail on critical vulnerabilities
     - time ./trivy filesystem --exit-code 1 --severity CRITICAL .
 
+    # Testing SBOM Generation
+    - time ./trivy filesystem --format cyclonedx --output gl-sbom-eyeon.json .
+
   cache:
     paths:
       - .trivycache/
@@ -72,6 +75,7 @@ container_scanning:  # Build project deps, download and install trivy, then scan
     when: always
     reports:
       container_scanning: gl-container-scanning-report.json
+      cyclonedx: gl-sbom-eyeon.json
 
 
 unittest:
