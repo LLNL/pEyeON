@@ -40,13 +40,12 @@ class ObservationTestCase(unittest.TestCase):
             "98304:kq6vzyzgvZe2fwa5T3CWxeKNn5pRD4RnzY/moFJ:V6vzhUfa5fnws5",  # noqa: E501
         )
         self.assertNotIn(  # check that the first cert has no issuer in the chain
-                "issuer_sha256",
-                self.OBS.signatures[0]["certs"][0]
-                )
+            "issuer_sha256", self.OBS.signatures[0]["certs"][0]
+        )
         self.assertEqual(  # check that the second cert has the first issuer's sha
-                self.OBS.signatures[0]["certs"][1]["issuer_sha256"],
-                "46011ede1c147eb2bc731a539b7c047b7ee93e48b9d3c3ba710ce132bbdfac6b"
-                )
+            self.OBS.signatures[0]["certs"][1]["issuer_sha256"],
+            "46011ede1c147eb2bc731a539b7c047b7ee93e48b9d3c3ba710ce132bbdfac6b",
+        )
 
         self.assertEqual(self.OBS.authenticode_integrity, "OK")
         self.assertEqual(self.OBS.signatures[0]["verification"], "OK")
@@ -217,15 +216,19 @@ class ObservationTestCaseArm(unittest.TestCase):
         self.assertEqual(self.OBS.permissions, "0o100644")
         self.assertEqual(
             self.OBS.ssdeep,
-            "24576:ZwNqyhCkb9KkPhiN3Uo84/rwAejGQePOqw+1UMXW8NossRK9fvYGHNucilZOAI7K:ZVwnbJLAGjGdP31UMXIh4gGH9ily7b8d"  # noqa: E501
+            "24576:ZwNqyhCkb9KkPhiN3Uo84/rwAejGQePOqw+1UMXW8NossRK9fvYGHNucilZOAI7K:ZVwnbJLAGjGdP31UMXIh4gGH9ily7b8d",  # noqa: E501
         )
         self.assertEqual(self.OBS.authenticode_integrity, "OK")
         self.assertEqual(self.OBS.signatures[0]["verification"], "OK")
         self.assertEqual(self.OBS.authentihash, self.OBS.signatures[0]["sha1"])
-        self.assertEqual(self.OBS.signatures[0]["certs"][0]["issuer_sha256"],
-                         "07821038ae6d90f2ea3bff5b6169ba0fb0b3b5cef57db18e7d48313da99e4a36")
-        self.assertEqual(self.OBS.signatures[0]["certs"][1]["issuer_sha256"],
-                         "07821038ae6d90f2ea3bff5b6169ba0fb0b3b5cef57db18e7d48313da99e4a36")
+        self.assertEqual(
+            self.OBS.signatures[0]["certs"][0]["issuer_sha256"],
+            "07821038ae6d90f2ea3bff5b6169ba0fb0b3b5cef57db18e7d48313da99e4a36",
+        )
+        self.assertEqual(
+            self.OBS.signatures[0]["certs"][1]["issuer_sha256"],
+            "07821038ae6d90f2ea3bff5b6169ba0fb0b3b5cef57db18e7d48313da99e4a36",
+        )
 
     def testConfigJson(self) -> None:
         vs = vars(self.OBS)
@@ -264,7 +267,7 @@ class ObservationTestCasePowerPC(unittest.TestCase):
         self.assertEqual(self.OBS.permissions, "0o100644")
         self.assertEqual(
             self.OBS.ssdeep,
-            "196608:j45VWK0byrgGFes2xTMRgWx3XHUuHzsOyHShHK9Xp440Cfo:j4Gb+BhRpkuYOyyBy440Cfo"  # noqa: E501
+            "196608:j45VWK0byrgGFes2xTMRgWx3XHUuHzsOyHShHK9Xp440Cfo:j4Gb+BhRpkuYOyyBy440Cfo",  # noqa: E501
         )
         self.assertFalse(len(self.OBS.signatures))
 
@@ -292,10 +295,8 @@ class ObservationTestCase7zip(unittest.TestCase):
         os.rename("test_config.toml", "test_config.txt")
 
         self.OBS = observe.Observe(
-                    "./binaries/x86/7z_win32.exe",
-                    log_level=logging.INFO,
-                    log_file="./observe.log"
-                )
+            "./binaries/x86/7z_win32.exe", log_level=logging.INFO, log_file="./observe.log"
+        )
 
     def testLog(self):  # check log is created and correct info logged
         self.assertTrue(os.path.isfile("./observe.log"))
@@ -303,10 +304,10 @@ class ObservationTestCase7zip(unittest.TestCase):
             log = f.read()
 
         messages = []
-        for line in log.split('\n'):
+        for line in log.split("\n"):
             # check log formatting is correct for each line
             if line:
-                components = line.split(' - ', maxsplit=3)  # seperator defined in observe
+                components = line.split(" - ", maxsplit=3)  # seperator defined in observe
 
                 # order should be a datetime, then name, then loglevel
                 try:
@@ -345,6 +346,7 @@ class TestFilePermissions(unittest.TestCase):
 class TestFolderPermissions(unittest.TestCase):
     def test_nonreadable_folder(self):
         self.assertRaises(PermissionError, observe.Observe, "/root")
+
 
 # class TestDiffArchitecture(unittest.TestCase):
 #     def test_i386_ls(self):

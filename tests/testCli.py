@@ -38,7 +38,6 @@ class CliTestCase(unittest.TestCase):
         self.assertEqual(self.cli3.args.algorithm, "sha1")
         self.assertEqual(self.cli3.args.cksum, "28a2a37cf2e9550a699b138dddba4b8067c8e1b1")
         self.assertEqual(self.cli3.args.func, self.cli3.checksum)
-        
 
 
 if __name__ == "__main__":
