@@ -16,7 +16,8 @@ dependencies=[
     # "unblob == 23.8.11",
     "telfhash == 0.9.8",
     "surfactant == 0.0.0rc5",
-    "coverage >= 7.5.3"
+    "coverage >= 7.5.3",
+    "alive_progress >= 3.1.5",
 ]
 
 [project.scripts]
