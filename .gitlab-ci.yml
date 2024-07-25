@@ -58,6 +58,7 @@ container_scanning:  # Build project deps, download and install trivy, then scan
     - ls -la
 
     - ./trivy --version        
+    - ./trivy clean --all  # clear scan + vuln cache
     # Build and save report
     - time ./trivy filesystem --timeout=10m --exit-code 0 --format template --template "@./contrib/gitlab.tpl" -o gl-container-scanning-report.json .
     # Print full report
