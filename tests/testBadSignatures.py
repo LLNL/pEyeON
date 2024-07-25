@@ -29,7 +29,7 @@ class CorruptFileTestCase(unittest.TestCase):
         corrupted.write(bytes([0x33] * writelen))  # overwrite some bytes
 
         # write rest of file
-        binary.seek(skip+writelen)
+        binary.seek(skip + writelen)
         corrupted.write(binary.read())
 
         binary.close()
@@ -41,13 +41,13 @@ class CorruptFileTestCase(unittest.TestCase):
     def scan(self, badbinpath):
         # scan the corrupted binary
         self.OBS = observe.Observe(
-                badbinpath,
-                log_level=logging.INFO,
-                log_file="testBadSignatures.log"
-                )
+            badbinpath, log_level=logging.INFO, log_file="testBadSignatures.log"
+        )
         self.assertTrue(os.path.isfile("testBadSignatures.log"))
 
-    def corruptedVarsExe(self, md5, sha1, sha256, filename, bytecount, sigflag, codeflag, magic=None):  # noqa E501
+    def corruptedVarsExe(
+        self, md5, sha1, sha256, filename, bytecount, sigflag, codeflag, magic=None
+    ):
         # verify hashes and see if verification broke properly
         self.assertEqual(self.OBS.bytecount, bytecount)
         self.assertEqual(self.OBS.filename, filename)
@@ -105,9 +105,8 @@ class NotepadFirstCertCorrupt(CorruptFileTestCase):
         bytecount = 6390616
         sigflag = "VERIFICATION_FLAGS.CERT_NOT_FOUND"
         codeflag = "VERIFICATION_FLAGS.CERT_NOT_FOUND | VERIFICATION_FLAGS.BAD_SIGNATURE"
-        filename = self.badbinpath.rsplit('/', maxsplit=1)[-1]
-        self.corruptedVarsExe(md5, sha1, sha256, filename, bytecount,
-                              sigflag, codeflag, magic)
+        filename = self.badbinpath.rsplit("/", maxsplit=1)[-1]
+        self.corruptedVarsExe(md5, sha1, sha256, filename, bytecount, sigflag, codeflag, magic)
         self.configJson()
         self.validateSchema()
 
@@ -127,9 +126,8 @@ class NotepadSecondCertCorrupt(CorruptFileTestCase):
         bytecount = 6390616
         sigflag = "VERIFICATION_FLAGS.CERT_NOT_FOUND"
         codeflag = "VERIFICATION_FLAGS.CERT_NOT_FOUND | VERIFICATION_FLAGS.BAD_SIGNATURE"
-        filename = self.badbinpath.rsplit('/', maxsplit=1)[-1]
-        self.corruptedVarsExe(md5, sha1, sha256, filename, bytecount,
-                              sigflag, codeflag, magic)
+        filename = self.badbinpath.rsplit("/", maxsplit=1)[-1]
+        self.corruptedVarsExe(md5, sha1, sha256, filename, bytecount, sigflag, codeflag, magic)
         self.configJson()
         self.validateSchema()
 
@@ -148,9 +146,8 @@ class CurlFirstCertCorrupt(CorruptFileTestCase):
         bytecount = 3237992
         sigflag = "VERIFICATION_FLAGS.CERT_NOT_FOUND"
         codeflag = "VERIFICATION_FLAGS.CERT_NOT_FOUND | VERIFICATION_FLAGS.BAD_SIGNATURE"
-        filename = self.badbinpath.rsplit('/', maxsplit=1)[-1]
-        self.corruptedVarsExe(md5, sha1, sha256, filename, bytecount,
-                              sigflag, codeflag)
+        filename = self.badbinpath.rsplit("/", maxsplit=1)[-1]
+        self.corruptedVarsExe(md5, sha1, sha256, filename, bytecount, sigflag, codeflag)
         self.configJson()
         self.validateSchema()
 
@@ -169,9 +166,8 @@ class CurlBreakAuthenticode1(CorruptFileTestCase):
         bytecount = 3237992
         sigflag = "OK"  # when you tamper with the code, the signature is still ok
         codeflag = "VERIFICATION_FLAGS.BAD_DIGEST | VERIFICATION_FLAGS.BAD_SIGNATURE"
-        filename = self.badbinpath.rsplit('/', maxsplit=1)[-1]
-        self.corruptedVarsExe(md5, sha1, sha256, filename, bytecount,
-                              sigflag, codeflag)
+        filename = self.badbinpath.rsplit("/", maxsplit=1)[-1]
+        self.corruptedVarsExe(md5, sha1, sha256, filename, bytecount, sigflag, codeflag)
         self.configJson()
         self.validateSchema()
 
@@ -190,9 +186,8 @@ class CurlBreakAuthenticode2(CorruptFileTestCase):
         bytecount = 3238492
         sigflag = "OK"
         codeflag = "VERIFICATION_FLAGS.BAD_DIGEST | VERIFICATION_FLAGS.BAD_SIGNATURE"
-        filename = self.badbinpath.rsplit('/', maxsplit=1)[-1]
-        self.corruptedVarsExe(md5, sha1, sha256, filename, bytecount,
-                              sigflag, codeflag)
+        filename = self.badbinpath.rsplit("/", maxsplit=1)[-1]
+        self.corruptedVarsExe(md5, sha1, sha256, filename, bytecount, sigflag, codeflag)
         self.configJson()
         self.validateSchema()
 

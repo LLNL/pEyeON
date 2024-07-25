@@ -23,7 +23,6 @@ dependencies=[
 [project.scripts]
 eyeon="eyeon.cli:main"
 
-
 [tools.setuptools.packages.find]
 # packages = ["src.eyeon"]
 # include = ["src"]
@@ -33,4 +32,3 @@ where = ["src"]
 
 [tool.coverage.run]
 omit =["/usr/*"] # omit code coverage scans for /usr/*
-
