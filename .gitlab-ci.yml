@@ -44,30 +44,33 @@ container_scanning:  # Build project deps, download and install trivy, then scan
     - build
   variables:
     TRIVY_NO_PROGRESS: "true"
-    TRIVY_CACHE_DIR: ".trivycache/"
   script:
     - pip install dist/eyeon-*.whl
     - pip freeze > requirements.txt  # this is the needed format for trivy to pick up dependencies
     - cat requirements.txt 
+    - mkdir -p trivy; cd trivy
 
-    # Install trivy to container, using this guide: https://aquasecurity.github.io/trivy/v0.53/tutorials/integrations/gitlab-ci/
-    - export TRIVY_VERSION=$(wget -qO - "https://api.github.com/repos/aquasecurity/trivy/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
-    - echo $TRIVY_VERSION
-    - wget --no-verbose "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" -O - | tar -zxvf -
+    # Install trivy to container, using this guide: 
+    # https://aquasecurity.github.io/trivy/v0.53/tutorials/integrations/gitlab-ci/
+    - export NEWEST_VERSION=$(wget -qO - "https://api.github.com/repos/aquasecurity/trivy/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+    - CURRENT_VERSION=$(cat version.txt)
+    - echo $NEWEST_VERSION
+    # Check if cached version is current version, before downloading
+    - if [ "$CURRENT_VERSION" != "$NEWEST_VERSION" ]; then echo "Downloading new version of trivy..." && wget --no-verbose "https://github.com/aquasecurity/trivy/releases/download/v${NEWEST_VERSION}/trivy_${NEWEST_VERSION}_Linux-64bit.tar.gz" -O - | tar -zxvf -; fi
     - ls -la
-
-    - ./trivy --version        
+    - ./trivy --version && echo $NEWEST_VERSION > version.txt # Save version to cache for later
     - ./trivy clean --all  # clear scan + vuln cache
     # Build and save report as gitlab formatted json
-    - time ./trivy filesystem --timeout=10m --exit-code 0 --format template --template "@./contrib/gitlab.tpl" -o gl-container-scanning-report.json .
+    - time ./trivy filesystem --timeout=10m --exit-code 0 --format template --template "@./contrib/gitlab.tpl" -o ../gl-container-scanning-report.json ..
     # Print full report to console
-    - time ./trivy filesystem --exit-code 0 .
+    - time ./trivy filesystem --exit-code 0 ..
     # This makes job fail if it finds a critical vuln
-    - time ./trivy filesystem --exit-code 1 --severity CRITICAL .
+    - time ./trivy filesystem --exit-code 1 --severity CRITICAL ..
+    - cd ..
 
   cache:
     paths:
-      - .trivycache/
+      - trivy/
   artifacts:
     when: always
     reports:
