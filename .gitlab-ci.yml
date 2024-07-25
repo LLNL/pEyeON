@@ -53,6 +53,7 @@ container_scanning:  # Build project deps, download and install trivy, then scan
     # Install trivy to container, using this guide: 
     # https://aquasecurity.github.io/trivy/v0.53/tutorials/integrations/gitlab-ci/
     - export NEWEST_VERSION=$(wget -qO - "https://api.github.com/repos/aquasecurity/trivy/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+    # Check if we have a cached version of trivy
     - if [ -f "version.txt" ]; then export CURRENT_VERSION=$(cat version.txt); else export CURRENT_VERSION=0; fi
     - echo $CURRENT_VERSION
     - echo $NEWEST_VERSION
