@@ -33,11 +33,11 @@ class ObservationTestCase(unittest.TestCase):
         self.assertEqual(self.OBS.permissions, "0o100644")
         self.assertEqual(
             self.OBS.magic,
-            "PE32 executable (GUI) Intel 80386, for MS Windows",  # noqa: E501
+            "PE32 executable (GUI) Intel 80386, for MS Windows",
         )
         self.assertEqual(
             self.OBS.ssdeep,
-            "98304:kq6vzyzgvZe2fwa5T3CWxeKNn5pRD4RnzY/moFJ:V6vzhUfa5fnws5",  # noqa: E501
+            "98304:kq6vzyzgvZe2fwa5T3CWxeKNn5pRD4RnzY/moFJ:V6vzhUfa5fnws5",
         )
         self.assertNotIn(  # check that the first cert has no issuer in the chain
             "issuer_sha256", self.OBS.signatures[0]["certs"][0]
@@ -346,12 +346,6 @@ class TestFilePermissions(unittest.TestCase):
 class TestFolderPermissions(unittest.TestCase):
     def test_nonreadable_folder(self):
         self.assertRaises(PermissionError, observe.Observe, "/root")
-
-
-# class TestDiffArchitecture(unittest.TestCase):
-#     def test_i386_ls(self):
-#         # Check to see if permission error is raised
-#         self.assertRaises(PermissionError, observe.Observe, "ls/i386-ls")
 
 
 if __name__ == "__main__":
