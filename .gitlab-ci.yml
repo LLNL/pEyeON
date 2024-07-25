@@ -7,7 +7,6 @@
 #     - if: '$CI_COMMIT_BRANCH'
 
 include:
-  #  - template: Jobs/Container-Scanning.gitlab-ci.yml # template for trivy scan
   - project: 'lc-templates/id_tokens'
     file: 'id_tokens.yml'
 
@@ -51,7 +50,8 @@ container_scanning:  # Build project deps, download and install trivy, then scan
     - pip freeze > requirements.txt  # this is the needed format for trivy to pick up dependencies
     - cat requirements.txt 
 
-    # Install trivy, using this guide: https://aquasecurity.github.io/trivy/v0.53/tutorials/integrations/gitlab-ci/
+    # Install trivy to container, using this guide: 
+    # https://aquasecurity.github.io/trivy/v0.53/tutorials/integrations/gitlab-ci/
     - export TRIVY_VERSION=$(wget -qO - "https://api.github.com/repos/aquasecurity/trivy/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
     - echo $TRIVY_VERSION
     - wget --no-verbose "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" -O - | tar -zxvf -
@@ -59,25 +59,20 @@ container_scanning:  # Build project deps, download and install trivy, then scan
 
     - ./trivy --version        
     - ./trivy clean --all  # clear scan + vuln cache
-    # Build and save report
+    # Build and save report as gitlab formatted json
     - time ./trivy filesystem --timeout=10m --exit-code 0 --format template --template "@./contrib/gitlab.tpl" -o gl-container-scanning-report.json .
     # Print full report
     - time ./trivy filesystem --exit-code 0 .
     # Fail on critical vulnerabilities
     - time ./trivy filesystem --exit-code 1 --severity CRITICAL .
 
-    # Testing SBOM Generation
-    - time ./trivy filesystem --format cyclonedx --output gl-sbom-eyeon.json .
-
   cache:
     paths:
       - .trivycache/
-  # Enables https://docs.gitlab.com/ee/user/application_security/container_scanning/ integration with security dashboard 
   artifacts:
     when: always
     reports:
-      container_scanning: gl-container-scanning-report.json
-      cyclonedx: gl-sbom-eyeon.json
+      container_scanning: gl-container-scanning-report.json  # This filename is important dont change it
 
 
 unittest:
