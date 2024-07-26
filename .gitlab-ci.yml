@@ -102,3 +102,32 @@ unittest:
       coverage_report:
         coverage_format: cobertura
         path: tests/coverage.xml
+
+sbom:
+  stage: sbom
+  dependencies: build
+  script:
+     - pip install dist/eyeon-*.whl
+     - pip freeze > requirements.txt  # I couldn't get sbom-tool to work without saving the requirements
+     - mkdir -p sbom-tool; cd sbom-tool
+
+     # check for newer version and download sbom-tool if necessary
+     - if [ -f "version.txt" ]; then export CURRENT_VERSION=$(cat version.txt); else export CURRENT_VERSION=0; fi
+     - export NEWEST_VERSION=$(wget -qO - "https://api.github.com/repos/microsoft/sbom-tool/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+     - if [ "$CURRENT_VERSION" != "$NEWEST_VERSION" ]; then echo "Downloading new version of sbom-tool..." && curl -Lo sbom-tool https://github.com/microsoft/sbom-tool/releases/latest/download/sbom-tool-osx-x64
+     - echo $NEWEST_VERSION > version.txt
+
+     - chmod +x sbom-tool
+     - ./sbom-tool generate -b .. -bc .. -ps "Lawrence Livermore National Laboratory" -nsb "https://www.llnl.gov" -pn "EyeON" -pv "0.1"
+     - cd ..
+  cache:
+    paths:
+    - sbom-tool/
+  artifacts:
+    when: always
+    reports:
+      sbom:
+        format: spdx
+          paths:
+            - _manifest
+
