@@ -121,7 +121,7 @@ sbom:
      # check for newer version and download sbom-tool if necessary
      - if [ -f "version.txt" ]; then export CURRENT_VERSION=$(cat version.txt); else export CURRENT_VERSION=0; fi
      - export NEWEST_VERSION=$(wget -qO - "https://api.github.com/repos/microsoft/sbom-tool/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
-     - if [ "$CURRENT_VERSION" != "$NEWEST_VERSION" ]; then echo "Downloading new version of sbom-tool..." && curl -Lo sbom-tool https://github.com/microsoft/sbom-tool/releases/latest/download/sbom-tool-osx-x64; fi
+     - if [ "$CURRENT_VERSION" != "$NEWEST_VERSION" ]; then echo "Downloading new version of sbom-tool..." && curl -Lo sbom-tool https://github.com/microsoft/sbom-tool/releases/latest/download/sbom-tool-linux-x64; fi
      - echo $NEWEST_VERSION > version.txt
 
      - chmod +x sbom-tool
