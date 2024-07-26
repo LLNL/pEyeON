@@ -125,6 +125,7 @@ sbom:
      - echo $NEWEST_VERSION > version.txt
 
      - chmod +x sbom-tool
+     - rm -rf ../_manifest  # remove old sbom if cached
      - ./sbom-tool generate -b .. -bc .. -ps "Lawrence Livermore National Laboratory" -nsb "https://www.llnl.gov" -pn "EyeON" -pv "0.1"
      - cd ..
   cache:
