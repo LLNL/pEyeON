@@ -125,9 +125,9 @@ sbom:
     - sbom-tool/
   artifacts:
     when: always
+    name: sbom
     reports:
       sbom:
-        format: spdx
-          paths:
-            - _manifest
+        paths:
+          - _manifest
 
