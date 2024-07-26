@@ -18,14 +18,18 @@ include:
 stages:
 - build
 - test
+- sbom
+
 ".oslic":
   tags:
   - shell
   - oslic
+
 before_script:
 - python3 -m venv eye
 - source eye/bin/activate
 - pip3 install build
+
 build:
   stage: build
   extends:
