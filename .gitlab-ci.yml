@@ -127,8 +127,6 @@ sbom:
   artifacts:
     when: always
     name: sbom
-    reports:
-      sbom:
-        paths:
-          - _manifest
+    paths:
+      - _manifest
 
