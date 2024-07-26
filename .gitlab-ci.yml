@@ -14,7 +14,6 @@
 include:
 - project: lc-templates/id_tokens
   file: id_tokens.yml
-- template: Jobs/Container-Scanning.gitlab-ci.yml
 
 stages:
 - build
