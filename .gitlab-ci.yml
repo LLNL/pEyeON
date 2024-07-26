@@ -15,6 +15,7 @@ include:
 - project: lc-templates/id_tokens
   file: id_tokens.yml
 - template: Jobs/Container-Scanning.gitlab-ci.yml
+
 stages:
 - build
 - test
@@ -35,6 +36,50 @@ build:
   artifacts:
     paths:
     - dist/
+
+container_scanning:  # Build project deps, download and install trivy, then scans filesystem
+  stage: test
+  extends:
+  - .oslic
+  dependencies:
+  - build
+  variables:
+    TRIVY_NO_PROGRESS: "true"
+  script:
+  - pip install dist/eyeon-*.whl
+  - pip freeze > requirements.txt  # this is the needed format for trivy to pick up dependencies
+  - cat requirements.txt 
+  - mkdir -p trivy; cd trivy
+
+  # Install trivy to container, using this guide: 
+  # https://aquasecurity.github.io/trivy/v0.53/tutorials/integrations/gitlab-ci/
+  - export NEWEST_VERSION=$(wget -qO - "https://api.github.com/repos/aquasecurity/trivy/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+  # Check if we have a cached version of trivy
+  - if [ -f "version.txt" ]; then export CURRENT_VERSION=$(cat version.txt); else export CURRENT_VERSION=0; fi
+  - echo $CURRENT_VERSION
+  - echo $NEWEST_VERSION
+  # Check if cached version is newest version, before downloading
+  - if [ "$CURRENT_VERSION" != "$NEWEST_VERSION" ]; then echo "Downloading new version of trivy..." && wget --no-verbose "https://github.com/aquasecurity/trivy/releases/download/v${NEWEST_VERSION}/trivy_${NEWEST_VERSION}_Linux-64bit.tar.gz" -O - | tar -zxvf -; fi
+  - ls -la
+  - ./trivy --version && echo $NEWEST_VERSION > version.txt # Save version to cache for later
+  - ./trivy clean --all  # clear scan + vuln cache
+  # Build and save report as gitlab formatted json
+  - time ./trivy filesystem --timeout=10m --exit-code 0 --format template --template "@./contrib/gitlab.tpl" -o ../gl-container-scanning-report.json ..
+  # Print full report to console
+  - time ./trivy filesystem --exit-code 0 ..
+  # This makes job fail if it finds a critical vuln
+  - time ./trivy filesystem --exit-code 1 --severity CRITICAL ..
+  - cd ..
+
+  cache:
+    paths:
+    - trivy/
+  artifacts:
+    when: always
+    reports:
+      container_scanning: gl-container-scanning-report.json  # This filename is important, dont change it!!
+
+
 unittest:
   stage: test
   extends:
