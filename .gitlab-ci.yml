@@ -109,6 +109,8 @@ unittest:
 
 sbom:
   stage: sbom
+  extends:
+  - ".oslic"
   dependencies: 
   - build
   script:
