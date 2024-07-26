@@ -105,7 +105,8 @@ unittest:
 
 sbom:
   stage: sbom
-  dependencies: build
+  dependencies: 
+  - build
   script:
      - pip install dist/eyeon-*.whl
      - pip freeze > requirements.txt  # I couldn't get sbom-tool to work without saving the requirements
