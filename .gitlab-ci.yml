@@ -62,7 +62,7 @@ container_scanning:  # Build project deps, download and install trivy, then scan
   - echo $CURRENT_VERSION
   - echo $NEWEST_VERSION
   # Check if cached version is newest version, before downloading
-  - if [ "$CURRENT_VERSION" != "$NEWEST_VERSION" ]; then echo "Downloading new version of trivy..." && wget --no-verbose "https://github.com/aquasecurity/trivy/releases/download/v${NEWEST_VERSION}/trivy_${NEWEST_VERSION}_Linux-64bit.tar.gz" -O - | tar -zxvf -; fi
+  - if [ "$CURRENT_VERSION" != "$NEWEST_VERSION" ]; then echo "Downloading new version of trivy..." && wget --no-verbose "https://github.com/aquasecurity/trivy/releases/download/v${NEWEST_VERSION}/trivy_${NEWEST_VERSION}_Linux-64bit.tar.gz" -O - | tar -zxvf -; else echo "Cached version of Trivy is up to date"; fi
   - ls -la
   - ./trivy --version && echo $NEWEST_VERSION > version.txt # Save version to cache for later
   - ./trivy clean --all  # clear scan + vuln cache
@@ -121,7 +121,7 @@ sbom:
      # check for newer version and download sbom-tool if necessary
      - if [ -f "version.txt" ]; then export CURRENT_VERSION=$(cat version.txt); else export CURRENT_VERSION=0; fi
      - export NEWEST_VERSION=$(wget -qO - "https://api.github.com/repos/microsoft/sbom-tool/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
-     - if [ "$CURRENT_VERSION" != "$NEWEST_VERSION" ]; then echo "Downloading new version of sbom-tool..." && curl -Lo sbom-tool https://github.com/microsoft/sbom-tool/releases/latest/download/sbom-tool-linux-x64; fi
+     - if [ "$CURRENT_VERSION" != "$NEWEST_VERSION" ]; then echo "Downloading new version of sbom-tool..." && curl -Lo sbom-tool https://github.com/microsoft/sbom-tool/releases/latest/download/sbom-tool-linux-x64; else echo "Cached version of SBOM-TOOL is up to date"; fi
      - echo $NEWEST_VERSION > version.txt
 
      - chmod +x sbom-tool
