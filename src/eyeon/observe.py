@@ -12,6 +12,8 @@ import pprint
 import subprocess
 import eyeon.config
 import re
+import duckdb
+from importlib.resources import files 
 from pathlib import Path
 from uuid import uuid4
 
@@ -327,6 +329,38 @@ class Observe:
         vs = {k: v for k, v in vs.items() if k != "certs"}
         with open(outfile, "w") as f:
             f.write(self._safe_serialize(vs))
+
+    def write_database(self, database: str, outdir: str = "."):
+        """
+        Creates or loads json file into duckdb database
+
+        Parameters:
+        -----------
+            database : str
+                Path to duckdb database file.
+            outdir : str
+                Output directory prefix. Defaults to local directory.
+        """
+        jsonfile = f"{os.path.join(outdir, self.filename)}.{self.md5}.json"
+
+        if os.path.exists(jsonfile):
+            try: 
+                db_exists = os.path.exists(database)
+                con = duckdb.connect(database)  # creates or connects
+                if db_exists:  # database exists, load the json file in
+                    con.sql(f"copy raw_pf from read_json('{jsonfile}', union_by_name=true);")
+                else:  # No database, instantiate
+                    con = duckdb.connect(database)
+                    # initialize following the schema
+                    con.sql(f"create table raw_pf as select * from read_json('{jsonfile}', union_by_name=true);")
+                    # create all of the views using eyeon-ddl.sql
+                    con.sql(files('database').joinpath('eyeon-ddl.sql').read_text())
+                con.close()
+            except duckdb.IOException as ioe:
+                con = None
+                return f":exclamation: Failed to attach to db {database}: {ioe}"
+        else:
+            raise FileNotFoundError
 
     def __str__(self) -> str:
         return pprint.pformat(vars(self), indent=2)

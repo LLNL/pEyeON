@@ -106,7 +106,7 @@ def opendb(filename):
     if "con" in st.session_state:
         if filename != st.session_state["filename"]:
             # User changed files, re-create db.
-            if "con" in st.session_state and st.session_state["con"] != None:
+            if "con" in st.session_state and st.session_state["con"] is not None:
                 # Close prior db.
                 print("  Closing db")
                 st.session_state["con"].close()

@@ -16,19 +16,22 @@ dependencies=[
     # "unblob == 23.8.11",
     "telfhash == 0.9.8",
     "surfactant == 0.0.0rc5",
-    "coverage >= 7.5.3"
+    "coverage >= 7.5.3",
+    "duckdb >= 1.0.0",
 ]
 
 [project.scripts]
 eyeon="eyeon.cli:main"
 
-
-[tools.setuptools.packages.find]
+[tool.setuptools.packages.find]
 # packages = ["src.eyeon"]
 # include = ["src"]
 where = ["src"]
 # find = {}
 # packages = ["eyeon", "eyeon.cli", "eyeon.observe", "eyeon.parse"]
+
+[tool.setuptools.package-data]
+database = ["*.sql"]
 
 [tool.coverage.run]
 omit =["/usr/*"] # omit code coverage scans for /usr/*
