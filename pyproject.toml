@@ -18,6 +18,7 @@ dependencies=[
     "surfactant == 0.0.0rc5",
     "coverage >= 7.5.3",
     "duckdb >= 1.0.0",
+    "alive_progress >= 3.1.5",
 ]
 
 [project.scripts]
@@ -35,4 +36,3 @@ database = ["*.sql"]
 
 [tool.coverage.run]
 omit =["/usr/*"] # omit code coverage scans for /usr/*
-
