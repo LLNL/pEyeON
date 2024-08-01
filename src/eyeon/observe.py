@@ -77,7 +77,7 @@ class Observe:
             csv string containing intended install locations
         imphash : str
             Either Import hash for Windows binaries or telfhash for ELF Linux binaries.
-        # die : str
+        die : str
             #Detect-It-Easy output.
         signatures : dict
             Descriptors of signature information, including signatures and certificates. Only
@@ -100,6 +100,7 @@ class Observe:
         self.bytecount = stat.st_size
         self.filename = os.path.basename(file)  # TODO: split into absolute path maybe?
         self.signatures = []
+        self.die = self.set_die(file)
         if lief.is_pe(file):
             self.set_imphash(file)
             self.certs = {}
