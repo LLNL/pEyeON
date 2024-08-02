@@ -96,18 +96,27 @@ class Parse:
         """
         if os.path.exists(outdir):
             try:
-                print(f"Writing to database {database}")
-                db_exists = os.path.exists(database)
-                con = duckdb.connect(database)  # creates or connects
-                if db_exists:  # database exists, load the json file in
-                    con.sql(f"copy raw_pf from read_json('{outdir}/*.json', union_by_name=true);")
-                else:  # No database, instantiate
-                    con = duckdb.connect(database)
-                    # initialize following the schema
-                    con.sql(f"create table raw_pf as select * from read_json('{outdir}/*.json', union_by_name=true);")
-                    # create all of the views using eyeon-ddl.sql
-                    con.sql(files('database').joinpath('eyeon-ddl.sql').read_text())
-                con.close()
+                with alive_bar(
+                    bar=None,
+                    elapsed_end=False,
+                    monitor_end=False,
+                    stats_end=False,
+                    receipt_text=True,
+                    spinner="waves",
+                    stats=False,
+                    monitor=False,
+                ) as bar:
+                    bar.title(f"Writing to database {database}")
+                    db_exists = os.path.exists(database)
+                    con = duckdb.connect(database)  # creates or connects
+                    if not db_exists:  # database exists, load the json file in
+                        # create table and views from sql
+                        con.sql(files('database').joinpath('eyeon-ddl.sql').read_text())
+
+                    con.sql(f"insert into raw_pf by name select * from read_json_auto('{outdir}/*.json', union_by_name=true, auto_detect=true);")
+                    bar.title("")
+                    bar.text(f"Database updated")
+                    con.close()
             except duckdb.IOException as ioe:
                 con = None
                 return f":exclamation: Failed to attach to db {database}: {ioe}"

@@ -364,14 +364,12 @@ class Observe:
             try: 
                 db_exists = os.path.exists(database)
                 con = duckdb.connect(database)  # creates or connects
-                if db_exists:  # database exists, load the json file in
-                    con.sql(f"copy raw_pf from read_json('{jsonfile}', union_by_name=true);")
-                else:  # No database, instantiate
-                    con = duckdb.connect(database)
-                    # initialize following the schema
-                    con.sql(f"create table raw_pf as select * from read_json('{jsonfile}', union_by_name=true);")
-                    # create all of the views using eyeon-ddl.sql
+                if not db_exists:  # create the table if database is new
+                    # create table and views from sql
                     con.sql(files('database').joinpath('eyeon-ddl.sql').read_text())
+
+                # add the file to the table
+                con.sql(f"insert into raw_pf by name select * from read_json_auto('{jsonfile}', union_by_name=true, auto_detect=true);")
                 con.close()
             except duckdb.IOException as ioe:
                 con = None
@@ -381,6 +379,7 @@ class Observe:
 
     def __str__(self) -> str:
         return pprint.pformat(vars(self), indent=2)
+
 
     # def extract(self) -> None:
     #     # TODO: add the system heirarchy stuff here
