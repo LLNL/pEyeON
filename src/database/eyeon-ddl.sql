@@ -22,9 +22,11 @@ CREATE TABLE raw_pf (
 			 RSA_key_size VARCHAR, 
 			 basic_constraints VARCHAR, 
 			 key_usage VARCHAR, 
+			 subject_alt_name VARCHAR, 
 			 ext_key_usage VARCHAR, 
 			 certificate_policies VARCHAR, 
-			 issuer_sha256 VARCHAR
+			 issuer_sha256 VARCHAR,
+			 "<unsupported>" VARCHAR -- dont know why lief pulls this out of certs sometimes, but schema will break without it
 		)[],
 		signers VARCHAR,
 		digest_algorithm VARCHAR,

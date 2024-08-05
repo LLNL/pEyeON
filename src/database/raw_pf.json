@@ -19,10 +19,12 @@
                  "signed_using": "",
                  "RSA_key_size": "",
                  "basic_constraints": "",
+                 "subject_alt_name": "", 
                  "key_usage": "",
                  "ext_key_usage": "",
                  "certificate_policies": "",
-                 "issuer_sha256": ""
+                 "issuer_sha256": "",
+                 "<unsupported>": ""
               }
           ],
           "signers": "",
