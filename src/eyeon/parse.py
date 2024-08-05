@@ -83,7 +83,7 @@ class Parse:
             for filet in alive_it(files, spinner="waves", title="Parsing files..."):
                 self._observe(filet)
 
-    def write_database(self, database: str, outdir: str = "./results"):
+    def write_database(self, database: str, outdir: str = "./results") -> None:
         """
         Parse all output json files and add to database
 
@@ -113,12 +113,22 @@ class Parse:
                         # create table and views from sql
                         con.sql(files('database').joinpath('eyeon-ddl.sql').read_text())
 
-                    con.sql(f"insert into raw_pf by name select * from read_json_auto('{outdir}/*.json', union_by_name=true, auto_detect=true);")
+                    # add the file to the raw_pf table, making it match template
+                    # observations with missing keys keys with null
+                    con.sql(f'''
+                    insert into raw_pf by name 
+                    select * from 
+                    read_json_auto(['{outdir}/*.json', 
+                                    '{files('database').joinpath('raw_pf.json')}'], 
+                                    union_by_name=true, auto_detect=true)
+                    where filename is not null;
+                    ''')
                     bar.title("")
                     bar.text(f"Database updated")
                     con.close()
             except duckdb.IOException as ioe:
                 con = None
-                return f":exclamation: Failed to attach to db {database}: {ioe}"
+                s = f":exclamation: Failed to attach to db {database}: {ioe}"
+                print(s)
         else:
             raise FileNotFoundError
