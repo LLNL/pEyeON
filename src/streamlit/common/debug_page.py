@@ -15,10 +15,8 @@ class LandingPage(BasePageLayout):
         super().__init__()
 
     def page_content(self):
-        st.set_page_config(
-            page_icon=settings.app.logo, page_title="Main Page", layout="wide"
-        )
-        sidebar_config(app_pages(),logo=settings.app.logo)
+        st.set_page_config(page_icon=settings.app.logo, page_title="Main Page", layout="wide")
+        sidebar_config(app_pages(), logo=settings.app.logo)
         st.header("Streamlit Debugging Tools")
         pf.summary()
 

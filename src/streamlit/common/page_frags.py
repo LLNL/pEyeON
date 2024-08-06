@@ -18,7 +18,7 @@ def summary():
                 )
 
             with col2:
-#                st.markdown(f"Hosts \n#### {du.get(du.getcon(),'host_count')[0]}")
+                #                st.markdown(f"Hosts \n#### {du.get(du.getcon(),'host_count')[0]}")
                 st.markdown("~something here~")
             with col3:
                 (min, max) = du.get(du.getcon(), "raw_data_range")

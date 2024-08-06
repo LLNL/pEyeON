@@ -47,13 +47,15 @@ def export_graph(netg, name="Sample"):
     with open(f"{name}.json", "w") as f:
         json.dump(cytodict, f)
 
+
 def display_comp(netg):
     # Try splitting the graph into its connected components and plot them seperately
-#    for comp in nx.connected_component_subgraphs(netg):
+    #    for comp in nx.connected_component_subgraphs(netg):
     for comp in nx.connected_components(netg.to_undirected()):
         st.write(type(comp))
         st.write(comp)
         display_graph(comp)
+
 
 def display_graph(netg, process_name_txt="(should be the filter value)"):
     if "netg" in locals():
@@ -66,21 +68,21 @@ def display_graph(netg, process_name_txt="(should be the filter value)"):
             # Use 0 in-degree, which is effectively the children.
             leaf_nodes = [n for n, d in netg.in_degree() if d == 0]
             # A variety of experiments that haven't worked out well for better layout.
-#            root_nodes = [n for n, d in netg.out_degree() if d == 0]
-#            edgelist = [e for e in netg.edges if e not in nx.selfloop_edges(netg)]
-#            krnl_nodes = [s for (s,d) in edgelist]
-#            with st.expander("Node IDs"):
-#                st.write(krnl_nodes)
-#                st.write(root_nodes)
+            #            root_nodes = [n for n, d in netg.out_degree() if d == 0]
+            #            edgelist = [e for e in netg.edges if e not in nx.selfloop_edges(netg)]
+            #            krnl_nodes = [s for (s,d) in edgelist]
+            #            with st.expander("Node IDs"):
+            #                st.write(krnl_nodes)
+            #                st.write(root_nodes)
 
             sel = cytoscape(
                 nx_to_stcyto(netg),
                 get_stylesheet(),
                 layout={
                     "name": sel_layout,
-#                    "roots": leaf_nodes,
+                    #                    "roots": leaf_nodes,
                     "directed": False,
-#                    "grid": True,
+                    #                    "grid": True,
                 },
                 height="800px",
                 min_zoom=0.5,

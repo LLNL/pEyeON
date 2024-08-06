@@ -20,7 +20,7 @@ def app_base_config():
     st.json(st.session_state)
 
 
-def sidebar_config(pages,logo=settings.app.logo, logo_width=120):
+def sidebar_config(pages, logo=settings.app.logo, logo_width=120):
     st.sidebar.image(logo, width=logo_width)
     st.sidebar.title(settings.app.page_title)
     st.sidebar.header("Menu")
@@ -60,11 +60,11 @@ def sidebar_db_chooser():
             index=curds_idx,
             key="_curds",
             on_change=change_cur_ds,
-            )
+        )
 
         # ensures the default selection populates correctly the first time
         if "curds" not in st.session_state and curds_idx is not None:
-            change_cur_ds()  
+            change_cur_ds()
             change_cur_db()
 
         if "curds" in st.session_state:
@@ -76,9 +76,9 @@ def sidebar_db_chooser():
             else:
                 curdb_idx = None
                 if "curdb" in st.session_state and st.session_state.curdb is not None:
-                    curdb_idx = list(
-                        get_allds()[st.session_state.curds].databases
-                    ).index(st.session_state.curdb)
+                    curdb_idx = list(get_allds()[st.session_state.curds].databases).index(
+                        st.session_state.curdb
+                    )
                 st.selectbox(
                     "Database: ",
                     get_allds()[st.session_state.curds].databases,

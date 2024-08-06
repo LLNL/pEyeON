@@ -86,14 +86,16 @@ def add_parent_child(g, processes):
     cols = processes.columns
     for row in processes.fetchall():
         # Don't add self-reference if its the kernel.
-        if row[cols.index("pid_hash")]!=row[cols.index("parent_pid_hash")]:
+        if row[cols.index("pid_hash")] != row[cols.index("parent_pid_hash")]:
             g.add_edge(
                 row[cols.index("pid_hash")],
                 row[cols.index("parent_pid_hash")],
                 type="parent",
             )
         else:
-            print(f'  Ignore self-reference: {row[cols.index("pid_hash")]} {row[cols.index("process_name")]}')
+            print(
+                f'  Ignore self-reference: {row[cols.index("pid_hash")]} {row[cols.index("process_name")]}'
+            )
 
 
 def add_node(graph, idx, nodetype, label, attributes={}):
@@ -147,9 +149,7 @@ def add_network_activity(con, netg, max_pnc=100, add_ip_nodes=True):
     ignore_list = ["svchost.exe", "ntoskrnl.exe"]
     new_pid_hashes = []
     pid_list = ", ".join(["'{}'".format(id) for id in netg.nodes()])
-    pnc_result = con.sql(
-        f"select * from process_net_conn where pid_hash in ({pid_list})"
-    )
+    pnc_result = con.sql(f"select * from process_net_conn where pid_hash in ({pid_list})")
 
     cols = pnc_result.columns
     print(f"Adding {pnc_result.count('*').fetchone()[0]} network edges")
@@ -181,7 +181,7 @@ def add_network_activity(con, netg, max_pnc=100, add_ip_nodes=True):
 def build_graph(con, process_name=None, pid_hash=None, num_seeds=-1, name=None):
     if not name:
         name = "Fix Me!"
-#        name = f"Process Graph from {','.join(process_name)}"
+    #        name = f"Process Graph from {','.join(process_name)}"
 
     print(type(pid_hash))
 

@@ -164,15 +164,15 @@ def get(con, name):
 def getonerow(con, sql: str):
     return con.sql(sql).fetchone()
 
+
 def getdatafor(con, sqlname: str):
-    return getdata(con, getsqlstmt("common/queries.sql",sqlname).sql)
+    return getdata(con, getsqlstmt("common/queries.sql", sqlname).sql)
+
 
 def getdata(con, sql: str):
     df = None
     try:
         df = con.execute(sql).fetchdf()
     except CatalogException as e:
-        logging.warning(
-            f"Warning! SQL Failed due to missing object:\n {sql} due to:\n{e}"
-        )
+        logging.warning(f"Warning! SQL Failed due to missing object:\n {sql} due to:\n{e}")
     return df

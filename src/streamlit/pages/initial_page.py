@@ -20,7 +20,7 @@ class LandingPage(BasePageLayout):
         pf.summary()
 
         st.markdown("Observations Clustered by Time")
-        obs_times_df=du.getdatafor(du.getcon(), "observation_times")
+        obs_times_df = du.getdatafor(du.getcon(), "observation_times")
         st.bar_chart(obs_times_df, x="ObsTime", y="NumRows")
         st.dataframe(obs_times_df)
 

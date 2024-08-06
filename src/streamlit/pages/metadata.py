@@ -23,31 +23,42 @@ class LandingPage(BasePageLayout):
         st.markdown("#### File sizes")
         filesize_df = du.getdatafor(du.getcon(), "file_sizes")
         st.altair_chart(
-            alt.Chart(filesize_df).mark_bar().encode(
+            alt.Chart(filesize_df)
+            .mark_bar()
+            .encode(
                 x=alt.X("bytecount:Q", bin=alt.Bin(maxbins=50, extent=(0, 30000000))),
-                y=alt.Y('count()').scale(type="log"),
-            ).interactive(),
-            use_container_width=True
+                y=alt.Y("count()").scale(type="log"),
+            )
+            .interactive(),
+            use_container_width=True,
         )
 
         st.markdown("#### File extensions")
         extension_df = du.getdatafor(du.getcon(), "file_extensions")
         # This horizontal barchart needs at least streamlit v1.36 I think
-        st.altair_chart(alt.Chart(extension_df).mark_bar().encode(
-                x=alt.X('file_extension', sort=None),
-                y='NumRows',
-            ).interactive(),
-            use_container_width=True
+        st.altair_chart(
+            alt.Chart(extension_df)
+            .mark_bar()
+            .encode(
+                x=alt.X("file_extension", sort=None),
+                y="NumRows",
+            )
+            .interactive(),
+            use_container_width=True,
         )
 
         st.markdown("#### Magic Bytes")
         magic_df = du.getdatafor(du.getcon(), "magic_bytes")
         # st.bar_chart(magic_df, x="magic", y="NumRows")
-        st.altair_chart(alt.Chart(magic_df).mark_bar().encode(
-                x=alt.X('magic', sort=None),
-                y='NumRows',
-            ).interactive(),
-            use_container_width=True
+        st.altair_chart(
+            alt.Chart(magic_df)
+            .mark_bar()
+            .encode(
+                x=alt.X("magic", sort=None),
+                y="NumRows",
+            )
+            .interactive(),
+            use_container_width=True,
         )
 
         # Proof-of-life debug info
