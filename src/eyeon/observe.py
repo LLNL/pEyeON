@@ -4,6 +4,7 @@ An observation will output a json file containing unique identifying information
 such as hashes, modify date, certificate info, etc.
 See the Observe class doc for full details.
 """
+
 import datetime
 import hashlib
 import json
@@ -13,7 +14,7 @@ import subprocess
 import eyeon.config
 import re
 import duckdb
-from importlib.resources import files 
+from importlib.resources import files
 from pathlib import Path
 from uuid import uuid4
 
@@ -228,7 +229,7 @@ class Observe:
                 "signers": str(sig.signers[0]),
                 "digest_algorithm": str(sig.digest_algorithm),
                 "verification": str(sig.check()),  # gives us more info than a bool on fail
-                "sha1": sig.content_info.digest.hex()
+                "sha1": sig.content_info.digest.hex(),
                 # "sections": [s.__str__() for s in pe.sections]
                 # **signinfo,
             }
@@ -366,18 +367,20 @@ class Observe:
                 con = duckdb.connect(database)  # creates or connects
                 if not db_exists:  # create the table if database is new
                     # create table and views from sql
-                    con.sql(files('database').joinpath('eyeon-ddl.sql').read_text())
+                    con.sql(files("database").joinpath("eyeon-ddl.sql").read_text())
 
                 # add the file to the raw_pf table, making it match template
                 # observations with missing keys will get null vals as placeholder to match sql
-                con.sql(f'''
+                con.sql(
+                    f"""
                 insert into raw_pf by name 
                 select * from 
                 read_json_auto(['{observation_json}', 
                                 '{files('database').joinpath('raw_pf.json')}'], 
                                 union_by_name=true, auto_detect=true)
                 where filename is not null;
-                ''')
+                """
+                )
                 con.close()
             except duckdb.IOException as ioe:
                 con = None
@@ -388,7 +391,6 @@ class Observe:
 
     def __str__(self) -> str:
         return pprint.pformat(vars(self), indent=2)
-
 
     # def extract(self) -> None:
     #     # TODO: add the system heirarchy stuff here

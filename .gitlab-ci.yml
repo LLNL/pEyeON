@@ -44,7 +44,7 @@ unittest:
     - ls
     - pip install dist/eyeon-*.whl
     - cd tests/
-    - coverage run --source eyeon -m unittest testObserveRemote.py testParse.py testCli.py testBadSignatures.py testChecksum.py
+    - coverage run --source eyeon -m unittest testObserveRemote.py testParse.py testCli.py testBadSignatures.py testChecksum.py testDatabase.py
     - coverage xml
     - coverage html
     - coverage report --precision=2

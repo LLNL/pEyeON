@@ -2,7 +2,6 @@
 CLI interface for EyeON tools.
 """
 
-
 import argparse
 
 import eyeon.observe
@@ -37,12 +36,10 @@ class CommandLine:
             help="Set the log level. Defaults to ERROR.",
         )
 
-
         # parent parser to add shared arg to both observe and parse
         db_parser = argparse.ArgumentParser(add_help=False)
         db_parser.add_argument(
-            "--database", "-d",
-            help="Specify a filepath to save result to duckdb database"
+            "--database", "-d", help="Specify a filepath to save result to duckdb database"
         )
 
         # Create subparser
@@ -106,7 +103,6 @@ class CommandLine:
 
         if args.database:
             obs.write_database(args.database, outdir)
-
 
     def parse(self, args) -> None:
         """

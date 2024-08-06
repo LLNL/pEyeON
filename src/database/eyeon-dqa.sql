@@ -140,4 +140,3 @@ select len(signatures) num_sigs, count(*) from raw_pf group by all
 -- Fully unnests, but may be tricky separating top level sig from nested certs:
 select unnest(signatures,recursive:=true) from raw_pf where
 		len(signatures)>0
-

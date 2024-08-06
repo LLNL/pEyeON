@@ -86,4 +86,3 @@ select
   split(trim(unnest(split(subject_name,','))),'=')[2] x509_value
 from main.raw_uniq_certs 
 ;
-
