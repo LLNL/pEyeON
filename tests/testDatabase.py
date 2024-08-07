@@ -20,7 +20,7 @@ class GeneralDatabaseTestCase(unittest.TestCase):
     def checkDatabaseCreated(self) -> None:
         self.assertTrue(os.path.isfile(self.database_output))
 
-    def checkDatabaseContents(self) -> None:
+    def validateDatabaseContents(self) -> None:
         # Read in the json, compare to raw_pf table contents
         con = duckdb.connect(self.database_output)
         table = con.execute("select * from raw_pf").fetchall()
@@ -41,13 +41,18 @@ class GeneralDatabaseTestCase(unittest.TestCase):
         # for each json file that was output, compare its contents to the database
         json_data = sorted(json_data, key = lambda x: x["filename"])
         db_data = sorted(db_data, key = lambda x: x["filename"])
-        json_structs = []
-        db_structs = []
+        json_sigs = []
+        db_sigs = []
+        json_metadata = []
+        db_metadata = []
         for json_dict, db_dict in zip(json_data,db_data):
-            for key in ["signatures", "metadata"]:
-                if key in json_dict:
-                    json_structs.append(json_dict.pop(key))
-                    db_structs.append(db_dict.pop(key))
+            if "signatures" in json_dict:
+                json_sigs.append(json_dict.pop("signatures"))
+                db_sigs.append(db_dict.pop("signatures"))
+
+            if "metadata" in json_dict:
+                json_metadata.append(json_dict.pop("metadata"))
+                db_metadata.append(db_dict.pop("metadata"))
 
             for key in json_dict:
                 if isinstance(json_dict[key], str):
@@ -56,12 +61,15 @@ class GeneralDatabaseTestCase(unittest.TestCase):
                     json_dict[key] = json_dict[key].replace("-", '')
                 self.assertEqual(json_dict[key], db_dict[key], msg=f"Comparison failed for key {key}" )
 
-        # look at signatures + metadata seperately
+        # iterate through signatures + metadata seperately
         # because these are nested structs, and the db has null values for missing entries
-        for json_struct, db_struct in zip(json_structs, db_structs):
-            # TODO: figure out how to compare this mess
-            pass
-
+        for json_sig, db_sig in zip(json_sigs, db_sigs):
+            for json_item, db_item in zip(json_sig, db_sig):  # This is is a mess but not sure of a better way...
+                for key in json_item:
+                    self.assertIn(key, db_item, msg=f"key {key} not added to signature in database" )
+                    self.assertIsNotNone(db_item[key], msg=f"key {key} was not populated in database" )
+                    # TODO figure out how to manually compare the converted variable types after adding json to DUckdb?
+                    #  for example: see how datetime entries look in the database
 
     @classmethod
     def tearDownClass(self):  # remove outputs
@@ -82,7 +90,7 @@ class NotepadObserveTestCase(GeneralDatabaseTestCase):
     def testCommon(self):
         self.writeObserve()
         self.checkDatabaseCreated()
-        self.checkDatabaseContents()
+        self.validateDatabaseContents()
 
 class LsObserveTestCase(GeneralDatabaseTestCase):
     @classmethod
@@ -94,7 +102,7 @@ class LsObserveTestCase(GeneralDatabaseTestCase):
     def testCommon(self):
         self.writeObserve()
         self.checkDatabaseCreated()
-        self.checkDatabaseContents()
+        self.validateDatabaseContents()
 
 
 class X86ParseDatabaseTestCase(GeneralDatabaseTestCase):
@@ -108,7 +116,7 @@ class X86ParseDatabaseTestCase(GeneralDatabaseTestCase):
     def testCommon(self):
         self.writeParse()
         self.checkDatabaseCreated()
-        self.checkDatabaseContents()
+        self.validateDatabaseContents()
 
 
 class TestErrorHandling(unittest.TestCase):
