@@ -101,6 +101,7 @@ class Observe:
         self.filename = os.path.basename(file)  # TODO: split into absolute path maybe?
         self.signatures = []
         self.die = self.set_die(file)
+        print("this is die1: ", self.die)
         if lief.is_pe(file):
             self.set_imphash(file)
             self.certs = {}
@@ -169,6 +170,7 @@ class Observe:
         """
         Sets Detect-It-Easy info. WIP
         """
+        print("trying to set die: ")
         try:
             dp = os.environ["DIEPATH"]
             self.die = subprocess.run(
