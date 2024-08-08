@@ -127,7 +127,7 @@ sbom:
      - chmod +x sbom-tool
      - rm -rf ../_manifest  # remove old sbom if cached
 
-     - export EYEON_VERSION=$(grep -m 1 'version=' pyproject.toml | cut -d\" -f2) # get eyeon version from pyproject.toml
+     - export EYEON_VERSION=$(grep -m 1 'version=' ../pyproject.toml | cut -d \" -f2) # get eyeon version from pyproject.toml
      - ./sbom-tool generate -b .. -bc .. -ps "Lawrence Livermore National Laboratory" -nsb "https://www.llnl.gov" -pn "EyeON" -pv $EYEON_VERSION 
      - cd ..
   cache:
