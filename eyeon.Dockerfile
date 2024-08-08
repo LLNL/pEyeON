@@ -27,6 +27,13 @@ RUN cd /opt && git clone https://github.com/trendmicro/tlsh.git \
 
 RUN pip3 install telfhash
 
+COPY die_3.09_Ubuntu_22.04_amd64.deb /opt/die/
+
+RUN apt-get update \
+  && apt-get install -y /opt/die/die_3.09_Ubuntu_22.04_amd64.deb \
+  && apt-get install -f \
+  && apt-get autoremove -y
+
 USER $OUN
 
 ENV PATH=/home/$OUN/.local/bin:$PATH
