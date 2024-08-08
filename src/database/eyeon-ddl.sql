@@ -26,6 +26,9 @@ CREATE TABLE raw_pf (
 			 ext_key_usage VARCHAR, 
 			 certificate_policies VARCHAR, 
 			 issuer_sha256 VARCHAR,
+			 "subject_alt_name_:" VARCHAR, -- weird formatting, but sometimes lief pulls a field out like this for some reason
+			 "dNSName" VARCHAR,
+			 "cert._type" VARCHAR,
 			 "<unsupported>" VARCHAR -- dont know why lief pulls this out of certs sometimes, but schema will break without it
 		)[],
 		signers VARCHAR,
@@ -46,16 +49,7 @@ CREATE TABLE raw_pf (
 	sha256 VARCHAR,
 	target_os VARCHAR,
 	ssdeep VARCHAR,
-	defaults STRUCT(
-			default_filename VARCHAR,
-			manufacturer STRUCT(org VARCHAR),
-			"location" STRUCT("location" VARCHAR, 
-							  filelocation VARCHAR),
-			machines STRUCT(machines VARCHAR, 
-							os VARCHAR, 
-						 	"version" VARCHAR, 
-							"x-version" VARCHAR)
-    )
+	defaults JSON,
 );
 
 -- Views from Grant J

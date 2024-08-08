@@ -24,6 +24,9 @@
                  "ext_key_usage": "",
                  "certificate_policies": "",
                  "issuer_sha256": "",
+                 "subject_alt_name_:": "",   
+                 "dNSName": "",
+                 "cert._type": "", 
                  "<unsupported>": ""
               }
           ],
