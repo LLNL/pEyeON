@@ -22,7 +22,7 @@ def summary():
                 st.markdown("~something here~")
             with col3:
                 (min, max) = du.get(du.getcon(), "raw_data_range")
-                st.markdown(f"Data Range \n#### {min:%m-%d-%Y} - {max:%m-%d-%Y}")
+                st.markdown(f"Data Range \n#### {min} - {max}")
         st.markdown(f"_Current db: {st.session_state.filename}_")
 
 
