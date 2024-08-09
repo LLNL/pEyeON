@@ -92,6 +92,7 @@ class NotepadObserveTestCase(GeneralDatabaseTestCase):
         self.checkDatabaseCreated()
         self.validateDatabaseContents()
 
+
 class LsObserveTestCase(GeneralDatabaseTestCase):
     @classmethod
     def setUpClass(self):
@@ -105,12 +106,39 @@ class LsObserveTestCase(GeneralDatabaseTestCase):
         self.validateDatabaseContents()
 
 
+class PowerPCObserveTestCase(GeneralDatabaseTestCase):
+    @classmethod
+    def setUpClass(self):
+        self.original_output = "rustup-init.3e7704532c1cafb02244fc7e4308ec3d.json"
+        self.database_output = "test_database"
+        self.OBS = observe.Observe("./binaries/powerpc/rustup-init")
+
+    def testCommon(self):
+        self.writeObserve()
+        self.checkDatabaseCreated()
+        self.validateDatabaseContents()
+
+
 class X86ParseDatabaseTestCase(GeneralDatabaseTestCase):
     @classmethod
     def setUpClass(self):
         self.original_output = "./testresults"
         self.database_output = "test_database"
         self.PRS = parse.Parse("./binaries/x86/")
+        self.PRS(result_path=self.original_output)
+
+    def testCommon(self):
+        self.writeParse()
+        self.checkDatabaseCreated()
+        self.validateDatabaseContents()
+
+
+class ARMParseDatabaseTestCase(GeneralDatabaseTestCase):
+    @classmethod
+    def setUpClass(self):
+        self.original_output = "./testresults"
+        self.database_output = "test_database"
+        self.PRS = parse.Parse("./binaries/arm/")
         self.PRS(result_path=self.original_output)
 
     def testCommon(self):
