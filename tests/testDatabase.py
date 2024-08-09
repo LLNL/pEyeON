@@ -43,16 +43,16 @@ class GeneralDatabaseTestCase(unittest.TestCase):
         db_data = sorted(db_data, key = lambda x: x["filename"])
         json_sigs = []
         db_sigs = []
-        json_metadata = []
-        db_metadata = []
         for json_dict, db_dict in zip(json_data,db_data):
             if "signatures" in json_dict:
                 json_sigs.append(json_dict.pop("signatures"))
                 db_sigs.append(db_dict.pop("signatures"))
 
             if "metadata" in json_dict:
-                json_metadata.append(json_dict.pop("metadata"))
-                db_metadata.append(db_dict.pop("metadata"))
+                self.assertEqual(json_dict.pop("metadata"), json.loads((db_dict.pop("metadata"))))
+
+            if "defaults" in json_dict:
+                self.assertEqual(json_dict.pop("defaults"), json.loads((db_dict.pop("defaults"))))
 
             for key in json_dict:
                 if isinstance(json_dict[key], str):
