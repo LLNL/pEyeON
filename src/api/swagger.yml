@@ -1,0 +1,90 @@
+openapi: 3.0.0
+info:
+  title: EyeON Data Upload API
+  description: API for receiving uploaded EyeON observations
+  version: 1.0.0
+  termsOfService: http://www.link-to-eyeon-terms-of-service.com
+  contact:
+    email: lyles6@llnl.gov
+  license:
+    name: MIT License
+    url: http://www.link-to-the-eyeon-LICENSE.file/
+
+externalDocs:
+  description:  EyeON Documentation
+  url: http://eyeon.org/docs
+  
+servers:
+  - url: "http://localhost:8080/api"
+    description: Local EyeON Server
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+paths:
+  /upload:
+    post:
+      summary: Upload observation data
+      description: Endpoint to upload data
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                description:
+                  type: string
+                  description: Observations in json, tar, or DuckDB format
+      responses:
+        '200':
+          description: Successful upload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Observations uploaded successfully"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid request format"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unauthorized access"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "An error occurred while processing the file"
+  
+
