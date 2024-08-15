@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM amd64/ubuntu:22.04
 
 ARG USER_ID
 ARG OUN
@@ -29,10 +29,18 @@ RUN pip3 install telfhash
 
 COPY die_3.09_Ubuntu_22.04_amd64.deb /opt/die/
 
-RUN apt-get update \
-  && apt-get install -y /opt/die/die_3.09_Ubuntu_22.04_amd64.deb \
-  && apt-get install -f \
-  && apt-get autoremove -y
+RUN apt-get update && \
+    apt-get install -y software-properties-common && \
+    add-apt-repository universe && \
+    apt-get update && \
+    apt-get install -y libqt5core5a && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && \
+    apt install -y /opt/die/die_3.09_Ubuntu_22.04_amd64.deb && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 USER $OUN
 
