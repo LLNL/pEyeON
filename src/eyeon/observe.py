@@ -100,8 +100,8 @@ class Observe:
         self.bytecount = stat.st_size
         self.filename = os.path.basename(file)  # TODO: split into absolute path maybe?
         self.signatures = []
-        self.die = self.set_die(file)
-        print("this is die1: ", self.die)
+        self.set_die(file)
+        print("this is die11111: ", self.die)
         if lief.is_pe(file):
             self.set_imphash(file)
             self.certs = {}
@@ -170,18 +170,24 @@ class Observe:
         """
         Sets Detect-It-Easy info. WIP
         """
-        print("trying to set die: ")
-        try:
-            dp = os.environ["DIEPATH"]
-            self.die = subprocess.run(
-                [os.path.join(dp, "diec.sh"), file], capture_output=True, timeout=10
-            ).stdout.decode("utf-8")
-        except KeyError:
-            log.warning("No $DIEPATH set. See README.md for more information.")
-        except FileNotFoundError:
-            log.warning("Please install Detect-It-Easy.")
-        except Exception as E:
-            log.error(E)
+        print("trying to set die suppppp: ")
+        print("this is diepath: ")
+        dp = os.environ["DIEPATH"]
+        if dp is None:
+            print("DIEPATH is not set. Exiting.")
+        return
+
+        # try:
+        #     dp = os.environ["DIEPATH"]
+        #     self.die = subprocess.run(
+        #         [os.path.join(dp, "diec.sh"), file], capture_output=True, timeout=10
+        #     ).stdout.decode("utf-8")
+        # except KeyError:
+        #     log.warning("No $DIEPATH set. See README.md for more information.")
+        # except FileNotFoundError:
+        #     log.warning("Please install Detect-It-Easy.")
+        # except Exception as E:
+        #     log.error(E)
 
     # @staticmethod
     def _cert_parser(self, cert: lief.PE.x509) -> dict:
