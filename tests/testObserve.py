@@ -35,6 +35,7 @@ class ObservationTestCase(unittest.TestCase):
             self.OBS.magic,
             "PE32 executable (GUI) Intel 80386, for MS Windows",  # noqa: E501
         )
+        self.assertEqual(self.OBS.imphash, "750aba166a0a8ac1c298d6e9bf68960f")
         self.assertEqual(
             self.OBS.ssdeep,
             "98304:kq6vzyzgvZe2fwa5T3CWxeKNn5pRD4RnzY/moFJ:V6vzhUfa5fnws5",  # noqa: E501
@@ -84,6 +85,10 @@ class ObservationTestCase2(unittest.TestCase):
             dt.datetime.strptime(self.OBS.modtime, "%Y-%m-%d %H:%M:%S")
         except ValueError:
             self.fail()
+        self.assertEqual(
+            self.OBS.telfhash,
+            "t1d8f0d802042307f72ba6ccb15c0677d68a208b2253b6bf202f18c5e88e1e06eb6a144f",
+        )
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100755")
         self.assertEqual(
