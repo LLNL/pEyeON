@@ -28,6 +28,10 @@
       "type": "string",
       "description": "Import Hash calculated via pefile"
     },
+    "telfhash": {
+      "type": "string",
+      "description": "Import hashing technique used on ELF files"
+    },
     "magic": {
       "type": "string",
       "description": "`file` Magic output for given file"
