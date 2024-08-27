@@ -78,7 +78,7 @@ class Observe:
         imphash : str
             Either Import hash for Windows binaries or telfhash for ELF Linux binaries.
         die : str
-            #Detect-It-Easy output.
+            Detect-It-Easy output.
         signatures : dict
             Descriptors of signature information, including signatures and certificates. Only
             valid for Windows
