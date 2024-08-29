@@ -16,12 +16,12 @@ dependencies=[
     # "unblob == 23.8.11",
     "telfhash == 0.9.8",
     "surfactant == 0.0.0rc5",
-    "coverage >= 7.5.3"
+    "coverage >= 7.5.3",
+    "alive_progress >= 3.1.5",
 ]
 
 [project.scripts]
 eyeon="eyeon.cli:main"
-
 
 [tools.setuptools.packages.find]
 # packages = ["src.eyeon"]
@@ -32,4 +32,3 @@ where = ["src"]
 
 [tool.coverage.run]
 omit =["/usr/*"] # omit code coverage scans for /usr/*
-
