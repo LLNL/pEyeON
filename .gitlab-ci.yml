@@ -1,67 +1,141 @@
-# Run workflow for both push and MR triggers, but avoid duplicate pipeline runs
-# workflow:
-#   rules:
-#     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-#     - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
-#       when: never
-#     - if: '$CI_COMMIT_BRANCH'
+# You can override the included template(s) by including variable overrides
+# SAST customization: https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
+# Secret Detection customization: https://docs.gitlab.com/ee/user/application_security/secret_detection/pipeline/#customization
+# Dependency Scanning customization: https://docs.gitlab.com/ee/user/application_security/dependency_scanning/#customizing-the-dependency-scanning-settings
+# Container Scanning customization: https://docs.gitlab.com/ee/user/application_security/container_scanning/#customizing-the-container-scanning-settings
+# Note that environment variables can be set in several places
+# See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
 
+# container_scanning:
+#   variables:
+#     DOCKER_IMAGE: ...
+#     DOCKER_USER: ...
+#     DOCKER_PASSWORD: ...
 include:
-  - project: 'lc-templates/id_tokens'
-    file: 'id_tokens.yml'
+- project: lc-templates/id_tokens
+  file: id_tokens.yml
 
 stages:
-  - build
-  - test
-#   - sbom
+- build
+- test
+- sbom
 
-.oslic:
+".oslic":
   tags:
-    - shell
-    - oslic
+  - shell
+  - oslic
 
 before_script:
-  - python3 -m venv eye  # Create venv
-  - source eye/bin/activate
-  - pip3 install build
+- python3 -m venv eye
+- source eye/bin/activate
+- pip3 install build
 
 build:
   stage: build
   extends:
-   - .oslic
+  - ".oslic"
   script:
-    - python3 -m build
+  - python3 -m build
   artifacts:
     paths:
-      - dist/
+    - dist/
+
+container_scanning:  # Build project deps, download and install trivy, then scans filesystem
+  stage: test
+  extends:
+  - .oslic
+  dependencies:
+  - build
+  variables:
+    TRIVY_NO_PROGRESS: "true"
+  script:
+  - pip install dist/eyeon-*.whl
+  - pip freeze > requirements.txt  # this is the needed format for trivy to pick up dependencies
+  - cat requirements.txt 
+  - mkdir -p trivy; cd trivy
+
+  # Install trivy to container, using this guide: 
+  # https://aquasecurity.github.io/trivy/v0.53/tutorials/integrations/gitlab-ci/
+  - export NEWEST_VERSION=$(wget -qO - "https://api.github.com/repos/aquasecurity/trivy/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/') 
+  # Check if we have a cached version of trivy
+  - if [ -f "version.txt" ]; then export CURRENT_VERSION=$(cat version.txt); else export CURRENT_VERSION=0; fi
+  - echo $CURRENT_VERSION
+  - echo $NEWEST_VERSION
+  # Check if cached version is newest version, before downloading
+  - if [ "$CURRENT_VERSION" != "$NEWEST_VERSION" ]; then echo "Downloading new version of trivy..." && wget --no-verbose "https://github.com/aquasecurity/trivy/releases/download/v${NEWEST_VERSION}/trivy_${NEWEST_VERSION}_Linux-64bit.tar.gz" -O - | tar -zxvf -; else echo "Cached version of Trivy is up to date"; fi
+  - ls -la
+  - ./trivy --version && echo $NEWEST_VERSION > version.txt # Save version to cache for later
+  - ./trivy clean --all  # clear scan + vuln cache
+  # Build and save report as gitlab formatted json
+  - time ./trivy filesystem --timeout=10m --exit-code 0 --format template --template "@./contrib/gitlab.tpl" -o ../gl-container-scanning-report.json ..
+  # Print full report to console
+  - time ./trivy filesystem --exit-code 0 ..
+  # This makes job fail if it finds a critical vuln
+  - time ./trivy filesystem --exit-code 1 --severity CRITICAL ..
+  - cd ..
+
+  cache:
+    paths:
+    - trivy/
+  artifacts:
+    when: always
+    reports:
+      container_scanning: gl-container-scanning-report.json  # This filename is important, dont change it!!
+
 
 unittest:
   stage: test
   extends:
-    - .oslic
-  # image: python:3.10
+  - ".oslic"
   script:
-    - ls
-    - pip install dist/eyeon-*.whl
-    - cd tests/
-    - coverage run --source eyeon -m unittest testObserveRemote.py testParse.py testCli.py testBadSignatures.py testChecksum.py
-    - coverage xml
-    - coverage html
-    - coverage report --precision=2
-  coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
+  - ls
+  - pip install dist/eyeon-*.whl
+  - cd tests/
+  - coverage run --source eyeon -m unittest testObserveRemote.py testParse.py testCli.py
+    testBadSignatures.py testChecksum.py
+  - coverage xml
+  - coverage html
+  - coverage report --precision=2
+  coverage: "/(?i)total.*? (100(?:\\.0+)?\\%|[1-9]?\\d(?:\\.\\d+)?\\%)$/"
   dependencies:
-    - build
+  - build
   artifacts:
     paths:
-      - 'tests/htmlcov/'
+    - tests/htmlcov/
     reports:
       coverage_report:
         coverage_format: cobertura
-        path: 'tests/coverage.xml'
-    
+        path: tests/coverage.xml
 
-# sbom:  # put in artifacts instead
-#   stage: sbom
-#   script:
-#     - cd .. # back to eyeon folder
-#     - ./sbom-tool generate -b / -bc src/ -pn lsbom -pv 0.2 -ps "Lawrence Livermore National Laboratory" -nsb https://www.llnl.gov/
+sbom:
+  stage: sbom
+  extends:
+  - ".oslic"
+  dependencies: 
+  - build
+  script:
+     - pip install dist/eyeon-*.whl
+     - pip freeze > requirements.txt  # I couldn't get sbom-tool to work without saving the requirements
+     - mkdir -p sbom-tool; cd sbom-tool
+
+     # check for newer version and download sbom-tool if necessary
+     - if [ -f "version.txt" ]; then export CURRENT_VERSION=$(cat version.txt); else export CURRENT_VERSION=0; fi
+     - export NEWEST_VERSION=$(wget -qO - "https://api.github.com/repos/microsoft/sbom-tool/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+     - if [ "$CURRENT_VERSION" != "$NEWEST_VERSION" ]; then echo "Downloading new version of sbom-tool..." && curl -Lo sbom-tool https://github.com/microsoft/sbom-tool/releases/latest/download/sbom-tool-linux-x64; else echo "Cached version of SBOM-TOOL is up to date"; fi
+     - echo $NEWEST_VERSION > version.txt
+
+     - chmod +x sbom-tool
+     - rm -rf ../_manifest  # remove old sbom if cached
+
+     - export EYEON_VERSION=$(grep -m 1 'version=' ../pyproject.toml | cut -d \" -f2) # get eyeon version from pyproject.toml
+     - ./sbom-tool generate -b .. -bc .. -ps "Lawrence Livermore National Laboratory" -nsb "https://www.llnl.gov" -pn "EyeON" -pv $EYEON_VERSION 
+     - cd ..
+  cache:
+    paths:
+    - sbom-tool/
+  artifacts:
+    when: always
+    name: sbom
+    paths:
+      - _manifest # upload the sbom to gitlab
+

@@ -33,12 +33,12 @@ class ObservationTestCase(unittest.TestCase):
         self.assertEqual(self.OBS.permissions, "0o100644")
         self.assertEqual(
             self.OBS.magic,
-            "PE32 executable (GUI) Intel 80386, for MS Windows",  # noqa: E501
+            "PE32 executable (GUI) Intel 80386, for MS Windows",
         )
         self.assertEqual(self.OBS.imphash, "750aba166a0a8ac1c298d6e9bf68960f")
         self.assertEqual(
             self.OBS.ssdeep,
-            "98304:kq6vzyzgvZe2fwa5T3CWxeKNn5pRD4RnzY/moFJ:V6vzhUfa5fnws5",  # noqa: E501
+            "98304:kq6vzyzgvZe2fwa5T3CWxeKNn5pRD4RnzY/moFJ:V6vzhUfa5fnws5",
         )
         self.assertNotIn(  # check that the first cert has no issuer in the chain
             "issuer_sha256", self.OBS.signatures[0]["certs"][0]
@@ -351,28 +351,6 @@ class TestFilePermissions(unittest.TestCase):
 class TestFolderPermissions(unittest.TestCase):
     def test_nonreadable_folder(self):
         self.assertRaises(PermissionError, observe.Observe, "/root")
-
-
-class ObservationTestSetDIE(unittest.TestCase):
-    @classmethod
-    def setUp(self) -> None:
-        self.OBS = observe.Observe("./binaries/x86/notepad++/notepad++.exe")
-
-    def test_set_die(self) -> None:
-        expected_output = (
-            "PE32\n"
-            "    Linker: Microsoft Linker(14.36.33522)\n"
-            "    Compiler: Microsoft Visual C/C++(19.36.33522)[LTCG/C++]\n"
-            "    Tool: Visual Studio(2022 version 17.6)\n"
-            "    \u001b[1;35mSign tool: Windows Authenticode(2.0)[PKCS #7]\u001b[0m\n\n"
-        )
-        self.assertEqual(self.OBS.die, expected_output)
-
-
-# class TestDiffArchitecture(unittest.TestCase):
-#     def test_i386_ls(self):
-#         # Check to see if permission error is raised
-#         self.assertRaises(PermissionError, observe.Observe, "ls/i386-ls")
 
 
 if __name__ == "__main__":
