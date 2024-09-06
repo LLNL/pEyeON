@@ -19,6 +19,8 @@ import lief
 import logging
 from .setup_log import logger  # noqa: F401
 
+import eyeon.file
+
 log = logging.getLogger("eyeon.observe")
 # from glob import glob
 
@@ -101,6 +103,7 @@ class Observe:
         self.filename = os.path.basename(file)  # TODO: split into absolute path maybe?
         self.signatures = []
         if lief.is_pe(file):
+            eyeon.file.PE_File(file)
             self.set_imphash(file)
             self.certs = {}
             self.set_signatures(file)
