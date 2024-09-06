@@ -6,7 +6,7 @@ from typing import List
 
 import duckdb
 import streamlit as st
-import wintappy.datautils.rawutil as ru
+import common.rawutil as ru
 
 
 @dataclass
@@ -23,7 +23,7 @@ class Dataset:
 
     @classmethod
     def from_path(cls, path: str, name: str = None):
-        if name == None:
+        if name is None:
             name = os.path.basename(os.path.normpath(path))
 
         agg_levels = os.listdir(path)

@@ -1,3 +1,2 @@
-dynaconf
-streamlit==1.36.0
-duckdb
+dynaconf>=3.2.6
+streamlit>=1.37.0
