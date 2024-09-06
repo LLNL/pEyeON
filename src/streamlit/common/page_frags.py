@@ -14,7 +14,8 @@ def summary():
             with col1:
                 # Yikes! Not sure this join is the simplest way, but it works.
                 st.markdown(
-                    f"Observations \n#### {'/'.join(map(str,du.get(du.getcon(), 'observation_count')))}"
+                    f"""Observations \n#### {'/'.
+                        join(map(str,du.get(du.getcon(), 'observation_count')))}"""
                 )
 
             with col2:
@@ -29,9 +30,9 @@ def summary():
 def debug_info():
     st.markdown(f"dataset path is still set to: {settings.datasets.dataset_path}")
     try:
-        from common.wintapgraph import add_node
+        from streamlit.common.dqautil import Dataset
 
-        st.markdown(f"successfully imported from common util! ({type(add_node)})")
+        st.markdown(f"successfully imported from common util! ({type(Dataset)})")
     except Exception as err:
         st.markdown("unable to import from common util!!")
         st.markdown(err)

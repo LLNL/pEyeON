@@ -1,7 +1,8 @@
 import os
 import json
 import unittest
-import jsonschema
+
+# import jsonschema
 import shutil
 import duckdb
 from glob import glob
@@ -21,9 +22,9 @@ class GeneralDatabaseTestCase(unittest.TestCase):
         self.assertTrue(os.path.isfile(self.database_output))
 
     def validateDatabaseContents(self) -> None:
-        # Read in the json, compare to raw_pf table contents
+        # Read in the json, compare to observations table contents
         con = duckdb.connect(self.database_output)
-        table = con.execute("select * from raw_pf").fetchall()
+        table = con.execute("select * from observations").fetchall()
 
         # convert table to list of dictionaries
         columns = [desc[0] for desc in con.description]
@@ -32,18 +33,18 @@ class GeneralDatabaseTestCase(unittest.TestCase):
         json_data = []
         if os.path.isdir(self.original_output):
             for jsonfile in glob(os.path.join(self.original_output, "*.json")):
-                with open(jsonfile, 'r') as f:
+                with open(jsonfile, "r") as f:
                     json_data.append(json.load(f))
         else:
             with open(self.original_output) as f:
                 json_data.append(json.load(f))
 
         # for each json file that was output, compare its contents to the database
-        json_data = sorted(json_data, key = lambda x: x["filename"])
-        db_data = sorted(db_data, key = lambda x: x["filename"])
+        json_data = sorted(json_data, key=lambda x: x["filename"])
+        db_data = sorted(db_data, key=lambda x: x["filename"])
         json_sigs = []
         db_sigs = []
-        for json_dict, db_dict in zip(json_data,db_data):
+        for json_dict, db_dict in zip(json_data, db_data):
             if "signatures" in json_dict:
                 json_sigs.append(json_dict.pop("signatures"))
                 db_sigs.append(db_dict.pop("signatures"))
@@ -57,18 +58,25 @@ class GeneralDatabaseTestCase(unittest.TestCase):
             for key in json_dict:
                 if isinstance(json_dict[key], str):
                     # normalize inconsistencies with uuid/hashes from db import
-                    db_dict[key] = str(db_dict[key]).replace("-", '')
-                    json_dict[key] = json_dict[key].replace("-", '')
-                self.assertEqual(json_dict[key], db_dict[key], msg=f"Comparison failed for key {key}" )
+                    db_dict[key] = str(db_dict[key]).replace("-", "")
+                    json_dict[key] = json_dict[key].replace("-", "")
+                self.assertEqual(
+                    json_dict[key], db_dict[key], msg=f"Comparison failed for key {key}"
+                )
 
         # iterate through signatures + metadata seperately
         # because these are nested structs, and the db has null values for missing entries
         for json_sig, db_sig in zip(json_sigs, db_sigs):
-            for json_item, db_item in zip(json_sig, db_sig):  # This is is a mess but not sure of a better way...
+            for json_item, db_item in zip(
+                json_sig, db_sig
+            ):  # This is is a mess but not sure of a better way...
                 for key in json_item:
-                    self.assertIn(key, db_item, msg=f"key {key} not added to signature in database" )
-                    self.assertIsNotNone(db_item[key], msg=f"key {key} was not populated in database" )
-                    # TODO figure out how to manually compare the converted variable types after adding json to DUckdb?
+                    self.assertIn(key, db_item, msg=f"key {key} not added to signature in database")
+                    self.assertIsNotNone(
+                        db_item[key], msg=f"key {key} was not populated in database"
+                    )
+                    # TODO figure out how to manually compare the converted variable types
+                    #  after adding json to DUckdb?
                     #  for example: see how datetime entries look in the database
 
     @classmethod
@@ -171,6 +179,7 @@ class TestErrorHandling(unittest.TestCase):
     def testNoDatabaseObserve(self):
         with self.assertRaises(FileNotFoundError):
             self.OBS.write_database("", self.observe_path)
+
 
 if __name__ == "__main__":
     unittest.main()

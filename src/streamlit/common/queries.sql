@@ -4,12 +4,12 @@
 select
 --# name: observation_times
 time_bucket(INTERVAL '15 minutes', observation_ts) ObsTime, count(*) NumRows
-from raw_pf group by all order by all
+from observations group by all order by all
 ;
 
 select
 --# name: observation_count
-count(*) Observations from raw_pf
+count(*) Observations from observations
 ;
 
 -- Get raw data collection range, which means we need to ignore process data reconstructed from Windows logs, which are activitytype="refresh"
@@ -18,7 +18,7 @@ select
 	min(observation_ts) first_seen,
 	max(observation_ts) last_seen,
 from
-	raw_pf
+	observations
 ;
 
 
@@ -65,7 +65,7 @@ from process
 select
 --# name: cert_observation_times
 time_bucket(INTERVAL '15 minutes', observation_ts) ObsTime, count(*) NumRows
-from raw_pf where ARRAY_LENGTH(signatures) > 0
+from observations where ARRAY_LENGTH(signatures) > 0
 group by all order by all
 ;
 
@@ -106,19 +106,19 @@ FROM raw_uniq_certs group by all order by NumRows DESC
 -- Get filesizes
 select 
 --# name: file_sizes
-bytecount FROM raw_pf
+bytecount FROM observations
 ;
 
 -- Cluter and count file extensions
 SELECT 
 --# name: file_extensions
 LOWER(SUBSTRING(REGEXP_EXTRACT(filename, '\.([^.]*)$'), 0)) file_extension, count(*) NumRows
-FROM raw_pf group by all order by NumRows DESC LIMIT 30
+FROM observations group by all order by NumRows DESC LIMIT 30
 ;
 
 -- Cluter magic bytes
 SELECT 
 --# name: magic_bytes
 magic, count(*) NumRows
-FROM raw_pf group by all order by NumRows DESC LIMIT 30
+FROM observations group by all order by NumRows DESC LIMIT 30
 ;

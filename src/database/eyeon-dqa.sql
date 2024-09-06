@@ -1,13 +1,13 @@
 -- Some simple DQA on the observation data
 -- Assumes eyeon-ddl.sql has been run to create the views
 
-summarize raw_pf;
+summarize observations;
 
-select * from raw_pf where len(signatures) > 0
+select * from observations where len(signatures) > 0
 ;
 
 -- Cluster observations by time. Were you expecting many small clusters or a few large or ???
-select time_bucket(INTERVAL '15 minutes', observation_ts), count(*) from raw_pf group by all order by all
+select time_bucket(INTERVAL '15 minutes', observation_ts), count(*) from observations group by all order by all
 ;
 
 summarize raw_sigs
@@ -42,7 +42,7 @@ select x509_field, x509_value, count(*) from main.raw_cert_subject_fields group 
 
 -- Flattens existing defaults. They're all the same value, so not too interesting yet.
 select *, count(*) from (		
-select unnest(defaults,recursive:=true) from raw_pf) group by all
+select unnest(defaults,recursive:=true) from observations) group by all
 
 
 -- Experimental/Dev below for working with nested structures ----------------------------------------------------
@@ -85,23 +85,23 @@ select unnest(json('[{"certs": [{"cert._version": "3","sha256": "c977923c771e1a6
                           completed: 'BOOLEAN'});
 
 
-summarize raw_pf
+summarize observations
 
 -- Its an array, but they're all only len 1
-select len(signatures) num_sigs, count(*) from raw_pf group by all
+select len(signatures) num_sigs, count(*) from observations group by all
 
 
 -- extract from list, summarize
-select signatures[1] from raw_pf where len(signatures)>0
+select signatures[1] from observations where len(signatures)>0
 
 -- Are the structures all the same? Nope.
-select json_structure(cast(signatures[1] as json)), count(*) from raw_pf where len(signatures)>0 group by all
+select json_structure(cast(signatures[1] as json)), count(*) from observations where len(signatures)>0 group by all
 
 -- Extract a top-level field
-select json_extract(cast(signatures[1] as json),'signers') signers, count(*) from raw_pf where len(signatures)>0  and signers not ilike '%microsoft%' group by all order by count(*) desc
+select json_extract(cast(signatures[1] as json),'signers') signers, count(*) from observations where len(signatures)>0  and signers not ilike '%microsoft%' group by all order by count(*) desc
 
 -- CERTs is a nested list, extract and count
-select filename,json_extract(cast(signatures[1] as json),'certs') certs, count(*) from raw_pf where len(signatures)>0  and certs not ilike '%microsoft%' group by all order by count(*) desc
+select filename,json_extract(cast(signatures[1] as json),'certs') certs, count(*) from observations where len(signatures)>0  and certs not ilike '%microsoft%' group by all order by count(*) desc
 
 -- CERTs is a nested list, extract and count
 select filename, unnest(certs) cert from (
@@ -110,33 +110,33 @@ summarize
 		filename,
 		json_extract(cast(signatures[1] as json),'certs') certs
 	from
-		raw_pf
+		observations
 	where
 		len(signatures)>0
 		and certs not ilike '%microsoft%' 
 )
 
 -- Unpack CERTs
-summarize select json_structure(json_extract(cast(signatures[1] as json),'certs')) certs from raw_pf where len(signatures)>0
+summarize select json_structure(json_extract(cast(signatures[1] as json),'certs')) certs from observations where len(signatures)>0
 
 
-select len(json_extract(cast(signatures[1] as json),'certs')) num_certs, count(*) from raw_pf where len(signatures)>0 group by all order by count(*) desc
+select len(json_extract(cast(signatures[1] as json),'certs')) num_certs, count(*) from observations where len(signatures)>0 group by all order by count(*) desc
 
 
 
-select metadata, count(*) from raw_pf group by all order by count(*) desc
+select metadata, count(*) from observations group by all order by count(*) desc
 
-select filename, count(distinct observation_ts), count(*) from raw_pf group by all having count(*) > 1 order by count(*) desc
+select filename, count(distinct observation_ts), count(*) from observations group by all having count(*) > 1 order by count(*) desc
 
-select filename, count(distinct observation_ts) num_ts, count(*) from raw_pf group by all having num_ts > 1 order by count(*) desc
+select filename, count(distinct observation_ts) num_ts, count(*) from observations group by all having num_ts > 1 order by count(*) desc
 
-select *, count(*) num_dups from raw_pf group by all having num_dups>1
+select *, count(*) num_dups from observations group by all having num_dups>1
 
-select sha256, count(*) from raw_pf group by all having count(*) > 1
+select sha256, count(*) from observations group by all having count(*) > 1
 
 -- Are signatures consistent?
-select len(signatures) num_sigs, count(*) from raw_pf group by all 
+select len(signatures) num_sigs, count(*) from observations group by all 
 
 -- Fully unnests, but may be tricky separating top level sig from nested certs:
-select unnest(signatures,recursive:=true) from raw_pf where
+select unnest(signatures,recursive:=true) from observations where
 		len(signatures)>0

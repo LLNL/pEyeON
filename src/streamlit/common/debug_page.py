@@ -6,8 +6,8 @@ from utils.config import settings
 import streamlit as st
 
 import common.dqautil as du
-import wintappy.datautils.stdview_duckdb as svd
-import os
+
+# import os
 
 
 class LandingPage(BasePageLayout):
@@ -26,7 +26,7 @@ class LandingPage(BasePageLayout):
         # Widgets update session_state using the "key" attribute. Awesome.
         # But, in multipage apps, they also clear out session_state when leaving the page!
         # Suggested hack is to persist the value in a shadow variable.
-        # Ref: https://discuss.streamlit.io/t/text-input-behavior-for-updating-a-session-state-value-is-not-intuitive-for-my-use-case/38814
+        # Ref: https://discuss.streamlit.io/t/text-input-behavior-for-updating-a-session-state-value-is-not-intuitive-for-my-use-case/38814 # noqa: E501
 
         # Initialize shadow for first execution
         if "_debug_sql" not in st.session_state:

@@ -1,11 +1,11 @@
 # EyeOn
 
-Welcome to your Streamlit Application for Wintap Data: EyeOn!
+Welcome to your Streamlit Application for EyeON Data!
 
 This template has the following features builtin:
 
 * Multi-page support
-* Wintap database selection
+* Database selection
     * Specifically supports duckdb databases defined in [dataset_path]/[dataset]/dbhelpers
     * Once selected, database is available vi dqautil.getcon() on any page
 

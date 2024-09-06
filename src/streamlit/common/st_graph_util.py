@@ -1,9 +1,9 @@
-from st_cytoscape import cytoscape
-import common.st_content_util as scu
-import common.wintapgraph as wg
+# from st_cytoscape import cytoscape
+# import common.st_content_util as scu
 import networkx as nx
-import streamlit as st
-import common.dqautil as du
+
+# import streamlit as st
+# import common.dqautil as du
 import json
 
 
@@ -32,7 +32,7 @@ def nx_to_stcyto(G):
     """
     elements = []
     for i in G.nodes(data="label"):
-        label = "Missing" if i[1] == None else i[1]
+        label = "Missing" if i[1] is None else i[1]
         elements.append({"data": {"id": i[0], "label": label}})
 
     for i in G.edges:
@@ -48,69 +48,69 @@ def export_graph(netg, name="Sample"):
         json.dump(cytodict, f)
 
 
-def display_comp(netg):
-    # Try splitting the graph into its connected components and plot them seperately
-    #    for comp in nx.connected_component_subgraphs(netg):
-    for comp in nx.connected_components(netg.to_undirected()):
-        st.write(type(comp))
-        st.write(comp)
-        display_graph(comp)
+# def display_comp(netg):
+#     # Try splitting the graph into its connected components and plot them seperately
+#     #    for comp in nx.connected_component_subgraphs(netg):
+#     for comp in nx.connected_components(netg.to_undirected()):
+#         st.write(type(comp))
+#         st.write(comp)
+#         display_graph(comp)
 
+# def display_graph(netg, process_name_txt="(should be the filter value)"):
+#     if "netg" in locals():
+#         with st.container(border=True):
+#             st.header("Wintap Data")
+#             sel_layout = st.selectbox(
+#                 "Layout", ["breadthfirst", "cose", "concentric", "circle", "grid"]
+#             )
 
-def display_graph(netg, process_name_txt="(should be the filter value)"):
-    if "netg" in locals():
-        with st.container(border=True):
-            st.header("Wintap Data")
-            sel_layout = st.selectbox(
-                "Layout", ["breadthfirst", "cose", "concentric", "circle", "grid"]
-            )
+#             # Use 0 in-degree, which is effectively the children.
+#             leaf_nodes = [n for n, d in netg.in_degree() if d == 0]
+#             # A variety of experiments that haven't worked out well for better layout.
+#             #            root_nodes = [n for n, d in netg.out_degree() if d == 0]
+#             #            edgelist = [e for e in netg.edges if e not in nx.selfloop_edges(netg)]
+#             #            krnl_nodes = [s for (s,d) in edgelist]
+#             #            with st.expander("Node IDs"):
+#             #                st.write(krnl_nodes)
+#             #                st.write(root_nodes)
 
-            # Use 0 in-degree, which is effectively the children.
-            leaf_nodes = [n for n, d in netg.in_degree() if d == 0]
-            # A variety of experiments that haven't worked out well for better layout.
-            #            root_nodes = [n for n, d in netg.out_degree() if d == 0]
-            #            edgelist = [e for e in netg.edges if e not in nx.selfloop_edges(netg)]
-            #            krnl_nodes = [s for (s,d) in edgelist]
-            #            with st.expander("Node IDs"):
-            #                st.write(krnl_nodes)
-            #                st.write(root_nodes)
+#             sel = cytoscape(
+#                 nx_to_stcyto(netg),
+#                 get_stylesheet(),
+#                 layout={
+#                     "name": sel_layout,
+#                     #                    "roots": leaf_nodes,
+#                     "directed": False,
+#                     #                    "grid": True,
+#                 },
+#                 height="800px",
+#                 min_zoom=0.5,
+#                 max_zoom=3,
+#                 key="_netg",
+#             )
 
-            sel = cytoscape(
-                nx_to_stcyto(netg),
-                get_stylesheet(),
-                layout={
-                    "name": sel_layout,
-                    #                    "roots": leaf_nodes,
-                    "directed": False,
-                    #                    "grid": True,
-                },
-                height="800px",
-                min_zoom=0.5,
-                max_zoom=3,
-                key="_netg",
-            )
+#         st.markdown("**Selected nodes**: %s" % (", ".join(sel["nodes"])))
+#         st.markdown("**Selected edges**: %s" % (", ".join(sel["edges"])))
 
-        st.markdown("**Selected nodes**: %s" % (", ".join(sel["nodes"])))
-        st.markdown("**Selected edges**: %s" % (", ".join(sel["edges"])))
+#         # Display selected nodes in a table.
+#         # Note: cheating for now and just displaying the first one.
+#         if len(sel["nodes"]) > 0:
+#             scu.display_node(sel["nodes"][0])
 
-        # Display selected nodes in a table.
-        # Note: cheating for now and just displaying the first one.
-        if len(sel["nodes"]) > 0:
-            scu.display_node(sel["nodes"][0])
-
-        st.button(
-            "Export (cytoscape and graphml)",
-            on_click=export_graph,
-            args=[
-                netg,
-                f"Wintap-{st.session_state.curds}-{st.session_state.curdb}-{process_name_txt}",
-            ],
-        )
+#         st.button(
+#             "Export (cytoscape and graphml)",
+#             on_click=export_graph,
+#             args=[
+#                 netg,
+#                 f"Wintap-{st.session_state.curds}-{st.session_state.curdb}-{process_name_txt}",
+#             ],
+#         )
 
 
 def get_stylesheet():
     """
-    Stylesheets don't seem, to work completely, Need more effort to figure out what does/doesn't work in Streamlit
+    Stylesheets don't seem, to work completely,
+    Need more effort to figure out what does/doesn't work in Streamlit
     """
     stylesheet = [
         {

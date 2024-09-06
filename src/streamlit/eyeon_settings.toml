@@ -1,5 +1,5 @@
 [datasets]
-dataset_path = "/Users/johnson30/data"
+dataset_path = "/workdir/tests/data"
 
 [app]
 page_title="EyeOn Explorer"

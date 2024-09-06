@@ -369,14 +369,14 @@ class Observe:
                     # create table and views from sql
                     con.sql(files("database").joinpath("eyeon-ddl.sql").read_text())
 
-                # add the file to the raw_pf table, making it match template
+                # add the file to the observations table, making it match template
                 # observations with missing keys will get null vals as placeholder to match sql
                 con.sql(
                     f"""
-                insert into raw_pf by name 
-                select * from 
-                read_json_auto(['{observation_json}', 
-                                '{files('database').joinpath('raw_pf.json')}'], 
+                insert into observations by name
+                select * from
+                read_json_auto(['{observation_json}',
+                                '{files('database').joinpath('observations.json')}'],
                                 union_by_name=true, auto_detect=true)
                 where filename is not null;
                 """
