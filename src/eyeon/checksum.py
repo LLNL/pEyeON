@@ -1,9 +1,9 @@
-import eyeon.observe as obs
+from eyeon.file import File as hasher
 
 
 def Checksum(file: str, algorithm: str, expected_checksum: str):
     # Get the md5 hash of the file
-    fileHash = obs.Observe.create_hash(file, algorithm)
+    fileHash = hasher.create_hash(file, algorithm)
     print(f"{algorithm} hash: {fileHash}")
     print(f"expected hash: {expected_checksum}")
 
