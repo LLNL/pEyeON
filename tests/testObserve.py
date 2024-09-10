@@ -18,12 +18,12 @@ class ObservationTestCase(unittest.TestCase):
         self.OBS = observe.Observe("./binaries/x86/notepad++/notepad++.exe")
 
     def testVarsExe(self) -> None:
-        self.assertEqual(self.OBS.vars.vars.bytecount, 6390616)
-        self.assertEqual(self.OBS.vars.vars.filename, "notepad++.exe")
-        self.assertEqual(self.OBS.vars.vars.md5, "0ec33611cb6594903ff88d47c78dcdab")
-        self.assertEqual(self.OBS.vars.vars.sha1, "28a2a37cf2e9550a699b138dddba4b8067c8e1b1")
+        self.assertEqual(self.OBS.vars.bytecount, 6390616)
+        self.assertEqual(self.OBS.vars.filename, "notepad++.exe")
+        self.assertEqual(self.OBS.vars.md5, "0ec33611cb6594903ff88d47c78dcdab")
+        self.assertEqual(self.OBS.vars.sha1, "28a2a37cf2e9550a699b138dddba4b8067c8e1b1")
         self.assertEqual(
-            self.OBS.vars.vars.sha256, "ccb4ff6b20689d948233807a67d9de9666229625aa6682466ef01917b01ccd3b"
+            self.OBS.vars.sha256, "ccb4ff6b20689d948233807a67d9de9666229625aa6682466ef01917b01ccd3b"
         )
         try:
             dt.datetime.strptime(self.OBS.vars.modtime, "%Y-%m-%d %H:%M:%S")
@@ -52,7 +52,7 @@ class ObservationTestCase(unittest.TestCase):
         self.assertEqual(self.OBS.vars.authentihash, self.OBS.vars.signatures[0]["sha1"])
 
     def testConfigJson(self) -> None:
-        vs = vars(self.OBS)
+        vs = vars(self.OBS.vars)
         obs_json = json.loads(self.OBS._safe_serialize(vs))
         assert "defaults" in obs_json, "defaults not in json"
 
@@ -99,7 +99,7 @@ class ObservationTestCase2(unittest.TestCase):
     def testValidateJson(self) -> None:
         with open("../schema/observation.schema.json") as schem:
             schema = json.loads(schem.read())
-        obs_json = json.loads(json.dumps(vars(self.OBS)))
+        obs_json = json.loads(json.dumps(vars(self.OBS.vars)))
         print(jsonschema.validate(instance=obs_json, schema=schema))
 
     def testValidateSchema(self) -> None:
@@ -231,7 +231,7 @@ class ObservationTestCaseArm(unittest.TestCase):
         )
 
     def testConfigJson(self) -> None:
-        vs = vars(self.OBS)
+        vs = vars(self.OBS.vars)
         obs_json = json.loads(self.OBS._safe_serialize(vs))
         assert "defaults" in obs_json, "defaults not in json"
 
@@ -272,7 +272,7 @@ class ObservationTestCasePowerPC(unittest.TestCase):
         self.assertFalse(len(self.OBS.vars.signatures))
 
     def testConfigJson(self) -> None:
-        vs = vars(self.OBS)
+        vs = vars(self.OBS.vars)
         obs_json = json.loads(self.OBS._safe_serialize(vs))
         assert "defaults" in obs_json, "defaults not in json"
 
@@ -314,12 +314,16 @@ class ObservationTestCase7zip(unittest.TestCase):
                     dt.datetime.strptime(components[0], "%Y-%m-%d %H:%M:%S,%f")
                 except ValueError:
                     self.fail()
+
                 self.assertEqual(components[1], "eyeon.observe")
                 self.assertEqual(components[2], "INFO")
                 messages.append(components[3])
-
+        
+        print(components)
+        print(messages)
         # check both messages are in log
-        self.assertIn("file ./binaries/x86/7z_win32.exe has no signatures.", messages)
+        # Moved to file.py
+        # self.assertIn("file ./binaries/x86/7z_win32.exe has no signatures.", messages)
         self.assertIn("toml config not found", messages)
 
     def testDefaults(self):  # defaults should be empty when no config

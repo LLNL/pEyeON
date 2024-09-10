@@ -68,7 +68,7 @@ class CorruptFileTestCase(unittest.TestCase):
         self.assertEqual(self.OBS.vars.authenticode_integrity, codeflag)
 
     def configJson(self) -> None:
-        vs = vars(self.OBS)
+        vs = vars(self.OBS.vars)
         obs_json = json.loads(self.OBS._safe_serialize(vs))
         assert "defaults" in obs_json, "defaults not in json"
 

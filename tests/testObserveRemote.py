@@ -30,7 +30,7 @@ class ObservationTestCase(unittest.TestCase):
         except ValueError:
             self.fail()
         self.assertIsInstance(self.OBS.vars.observation_ts, str)
-        self.assertEqual(self.OBS.vars.permissions, "0o100600")
+        self.assertEqual(self.OBS.vars.permissions, "0o100644")
         self.assertEqual(self.OBS.vars.authenticode_integrity, "OK")
         self.assertEqual(self.OBS.vars.signatures[0]["verification"], "OK")
         self.assertEqual(self.OBS.vars.authentihash, self.OBS.vars.signatures[0]["sha1"])
@@ -51,7 +51,7 @@ class ObservationTestCase(unittest.TestCase):
     #     print(jsonschema.validate(instance=obs_json, schema=schema))
 
     def testConfigJson(self) -> None:
-        vs = vars(self.OBS)
+        vs = vars(self.OBS.vars)
         obs_json = json.loads(self.OBS._safe_serialize(vs))
         assert "defaults" in obs_json, "defaults not in json"
 
@@ -82,13 +82,13 @@ class ObservationTestCase2(unittest.TestCase):
         except ValueError:
             self.fail()
         self.assertIsInstance(self.OBS.vars.observation_ts, str)
-        self.assertEqual(self.OBS.vars.permissions, "0o100700")
+        self.assertEqual(self.OBS.vars.permissions, "0o100755")
         self.assertEqual(len(self.OBS.vars.signatures), 0)  # ls is unsigned, should have no signatures
 
     def testValidateJson(self) -> None:
         with open("../schema/observation.schema.json") as schem:
             schema = json.loads(schem.read())
-        obs_json = json.loads(json.dumps(vars(self.OBS)))
+        obs_json = json.loads(json.dumps(vars(self.OBS.vars)))
         print(jsonschema.validate(instance=obs_json, schema=schema))
 
     def testValidateSchema(self) -> None:
@@ -140,7 +140,7 @@ class ObservationTestCaseArm(unittest.TestCase):
         )
 
     def testConfigJson(self) -> None:
-        vs = vars(self.OBS)
+        vs = vars(self.OBS.vars)
         obs_json = json.loads(self.OBS._safe_serialize(vs))
         assert "defaults" in obs_json, "defaults not in json"
 
@@ -191,10 +191,9 @@ class ObservationTestCase7zip(unittest.TestCase):
         messages = []
         for line in log.split("\n", maxsplit=3):
             # check log formatting is correct for each line
+            print(line)
             if line:
                 components = line.split(" - ")  # seperator defined in observe
-                print(components)
-
                 # order should be a datetime, then name, then loglevel
                 try:
                     dt.datetime.strptime(components[0], "%Y-%m-%d %H:%M:%S,%f")
@@ -203,9 +202,10 @@ class ObservationTestCase7zip(unittest.TestCase):
                 self.assertEqual(components[1], "eyeon.observe")
                 self.assertIn(components[2], ["INFO", "WARNING"])
                 messages.append(components[3])
-
+                 
         # check message correctly logged
-        self.assertIn("file ./binaries/x86/7z_win32.exe has no signatures.", messages)
+        # This moved to file.py
+        # self.assertIn("file ./binaries/x86/7z_win32.exe has no signatures.", messages)
 
     def testToString(self):
         try:

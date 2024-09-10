@@ -13,26 +13,26 @@ class File:
     '''
     def __init__(self, file:str) -> None:
         #want to have all the attributes for any type of file defined here
-        self.file = file
+        # self.file = file
         self.filename = os.path.basename(file)
         # self.file_type="unknown"
         self.uuid = str(uuid4())
-        self.bytecount = self.get_byte_count()
+        self.bytecount = self.get_byte_count(file)
         self.signatures = []
         self.imphash = "N/A"
         self.md5=self.create_hash(file, "md5")
         self.sha1=self.create_hash(file, "sha1")
         self.sha256=self.create_hash(file, "sha256")
-        self.get_file_time()
+        self.get_file_time(file)
         self.set_magic(file)
         self.set_ssdeep(file)
     
-    def get_byte_count(self):
-        stat = os.stat(self.file)
+    def get_byte_count(self, file):
+        stat = os.stat(file)
         return stat.st_size
     
-    def get_file_time(self):
-        stat = os.stat(self.file)
+    def get_file_time(self, file):
+        stat = os.stat(file)
         self.modtime = datetime.datetime.fromtimestamp(
             stat.st_mtime, tz=datetime.timezone.utc
         ).strftime("%Y-%m-%d %H:%M:%S")
