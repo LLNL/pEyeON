@@ -30,7 +30,7 @@ class ObservationTestCase(unittest.TestCase):
         except ValueError:
             self.fail()
         self.assertIsInstance(self.OBS.vars.observation_ts, str)
-        self.assertEqual(self.OBS.vars.permissions, "0o100644")
+        self.assertEqual(self.OBS.vars.permissions, "0o100600")
         self.assertEqual(self.OBS.vars.authenticode_integrity, "OK")
         self.assertEqual(self.OBS.vars.signatures[0]["verification"], "OK")
         self.assertEqual(self.OBS.vars.authentihash, self.OBS.vars.signatures[0]["sha1"])
@@ -82,7 +82,7 @@ class ObservationTestCase2(unittest.TestCase):
         except ValueError:
             self.fail()
         self.assertIsInstance(self.OBS.vars.observation_ts, str)
-        self.assertEqual(self.OBS.vars.permissions, "0o100755")
+        self.assertEqual(self.OBS.vars.permissions, "0o100700")
         self.assertEqual(len(self.OBS.vars.signatures), 0)  # ls is unsigned, should have no signatures
 
     def testValidateJson(self) -> None:
