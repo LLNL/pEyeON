@@ -49,23 +49,23 @@ class CorruptFileTestCase(unittest.TestCase):
         self, md5, sha1, sha256, filename, bytecount, sigflag, codeflag, magic=None
     ):
         # verify hashes and see if verification broke properly
-        self.assertEqual(self.OBS.bytecount, bytecount)
-        self.assertEqual(self.OBS.filename, filename)
-        self.assertEqual(self.OBS.md5, md5)
-        self.assertEqual(self.OBS.sha1, sha1)
-        self.assertEqual(self.OBS.sha256, sha256)
+        self.assertEqual(self.OBS.vars.bytecount, bytecount)
+        self.assertEqual(self.OBS.vars.filename, filename)
+        self.assertEqual(self.OBS.vars.md5, md5)
+        self.assertEqual(self.OBS.vars.sha1, sha1)
+        self.assertEqual(self.OBS.vars.sha256, sha256)
         try:
-            dt.datetime.strptime(self.OBS.modtime, "%Y-%m-%d %H:%M:%S")
+            dt.datetime.strptime(self.OBS.vars.modtime, "%Y-%m-%d %H:%M:%S")
         except ValueError:
             self.fail()
-        self.assertIsInstance(self.OBS.observation_ts, str)
+        self.assertIsInstance(self.OBS.vars.observation_ts, str)
 
         if magic:  # magic bytes may change during gitlab job, can't always test
-            self.assertEqual(self.OBS.magic, magic)
+            self.assertEqual(self.OBS.vars.magic, magic)
 
         # check signature and authenticode
-        self.assertEqual(self.OBS.signatures[0]["verification"], sigflag)
-        self.assertEqual(self.OBS.authenticode_integrity, codeflag)
+        self.assertEqual(self.OBS.vars.signatures[0]["verification"], sigflag)
+        self.assertEqual(self.OBS.vars.authenticode_integrity, codeflag)
 
     def configJson(self) -> None:
         vs = vars(self.OBS)
