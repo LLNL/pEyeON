@@ -319,11 +319,8 @@ class ObservationTestCase7zip(unittest.TestCase):
                 self.assertEqual(components[2], "INFO")
                 messages.append(components[3])
         
-        print(components)
-        print(messages)
         # check both messages are in log
-        # Moved to file.py
-        # self.assertIn("file ./binaries/x86/7z_win32.exe has no signatures.", messages)
+        self.assertIn("file ./binaries/x86/7z_win32.exe has no signatures.", messages)
         self.assertIn("toml config not found", messages)
 
     def testDefaults(self):  # defaults should be empty when no config

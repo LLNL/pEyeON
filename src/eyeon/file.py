@@ -6,10 +6,38 @@ import re
 import subprocess
 
 from uuid import uuid4
+import eyeon.observe
 
 class File:
     '''
-    Create base observations for each file
+    Create base observations for each file based on their file type.
+    Called from Observe 
+    ----------------------
+        bytecount : int
+            size of file
+        filename : str
+            File name
+        magic : str
+            Magic byte descriptor
+        md5 : str
+            ``md5sum`` of file
+        modtime : str
+            Datetime string of last modified time
+        observation_ts : str
+            Datetime string of time of scan
+        permissions : str
+            Octet string of file permission value
+        sha1 : str
+            ``sha1sum`` of file
+        sha256 : str
+            ``sha256sum`` of file
+        ssdeep : str
+            Fuzzy hash used by VirusTotal to match similar binaries.
+        imphash : str
+            Either Import hash for Windows binaries or telfhash for ELF Linux binaries.
+        signatures : dict
+            Descriptors of signature information, including signatures and certificates. Only
+            valid for Windows
     '''
     def __init__(self, file:str) -> None:
         #want to have all the attributes for any type of file defined here
@@ -61,7 +89,7 @@ class File:
         try:
             import magic
         except ImportError:
-            print("libmagic1 or python-magic is not installed.")
+            eyeon.observe.log.warning("libmagic1 or python-magic is not installed.")
         self.magic = magic.from_file(file)    
 
     def set_ssdeep(self, file: str) -> None:
@@ -74,7 +102,7 @@ class File:
                 ["ssdeep", "-b", file], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
             ).stdout.decode("utf-8")
         except FileNotFoundError:
-            print("ssdeep is not installed.")
+            eyeon.observe.log.warning("ssdeep is not installed.")
             return
         out = out.split("\n")[1]  # header/hash/emptystring
         out = out.split(",")[0]  # hash/filename
@@ -84,23 +112,20 @@ class File:
 class PE_File(File):
     '''
     Create base observations for PE file
+    ----------------------
+        certs : dict
+            indvidual certificate information. will be added to signatures array
+        metadata : dict
+            Windows File Properties -- OS, Architecture, File Info, etc.
     '''
     def __init__(self, file: str) -> None:
         #PE specific stuff
         self.certs = {}
         self.set_windows_metadata(file)
-        # print(self.metadata)
 
         super().__init__(file)
-        # print(self.uuid)
-        # print(self.bytecount)
-        # print(self.md5)
-        # print(self.modtime)
-        # print(self.permissions)
         self.set_imphash(file)
-        # print(self.imphash)
         self.set_signatures(file)
-        # print(self.signatures)
         self.set_issuer_sha256()
 
     def set_imphash(self, file: str) -> None:
@@ -145,10 +170,10 @@ class PE_File(File):
         """
         pe = lief.parse(file)
         if len(pe.signatures) > 1:
-            print("file has multiple signatures")
+            eyeon.observe.log.info("file has multiple signatures")
         self.signatures = []
         if not pe.signatures:
-            print(f"file {file} has no signatures.")
+            eyeon.observe.log.info(f"file {file} has no signatures.")
             return
 
         # perform authentihash computation
@@ -195,7 +220,7 @@ class PE_File(File):
         try:
             self.metadata = extract_pe_info(file)
         except Exception as e:
-            print(file, e)
+            eyeon.observe.log.warning(file, e)
             self.metadata = {}
 
 class ELF_File(File):
@@ -206,9 +231,6 @@ class ELF_File(File):
         #ELF specific attrs here
         super().__init__(file)
         self.set_telfhash(file)
-        print(self.uuid)
-        print(self.bytecount)
-        print(self.md5)
 
     def set_telfhash(self, file: str) -> None:
         """

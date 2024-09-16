@@ -4,7 +4,6 @@ An observation will output a json file containing unique identifying information
 such as hashes, modify date, certificate info, etc.
 See the Observe class doc for full details.
 """
-import hashlib
 import json
 import os
 import pprint
@@ -41,30 +40,20 @@ class Observe:
 
     Parameters:
     -----------
-        file (str): Path to file to be scanned.
+        file : str
+            Path to file to be scanned.
+        log_level : int
+            set the log level
+                Debug:10
+                Info:20
+                Warning:30
+                Error:40
+                Critical:50
+        log_file : str
+            path to output log file
 
     Required Attributes:
     ----------------------
-        bytecount : int
-            size of file
-        filename : str
-            File name
-        magic : str
-            Magic byte descriptor
-        md5 : str
-            ``md5sum`` of file
-        modtime : str
-            Datetime string of last modified time
-        observation_ts : str
-            Datetime string of time of scan
-        permissions : str
-            Octet string of file permission value
-        sha1 : str
-            ``sha1sum`` of file
-        sha256 : str
-            ``sha256sum`` of file
-        ssdeep : str
-            Fuzzy hash used by VirusTotal to match similar binaries.
         config : dict
             toml configuration file elements
 
@@ -74,15 +63,9 @@ class Observe:
             String describing compiler, compiler version, flags, etc.
         host : str
             csv string containing intended install locations
-        imphash : str
-            Either Import hash for Windows binaries or telfhash for ELF Linux binaries.
         # die : str
             #Detect-It-Easy output.
-        signatures : dict
-            Descriptors of signature information, including signatures and certificates. Only
-            valid for Windows
-        metadata : dict
-            Windows File Properties -- OS, Architecture, File Info, etc.
+
     """
 
     def __init__(self, file: str, log_level: int = logging.ERROR, log_file: str = None) -> None:

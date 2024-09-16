@@ -204,8 +204,7 @@ class ObservationTestCase7zip(unittest.TestCase):
                 messages.append(components[3])
                  
         # check message correctly logged
-        # This moved to file.py
-        # self.assertIn("file ./binaries/x86/7z_win32.exe has no signatures.", messages)
+        self.assertIn("file ./binaries/x86/7z_win32.exe has no signatures.", messages)
 
     def testToString(self):
         try:
