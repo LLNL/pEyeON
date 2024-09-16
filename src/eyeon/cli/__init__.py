@@ -62,17 +62,18 @@ class CommandLine:
         )
         parse_parser.set_defaults(func=self.parse)
 
-
         # Create parser for checksum command
         parse_parser = subparsers.add_parser("checksum", help="checksum help")
         parse_parser.add_argument("file", help="file you want to checksum")
         parse_parser.add_argument("cksum", help="expected checksum (md5, sha1, sha256) of file")
         parse_parser.add_argument(
-            '-a', '--algorithm', choices=['md5', 'sha1', 'sha256'], default='md5',
-            help='Specify the hash algorithm (default: md5)'
+            "-a",
+            "--algorithm",
+            choices=["md5", "sha1", "sha256"],
+            default="md5",
+            help="Specify the hash algorithm (default: md5)",
         )
         parse_parser.set_defaults(func=self.checksum)
-
 
         # new
         if testargs:
@@ -106,13 +107,10 @@ class CommandLine:
         else:
             p(threads=args.threads)
 
-
-
     def checksum(self, args) -> None:
         "verify checksum against provided value"
 
-        c=eyeon.checksum.Checksum(args.file, args.algorithm, args.cksum)
-
+        eyeon.checksum.Checksum(args.file, args.algorithm, args.cksum)
 
 
 def main():
