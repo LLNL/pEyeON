@@ -14,12 +14,12 @@ RUN echo "alias build='python3 -m build'" >> /home/$OUN/.bashrc \
     && echo "alias clean='rm -rf /workdir/dist'" >> /home/$OUN/.bashrc \
     && echo "alias rein='build && pip uninstall -y eyeon && pip install /workdir/dist/eyeon*.whl'" >> /home/$OUN/.bashrc 
 
-RUN wget https://github.com/Kitware/CMake/releases/download/v3.27.4/cmake-3.27.4-linux-x86_64.sh \
-    && chmod u+x cmake-3.27.4-linux-x86_64.sh \
-    && mkdir /opt/cmake-3.27.4 \
-    && ./cmake-3.27.4-linux-x86_64.sh --skip-license --prefix=/opt/cmake-3.27.4 \
-    && rm cmake-3.27.4-linux-x86_64.sh \
-    && ln -s /opt/cmake-3.27.4/bin/* /usr/local/bin
+RUN wget https://github.com/Kitware/CMake/releases/download/v3.30.3/cmake-3.30.3-linux-x86_64.sh \
+    && chmod u+x cmake-3.30.3-linux-x86_64.sh \
+    && mkdir /opt/cmake-3.30.3 \
+    && ./cmake-3.30.3-linux-x86_64.sh --skip-license --prefix=/opt/cmake-3.30.3 \
+    && rm cmake-3.30.3-linux-x86_64.sh \
+    && ln -s /opt/cmake-3.30.3/bin/* /usr/local/bin
 
 RUN cd /opt && git clone https://github.com/trendmicro/tlsh.git \
     && cd /opt/tlsh \
