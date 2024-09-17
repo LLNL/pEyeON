@@ -207,6 +207,22 @@ class Observe:
         """
         Runs LIEF signature validation and collects certificate chain.
         """
+        VERIFICATION_FLAGS = {
+            0: "OK",
+            1: "INVALID_SIGNER",
+            2: "UNSUPPORTED_ALGORITHM",
+            4: "INCONSISTENT_DIGEST_ALGORITHM",
+            8: "CERT_NOT_FOUND",
+            16: "CORRUPTED_CONTENT_INFO",
+            32: "CORRUPTED_AUTH_DATA",
+            64: "MISSING_PKCS9_MESSAGE_DIGEST",
+            128: "BAD_DIGEST",
+            256: "BAD_SIGNATURE",
+            512: "NO_SIGNATURE",
+            1024: "CERT_EXPIRED",
+            2048: "CERT_FUTURE",
+        }
+
         pe = lief.parse(file)
         if len(pe.signatures) > 1:
             log.info("file has multiple signatures")
@@ -219,7 +235,7 @@ class Observe:
         self.authentihash = pe.authentihash(pe.signatures[0].digest_algorithm).hex()
 
         # verifies signature digest vs the hashed code to validate code integrity
-        self.authenticode_integrity = str(pe.verify_signature())
+        self.authenticode_integrity = VERIFICATION_FLAGS[pe.verify_signature()]
 
         # signinfo = sig.SignerInfo
         # this thing is documented but has no constructor defined
@@ -228,7 +244,9 @@ class Observe:
                 "certs": [self._cert_parser(c) for c in sig.certificates],
                 "signers": str(sig.signers[0]),
                 "digest_algorithm": str(sig.digest_algorithm),
-                "verification": str(sig.check()),  # gives us more info than a bool on fail
+                "verification": VERIFICATION_FLAGS[
+                    sig.check()
+                ],  # gives us more info than a bool on fail
                 "sha1": sig.content_info.digest.hex(),
                 # "sections": [s.__str__() for s in pe.sections]
                 # **signinfo,
