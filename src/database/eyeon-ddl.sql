@@ -37,6 +37,7 @@ CREATE TABLE observations (
 		verification VARCHAR
 	)[],
 	imphash VARCHAR,
+	telfhash VARCHAR,
 	authentihash VARCHAR,
 	authenticode_integrity VARCHAR,
 	metadata JSON,
