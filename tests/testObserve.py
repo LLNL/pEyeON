@@ -33,7 +33,7 @@ class ObservationTestCase(unittest.TestCase):
         self.assertEqual(self.OBS.permissions, "0o100644")
         self.assertEqual(
             self.OBS.magic,
-            "PE32 executable (GUI) Intel 80386, for MS Windows, 5 sections",
+            "PE32 executable (GUI) Intel 80386, for MS Windows",
         )
         self.assertEqual(
             self.OBS.ssdeep,

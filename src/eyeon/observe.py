@@ -208,7 +208,7 @@ class Observe:
         Runs LIEF signature validation and collects certificate chain.
         """
 
-        def verif_flags(flag: lief.PE.VERIFICATION_FLAGS) -> str:
+        def verif_flags(flag: lief.PE.Signature.VERIFICATION_FLAGS) -> str:
             """
             Map flags to strings
             """
