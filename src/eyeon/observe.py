@@ -212,9 +212,10 @@ class Observe:
             """
             Map flags to strings
             """
+            if flag == 0:
+                return "OK"
 
             VERIFICATION_FLAGS = {
-                0: "OK",
                 1: "INVALID_SIGNER",
                 2: "UNSUPPORTED_ALGORITHM",
                 4: "INCONSISTENT_DIGEST_ALGORITHM",
