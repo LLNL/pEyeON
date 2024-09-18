@@ -103,8 +103,8 @@ class NotepadFirstCertCorrupt(CorruptFileTestCase):
         sha256 = "4e434a9fb8bfbb15a5fac7a33c882ec91a05427b35c55e17fd82e030548b4b3f"
         magic = "PE32 executable (GUI) Intel 80386, for MS Windows"
         bytecount = 6390616
-        sigflag = "VERIFICATION_FLAGS.CERT_NOT_FOUND"
-        codeflag = "VERIFICATION_FLAGS.CERT_NOT_FOUND | VERIFICATION_FLAGS.BAD_SIGNATURE"
+        sigflag = "CERT_NOT_FOUND"
+        codeflag = "CERT_NOT_FOUND | BAD_SIGNATURE"
         filename = self.badbinpath.rsplit("/", maxsplit=1)[-1]
         self.corruptedVarsExe(md5, sha1, sha256, filename, bytecount, sigflag, codeflag, magic)
         self.configJson()
@@ -124,8 +124,8 @@ class NotepadSecondCertCorrupt(CorruptFileTestCase):
         sha256 = "2f11aaa964206882823348915b08b8106f95ce17bb5491fede7932466f85c31c"
         magic = "PE32 executable (GUI) Intel 80386, for MS Windows"
         bytecount = 6390616
-        sigflag = "VERIFICATION_FLAGS.CERT_NOT_FOUND"
-        codeflag = "VERIFICATION_FLAGS.CERT_NOT_FOUND | VERIFICATION_FLAGS.BAD_SIGNATURE"
+        sigflag = "CERT_NOT_FOUND"
+        codeflag = "CERT_NOT_FOUND | BAD_SIGNATURE"
         filename = self.badbinpath.rsplit("/", maxsplit=1)[-1]
         self.corruptedVarsExe(md5, sha1, sha256, filename, bytecount, sigflag, codeflag, magic)
         self.configJson()
@@ -144,8 +144,8 @@ class CurlFirstCertCorrupt(CorruptFileTestCase):
         sha1 = "68c4acb734d0cfdde2b75020e5fd1a64e91553b2"
         sha256 = "34985fc11dc4875c0d7f6b03be601225e99b527202e34ec3ceef6cd270b30c3c"
         bytecount = 3237992
-        sigflag = "VERIFICATION_FLAGS.CERT_NOT_FOUND"
-        codeflag = "VERIFICATION_FLAGS.CERT_NOT_FOUND | VERIFICATION_FLAGS.BAD_SIGNATURE"
+        sigflag = "CERT_NOT_FOUND"
+        codeflag = "CERT_NOT_FOUND | BAD_SIGNATURE"
         filename = self.badbinpath.rsplit("/", maxsplit=1)[-1]
         self.corruptedVarsExe(md5, sha1, sha256, filename, bytecount, sigflag, codeflag)
         self.configJson()
@@ -165,7 +165,7 @@ class CurlBreakAuthenticode1(CorruptFileTestCase):
         sha256 = "461bf5ce846ecc8de7d8c09b508dcaff520f63f1b926bfccedf89411136bffa3"
         bytecount = 3237992
         sigflag = "OK"  # when you tamper with the code, the signature is still ok
-        codeflag = "VERIFICATION_FLAGS.BAD_DIGEST | VERIFICATION_FLAGS.BAD_SIGNATURE"
+        codeflag = "BAD_DIGEST | BAD_SIGNATURE"
         filename = self.badbinpath.rsplit("/", maxsplit=1)[-1]
         self.corruptedVarsExe(md5, sha1, sha256, filename, bytecount, sigflag, codeflag)
         self.configJson()
@@ -185,7 +185,7 @@ class CurlBreakAuthenticode2(CorruptFileTestCase):
         sha256 = "fb5dce8bd9e138c413dfd6b0d99b702882de282f9a8e63ae9e6055aa913c6b9a"
         bytecount = 3238492
         sigflag = "OK"
-        codeflag = "VERIFICATION_FLAGS.BAD_DIGEST | VERIFICATION_FLAGS.BAD_SIGNATURE"
+        codeflag = "BAD_DIGEST | BAD_SIGNATURE"
         filename = self.badbinpath.rsplit("/", maxsplit=1)[-1]
         self.corruptedVarsExe(md5, sha1, sha256, filename, bytecount, sigflag, codeflag)
         self.configJson()
