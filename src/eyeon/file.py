@@ -150,7 +150,7 @@ class PE_File(File):
                     k = re.split("\s+: ", line)[0]  # noqa: W605
                     v = ""
                 except Exception as e:
-                    print(line)
+                    eyeon.observe.log.warning(line)
                     raise (e)
                 k = "_".join(k.split())  # replace space with underscore
                 cert_d[k] = v
@@ -240,6 +240,6 @@ class ELF_File(File):
         try:
             import telfhash
         except ModuleNotFoundError:
-            print("tlsh and telfhash are not installed.")
+            eyeon.observe.log.warning("tlsh and telfhash are not installed.")
             return
         self.imphash = telfhash.telfhash(file)[0]["telfhash"]
