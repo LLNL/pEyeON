@@ -4,6 +4,7 @@ An observation will output a json file containing unique identifying information
 such as hashes, modify date, certificate info, etc.
 See the Observe class doc for full details.
 """
+
 import datetime
 import hashlib
 import json
@@ -12,6 +13,8 @@ import pprint
 import subprocess
 import eyeon.config
 import re
+import duckdb
+from importlib.resources import files
 from pathlib import Path
 from uuid import uuid4
 
@@ -79,7 +82,7 @@ class Observe:
             Import hash for Windows binaries
         telfhash : str
             Telfhash for ELF Linux binaries
-        die : str
+        detect_it_easy : str
             Detect-It-Easy output.
         signatures : dict
             Descriptors of signature information, including signatures and certificates. Only
@@ -102,7 +105,7 @@ class Observe:
         self.bytecount = stat.st_size
         self.filename = os.path.basename(file)  # TODO: split into absolute path maybe?
         self.signatures = []
-        self.set_die(file)
+        self.set_detect_it_easy(file)
         if lief.is_pe(file):
             self.set_imphash(file)
             self.certs = {}
@@ -167,13 +170,13 @@ class Observe:
         pef = pefile.PE(file)
         self.imphash = pef.get_imphash()
 
-    def set_die(self, file: str) -> None:
+    def set_detect_it_easy(self, file: str) -> None:
         """
-        Sets Detect-It-Easy info. WIP
+        Sets Detect-It-Easy info.
         """
         try:
             dp = "/usr/bin"
-            self.die = subprocess.run(
+            self.detect_it_easy = subprocess.run(
                 [os.path.join(dp, "diec"), file], capture_output=True, timeout=10
             ).stdout.decode("utf-8")
         except KeyError:
@@ -207,6 +210,38 @@ class Observe:
         """
         Runs LIEF signature validation and collects certificate chain.
         """
+
+        def verif_flags(flag: lief.PE.Signature.VERIFICATION_FLAGS) -> str:
+            """
+            Map flags to strings
+            """
+            if flag == 0:
+                return "OK"
+
+            VERIFICATION_FLAGS = {
+                1: "INVALID_SIGNER",
+                2: "UNSUPPORTED_ALGORITHM",
+                4: "INCONSISTENT_DIGEST_ALGORITHM",
+                8: "CERT_NOT_FOUND",
+                16: "CORRUPTED_CONTENT_INFO",
+                32: "CORRUPTED_AUTH_DATA",
+                64: "MISSING_PKCS9_MESSAGE_DIGEST",
+                128: "BAD_DIGEST",
+                256: "BAD_SIGNATURE",
+                512: "NO_SIGNATURE",
+                1024: "CERT_EXPIRED",
+                2048: "CERT_FUTURE",
+            }
+            vf = ""
+
+            for k, v in VERIFICATION_FLAGS.items():
+                if flag & k:
+                    if len(vf):
+                        vf += " | "
+                    vf += v
+
+            return vf
+
         pe = lief.parse(file)
         if len(pe.signatures) > 1:
             log.info("file has multiple signatures")
@@ -219,7 +254,7 @@ class Observe:
         self.authentihash = pe.authentihash(pe.signatures[0].digest_algorithm).hex()
 
         # verifies signature digest vs the hashed code to validate code integrity
-        self.authenticode_integrity = str(pe.verify_signature())
+        self.authenticode_integrity = verif_flags(pe.verify_signature())
 
         # signinfo = sig.SignerInfo
         # this thing is documented but has no constructor defined
@@ -228,8 +263,8 @@ class Observe:
                 "certs": [self._cert_parser(c) for c in sig.certificates],
                 "signers": str(sig.signers[0]),
                 "digest_algorithm": str(sig.digest_algorithm),
-                "verification": str(sig.check()),  # gives us more info than a bool on fail
-                "sha1": sig.content_info.digest.hex()
+                "verification": verif_flags(sig.check()),  # gives us more info than a bool on fail
+                "sha1": sig.content_info.digest.hex(),
                 # "sections": [s.__str__() for s in pe.sections]
                 # **signinfo,
             }
@@ -347,6 +382,47 @@ class Observe:
         vs = {k: v for k, v in vs.items() if k != "certs"}
         with open(outfile, "w") as f:
             f.write(self._safe_serialize(vs))
+
+    def write_database(self, database: str, outdir: str = ".") -> None:
+        """
+        Creates or loads json file into duckdb database
+
+        Parameters:
+        -----------
+            database : str
+                Path to duckdb database file.
+            outdir : str
+                Output directory prefix. Defaults to current working directory.
+        """
+        observation_json = f"{os.path.join(outdir, self.filename)}.{self.md5}.json"
+
+        if os.path.exists(observation_json):
+            try:
+                db_exists = os.path.exists(database)
+                con = duckdb.connect(database)  # creates or connects
+                if not db_exists:  # create the table if database is new
+                    # create table and views from sql
+                    con.sql(files("database").joinpath("eyeon-ddl.sql").read_text())
+
+                # add the file to the observations table, making it match template
+                # observations with missing keys will get null vals as placeholder to match sql
+                con.sql(
+                    f"""
+                insert into observations by name
+                select * from
+                read_json_auto(['{observation_json}',
+                                '{files('database').joinpath('observations.json')}'],
+                                union_by_name=true, auto_detect=true)
+                where filename is not null;
+                """
+                )
+                con.close()
+            except duckdb.IOException as ioe:
+                con = None
+                s = f":exclamation: Failed to attach to db {database}: {ioe}"
+                print(s)
+        else:
+            raise FileNotFoundError
 
     def __str__(self) -> str:
         return pprint.pformat(vars(self), indent=2)
