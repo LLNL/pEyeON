@@ -80,8 +80,8 @@ class Observe:
             csv string containing intended install locations
         imphash : str
             Either Import hash for Windows binaries or telfhash for ELF Linux binaries.
-        # die : str
-            #Detect-It-Easy output.
+        detect_it_easy : str
+            Detect-It-Easy output.
         signatures : dict
             Descriptors of signature information, including signatures and certificates. Only
             valid for Windows
@@ -103,6 +103,7 @@ class Observe:
         self.bytecount = stat.st_size
         self.filename = os.path.basename(file)  # TODO: split into absolute path maybe?
         self.signatures = []
+        self.set_detect_it_easy(file)
         if lief.is_pe(file):
             self.set_imphash(file)
             self.certs = {}
@@ -167,14 +168,14 @@ class Observe:
         pef = pefile.PE(file)
         self.imphash = pef.get_imphash()
 
-    def set_die(self, file: str) -> None:
+    def set_detect_it_easy(self, file: str) -> None:
         """
-        Sets Detect-It-Easy info. WIP
+        Sets Detect-It-Easy info.
         """
         try:
-            dp = os.environ["DIEPATH"]
-            self.die = subprocess.run(
-                [os.path.join(dp, "diec.sh"), file], capture_output=True, timeout=10
+            dp = "/usr/bin"
+            self.detect_it_easy = subprocess.run(
+                [os.path.join(dp, "diec"), file], capture_output=True, timeout=10
             ).stdout.decode("utf-8")
         except KeyError:
             log.warning("No $DIEPATH set. See README.md for more information.")

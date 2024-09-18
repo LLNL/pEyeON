@@ -101,6 +101,10 @@
         },
         "required": ["signers", "digest_algorithm"]
       }
+    },
+    "detect_it_easy": {
+      "type": "string",
+      "description": "Program that determines types of files for Windows, Linux and MacOS"
     }
   },
   "additionalProperties": false,
