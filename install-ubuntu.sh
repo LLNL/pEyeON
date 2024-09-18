@@ -5,8 +5,7 @@ export eyeon_dir=$(pwd)
 apt update
 DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC \
     apt install -y python3 python3-pip python3-dev python3-venv \
-    libmagic1 git make wget unzip build-essential vim ssdeep jq \
-    python3-build python3-sphinx python3-venv
+    libmagic1 git make wget unzip build-essential vim ssdeep jq
 
 # cmake, have to build telfhash
 wget https://github.com/Kitware/CMake/releases/download/v3.30.3/cmake-3.30.3-linux-x86_64.sh
@@ -22,5 +21,8 @@ cd /opt/tlsh
 ./make.sh
 
 cd $eyeon_dir
+# set up virtual environment
 python3 -m venv eye && source eye/bin/activate
+pip install build sphinx
+python3 -m build
 pip install ./dist/eyeon-*.whl
