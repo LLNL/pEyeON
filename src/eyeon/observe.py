@@ -79,7 +79,9 @@ class Observe:
         host : str
             csv string containing intended install locations
         imphash : str
-            Either Import hash for Windows binaries or telfhash for ELF Linux binaries.
+            Import hash for Windows binaries
+        telfhash : str
+            Telfhash for ELF Linux binaries
         detect_it_easy : str
             Detect-It-Easy output.
         signatures : dict
@@ -303,7 +305,7 @@ class Observe:
         except ModuleNotFoundError:
             log.warning("tlsh and telfhash are not installed.")
             return
-        self.imphash = telfhash.telfhash(file)[0]["telfhash"]
+        self.telfhash = telfhash.telfhash(file)[0]["telfhash"]
 
     def set_ssdeep(self, file: str) -> None:
         """
