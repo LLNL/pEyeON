@@ -143,6 +143,22 @@ class Observe:
             h = hashers[hash]()
             h.update(f.read())
             return h.hexdigest()
+        
+    # binary2string plugin from surfactant
+    def set_strings(self, file: str) -> None:
+        """
+        Reads all strings from a file into a list
+        """
+        from surfactant.binary2strings import extract_strings
+        try:
+            # needs magic bytes to work
+            if not self.magic:
+                self.set_magic(file)
+            
+            self.strings= extract_strings(None,None,file, self.magic)
+        except Exception as e:
+            print(file,e)
+            self.strings = []
 
     def set_magic(self, file: str) -> None:
         """
