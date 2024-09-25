@@ -70,13 +70,13 @@ EyeON consists of two parts - an observe call and a parse call. Observe.py works
 CLI command:
 
 ```bash
-eyeon observe Obsidian.1.1.9.exe
+eyeon observe notepad++.exe
 ```
 
 Init file calls observe function in observe.py
 
 ```bash
-obs = eyeon.observe.Observe("./tests/Obsidian.1.1.9.exe")
+obs = eyeon.observe.Observe("./tests/binaries/x86/notepad++/notepad++.exe")
 ```
 The observation will output a json file containing unique identifying information such as hashes, modify date, certificate info, etc.
 
@@ -105,6 +105,14 @@ parse.py calls observe recursively, returning an observation for each file in a 
 ```bash
 obs = eyeon.parse.Parse(args.dir)
 ```
+
+#### Jupyter Notebook
+If you want to run jupyter, the `./docker-run.sh` script exposes port 8888. Launch it from the `/workdir` or eyeon root directory via `jupyter notebook --ip=0.0.0.0 --no-browser` and open the `demo.ipynb` notebook for a quick demonstration.
+
+
+#### Streamlit app
+In the `src` directory, there exist the bones of a data exploration applet. To generate data for this, add the database flag like `eyeon parse -d tests/data/eyeon/dbhelper/20240925-eyeon.db`. Then, if necessary, update the database path variable in the `pyproject.toml`. The streamlit directory has more information in its own README.
+
 
 ## Future Work
 There will be a second part to this project, which will be to develop a cloud application that anonymizes and summarizes the findings to enable OT security analysis.
