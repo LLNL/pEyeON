@@ -7,7 +7,6 @@ from typing import List
 import duckdb
 import streamlit as st
 import common.rawutil as ru
-from glob import glob
 
 
 @dataclass
@@ -61,8 +60,17 @@ def finddatasets(path):
 
 def getdbs(path):
     # Load paths to any db files
-    return [file for file in glob(os.path.join(path, "**/*.db"), recursive=True)]
-
+    dbfiles = []
+    logging.debug(os.path.join(path, "dbhelpers"))
+    if os.path.isdir(os.path.join(path, "dbhelpers")):
+        logging.debug("dbhelpers exists")
+        for dbpath in os.listdir(os.path.join(path, "dbhelpers")):
+            logging.debug(f"dpath={dbpath}")
+            if dbpath.endswith(".db"):
+                dbfiles.append(dbpath)
+    else:
+        logging.debug("dbhelpers does not exist")
+    return dbfiles
 
 
 def getdbcon(file):
