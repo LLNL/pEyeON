@@ -39,7 +39,7 @@ class CommandLine:
         # parent parser to add shared arg to both observe and parse
         db_parser = argparse.ArgumentParser(add_help=False)
         db_parser.add_argument(
-            "--database", "-d", help="Specify a filepath to save result to duckdb database"
+            "-d", "--database", help="Specify a filepath to save result to duckdb database"
         )
 
         # Create subparser
