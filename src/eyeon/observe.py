@@ -395,15 +395,17 @@ class Observe:
                 Output directory prefix. Defaults to current working directory.
         """
         observation_json = f"{os.path.join(outdir, self.filename)}.{self.md5}.json"
-        os.makedirs(os.path.dirname(database), exist_ok=True)
         if os.path.exists(observation_json):
             try:
-                os.makedirs(os.path.dirname(database), exist_ok=True)  # make db path if needed
-                con = duckdb.connect(database)  # creates or connects
                 if not os.path.exists(database):  # create the table if database is new
                     # create table and views from sql
+                    db_path = os.path.dirname(database)
+                    if db_path != '':
+                        os.makedirs(db_path, exist_ok=True)
+                    con = duckdb.connect(database)  # creates or connects
                     con.sql(files("database").joinpath("eyeon-ddl.sql").read_text())
-
+                else:
+                    con = duckdb.connect(database)  # creates or connects
                 # add the file to the observations table, making it match template
                 # observations with missing keys will get null vals as placeholder to match sql
                 con.sql(
