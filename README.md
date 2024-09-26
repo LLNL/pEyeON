@@ -111,7 +111,7 @@ If you want to run jupyter, the `./docker-run.sh` script exposes port 8888. Laun
 
 
 #### Streamlit app
-In the `src` directory, there exist the bones of a data exploration applet. To generate data for this, add the database flag like `eyeon parse -d tests/data/eyeon/dbhelpers/20240925-eyeon.db`. Then, if necessary, update the database path variable in the `pyproject.toml`. Note that the path needs to point to the grandparent directory of the `dbhelpers` directory. This is a specific path for the streamlit app; the streamlit directory has more information in its own README.
+In the `src` directory, there exist the bones of a data exploration applet. To generate data for this, add the database flag like `eyeon parse -d tests/data/20240925-eyeon/dbhelpers/20240925-eyeon.db`. Then, if necessary, update the database path variable in the `src/streamlit/eyeon_settings.toml`. Note that the path needs to point to the grandparent directory of the `dbhelpers` directory. This is a specific path for the streamlit app; the streamlit directory has more information in its own README.
 
 
 ## Future Work
