@@ -108,6 +108,7 @@ class Parse:
                 ) as bar:
                     bar.title(f"Writing to database {database}")
                     db_exists = os.path.exists(database)
+                    os.makedirs(os.path.dirname(database), exist_ok=True)
                     con = duckdb.connect(database)  # creates or connects
                     if not db_exists:  # database exists, load the json file in
                         # create table and views from sql
