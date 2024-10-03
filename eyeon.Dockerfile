@@ -7,12 +7,12 @@ RUN apt update \
     && apt install -y python3 python3-pip python3-dev python3-venv libmagic1 git make wget unzip build-essential vim ssdeep jq \
     && groupadd -g $USER_ID $OUN \
     && useradd -ms /bin/bash $OUN -u $USER_ID -g $USER_ID \
-    && pip3 install build sphinx pre-commit black
+    && pip3 install build sphinx pre-commit black 
 
 
 RUN echo "alias build='python3 -m build'" >> /home/$OUN/.bashrc \
     && echo "alias clean='rm -rf /workdir/dist'" >> /home/$OUN/.bashrc \
-    && echo "alias rein='build && pip uninstall -y eyeon && pip install /workdir/dist/eyeon*.whl'" >> /home/$OUN/.bashrc 
+    && echo "alias rein='build && pip uninstall -y eyeon && pip install /workdir/dist/eyeon*.whl && pip install git+https://github.com/LLNL/Surfactant#subdirectory=plugins/binary2strings'" >> /home/$OUN/.bashrc 
 
 RUN wget https://github.com/Kitware/CMake/releases/download/v3.27.4/cmake-3.27.4-linux-x86_64.sh \
     && chmod u+x cmake-3.27.4-linux-x86_64.sh \

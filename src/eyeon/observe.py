@@ -111,11 +111,15 @@ class Observe:
         else:
             self.imphash = "N/A"
         self.set_magic(file)
+        print("hello???")
         self.modtime = datetime.datetime.fromtimestamp(
             stat.st_mtime, tz=datetime.timezone.utc
         ).strftime("%Y-%m-%d %H:%M:%S")
         self.observation_ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.permissions = oct(stat.st_mode)
+
+        # set strings - new
+        self.set_strings(file)
 
         self.md5 = Observe.create_hash(file, "md5")
         self.sha1 = Observe.create_hash(file, "sha1")
@@ -149,16 +153,19 @@ class Observe:
         """
         Reads all strings from a file into a list
         """
-        from surfactant.binary2strings import extract_strings
+        from surfactantplugin_binary2strings import extract_strings
         try:
             # needs magic bytes to work
             if not self.magic:
                 self.set_magic(file)
             
             self.strings= extract_strings(None,None,file, self.magic)
+            
         except Exception as e:
             print(file,e)
             self.strings = []
+        print("strings: ")
+        print(self.strings)
 
     def set_magic(self, file: str) -> None:
         """

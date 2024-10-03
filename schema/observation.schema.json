@@ -64,6 +64,10 @@
       "type": "string",
       "description": "Ssdeep of file"
     },
+    "strings": {
+      "type": "list",
+      "description": "File strings"
+    },
     "target_os": {
       "type": "string",
       "description": "Operating system of target machine"
