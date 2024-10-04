@@ -11,6 +11,7 @@ from fastapi.responses import RedirectResponse
 
 from datetime import timedelta
 from typing import Annotated, List
+from contextlib import asynccontextmanager
 
 from jwt.exceptions import InvalidTokenError
 
@@ -26,10 +27,32 @@ def get_db():
 
 db_dependency = Annotated[Session, Depends(get_db)]
 
-app=FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    '''
+    initialize db on app startup
+    '''
+    db = database.SessionLocal()
+    try:
+        init_db(db)
+        yield
+    finally:
+        db.close()
+
+app=FastAPI(lifespan=lifespan)
 
 #router for api
 api_router = APIRouter(prefix="/api")
+
+def init_db(db: db_dependency):
+    '''
+    init db with admin user
+    '''
+    if not database.get_user_by_username(db, "admin"):
+        database.admin_seed(db)
+        print("Admin Created")
+    else:
+        print("Admin user exists")
 
 async def get_current_user(token:Annotated[str, Depends(security.oauth2_scheme)], db: db_dependency):
     '''
@@ -68,6 +91,12 @@ async def get_current_active_user(current_user: Annotated[userModel.UserInDB, De
         )
     return current_user
 
+async def admin_required(current_user:Annotated[userModel.UserInDB, Depends(get_current_active_user)]):
+    if not current_user.admin:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    return current_user
+
+
 @app.get("/")
 async def root():
     return RedirectResponse(url="/api")
@@ -87,12 +116,48 @@ def register(user: userModel.CreateUser, db: db_dependency):
 
 
 @app.get("/users/", response_model=List[userModel.UserInDB])
-def read_users(db: db_dependency):
+def read_users(db: db_dependency, current_user: userModel.UserInDB = Depends(admin_required)):
     '''
-    returns all users and data in the db
+    returns all users and data in the db ; only for admin users
     '''
-    users = database.get_all_users(db)
-    return users
+    if current_user.admin:
+        users = database.get_all_users(db)
+        return users
+    else:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not Authorized")
+
+@app.patch("/users/{username}/disable")
+def disable_user(username: str, db: db_dependency, current_user: userModel.UserInDB = Depends(admin_required)):
+    '''
+    disable target user
+    '''
+    user = db.query(database.User).filter(database.User.username == username).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    elif user.admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Can't disable admin user")
+
+    user.disabled = True  # Set the user as disabled
+    db.commit()  # Commit the changes to the database
+    db.refresh(user)  # Refresh the user instance to get the updated state
+
+    return {"message": f"User '{username}' has been disabled", "disabled": user.disabled}
+
+@app.patch("/users/{username}/enable")
+def disable_user(username: str, db: db_dependency, current_user: userModel.UserInDB = Depends(admin_required)):
+    '''
+    enable taarget user
+    '''
+    user = db.query(database.User).filter(database.User.username == username).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.disabled = False  # Set the user as enabled
+    db.commit()  # Commit the changes to the database
+    db.refresh(user)  # Refresh the user instance to get the updated state
+
+    return {"message": f"User '{username}' has been enabled", "disabled": user.disabled}
+
 
 @app.post("/token", response_model=userModel.Token)
 async def login(db: db_dependency, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> userModel.Token:
@@ -148,8 +213,7 @@ async def upload_file(current_user: userModel.User = Depends(get_current_active_
             }
         }
 
+app.include_router(api_router)
 
 # if __name__=="__main__":
 #     uvicorn.run("src.api.main", host="127.0.0.1", port=8080)
-
-app.include_router(api_router)

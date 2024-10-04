@@ -34,6 +34,16 @@ def create_user(db: Session, username: str, password: str, fullname: str, email:
     db.refresh(db_user) #ensures the db_user object has the most up to date db info
     return db_user
 
+def admin_seed(db: Session):
+    '''
+    Create a default admin user ; called by on init db
+    '''
+    hashed_password=security.hash_password(security.ADMIN_PWD)
+    admin_user=User(username="admin", hashed_password=hashed_password, fullname="Admin", email="admin@admin.com", admin=True)
+    db.add(admin_user)
+    db.commit()
+    db.refresh(admin_user)
+
 def get_user_by_username(db: Session, username: str):
     return db.query(User).filter(User.username == username).first()
 
