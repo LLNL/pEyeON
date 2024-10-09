@@ -111,14 +111,13 @@ class Observe:
         else:
             self.imphash = "N/A"
         self.set_magic(file)
-        print("hello???")
         self.modtime = datetime.datetime.fromtimestamp(
             stat.st_mtime, tz=datetime.timezone.utc
         ).strftime("%Y-%m-%d %H:%M:%S")
         self.observation_ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.permissions = oct(stat.st_mode)
 
-        # set strings - new
+        # set strings
         self.set_strings(file)
 
         self.md5 = Observe.create_hash(file, "md5")
@@ -153,19 +152,29 @@ class Observe:
         """
         Reads all strings from a file into a list
         """
+        from surfactant.sbomtypes import Software
         from surfactantplugin_binary2strings import extract_strings
         try:
             # needs magic bytes to work
             if not self.magic:
                 self.set_magic(file)
             
-            self.strings= extract_strings(None,None,file, self.magic)
+            # get the hash
+            software = Software.create_software_from_file(file)
+            hash = software.sha256
+            output_file = hash+"_additional_metadata.json"
+            extract_strings(None, software, file, self.magic)
+
+            # read the output file
+            with open(output_file) as json_file:
+                json_data = json.load(json_file)
+            
+            self.strings = json_data['strings']
+            os.system("rm "+output_file)
             
         except Exception as e:
             print(file,e)
             self.strings = []
-        print("strings: ")
-        print(self.strings)
 
     def set_magic(self, file: str) -> None:
         """
