@@ -7,7 +7,8 @@ RUN apt update \
     && apt install -y python3 python3-pip python3-dev python3-venv libmagic1 git make wget unzip build-essential vim ssdeep jq \
     && groupadd -g $USER_ID $OUN \
     && useradd -ms /bin/bash $OUN -u $USER_ID -g $USER_ID \
-    && pip3 install build sphinx pre-commit black 
+    && pip3 install build sphinx pre-commit black \
+    && pip install --upgrade pip
 
 
 RUN echo "alias build='python3 -m build'" >> /home/$OUN/.bashrc \
