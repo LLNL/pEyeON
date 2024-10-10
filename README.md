@@ -12,6 +12,8 @@ Validation is important when installing new software. Existing tools use a hash/
 EyeON provides an automated, consistent process across users to scan software files used for operational technologies. It's findings can be used to generate reports that can help in tracking software patterns to shed light on supply chain risks. This tool's main capabilities are focused on increasing the security of OT software. 
 
 ## Installation
+Eyeon can also be run in linux or WSL.
+
 ```bash
 git clone ssh://git@czgitlab.llnl.gov:7999/cir-software-assurance/peyeon.git
 ```
@@ -33,7 +35,8 @@ Run docker run script
 ./docker-run.sh
 ```
 
-This attaches current code directory as work directory in the container. 
+This attaches current code directory as work directory in the container. Files that need to be scanned should go in "tests" folder. If running in a docker container, the eyeon root directory is mounted to "/workdir", so place samples in "/workdir/samples" or "/workdir/tests/samples".
+
 Cd into workdir directory, install EyeON, and run 'rein' alias to build python dependencies:
 ```bash
 cd workdir
