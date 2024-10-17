@@ -49,5 +49,6 @@
   "sha256": "",
   "target_os": "",
   "ssdeep": "",
+  "strings": [],
   "defaults": {}
 }

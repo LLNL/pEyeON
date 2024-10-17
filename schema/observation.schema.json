@@ -69,7 +69,7 @@
       "description": "Ssdeep of file"
     },
     "strings": {
-      "type": "list",
+      "type": "array",
       "description": "File strings"
     },
     "target_os": {
