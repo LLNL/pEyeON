@@ -22,7 +22,7 @@ dependencies=[
     "dynaconf>=3.2.6",
     "streamlit>=1.37.0",
     "jupyter>=1.1.1",
-    "git+https://github.com/LLNL/Surfactant#subdirectory=plugins/binary2strings",
+    "binary2strings@git+https://github.com/LLNL/Surfactant#subdirectory=plugins/binary2strings",
 ]
 
 [project.scripts]
