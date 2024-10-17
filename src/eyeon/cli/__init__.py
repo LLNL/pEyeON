@@ -2,7 +2,6 @@
 CLI interface for EyeON tools.
 """
 
-
 import argparse
 
 import eyeon.observe
@@ -37,11 +36,17 @@ class CommandLine:
             help="Set the log level. Defaults to ERROR.",
         )
 
+        # parent parser to add shared arg to both observe and parse
+        db_parser = argparse.ArgumentParser(add_help=False)
+        db_parser.add_argument(
+            "-d", "--database", help="Specify a filepath to save result to duckdb database"
+        )
+
         # Create subparser
         subparsers = parser.add_subparsers(required=True, help="sub-command help")
 
         # Create parser for observe command
-        observe_parser = subparsers.add_parser("observe", help="observe help")
+        observe_parser = subparsers.add_parser("observe", help="observe help", parents=[db_parser])
         observe_parser.add_argument("filename", help="Name of file to scan")
         observe_parser.add_argument(
             "-l",
@@ -51,7 +56,7 @@ class CommandLine:
         observe_parser.set_defaults(func=self.observe)
 
         # Create parser for parse command
-        parse_parser = subparsers.add_parser("parse", help="parse help")
+        parse_parser = subparsers.add_parser("parse", help="parse help", parents=[db_parser])
         parse_parser.add_argument("dir", help="Name of directory to scan")
         parse_parser.add_argument(
             "--threads",
@@ -91,10 +96,13 @@ class CommandLine:
 
         obs = eyeon.observe.Observe(args.filename, args.log_level, args.log_file)
 
-        if args.output_dir:
-            obs.write_json(args.output_dir)
-        else:
-            obs.write_json()
+        if (outdir := args.output_dir) is None:
+            outdir = "."
+
+        obs.write_json(outdir)
+
+        if args.database:
+            obs.write_database(args.database, outdir)
 
     def parse(self, args) -> None:
         """
@@ -102,10 +110,13 @@ class CommandLine:
         """
 
         p = eyeon.parse.Parse(args.dir, args.log_level, args.log_file)
-        if args.output_dir:
-            p(result_path=args.output_dir, threads=args.threads)
-        else:
-            p(threads=args.threads)
+        if (outdir := args.output_dir) is None:
+            outdir = "./results"
+
+        p(result_path=outdir, threads=args.threads)
+
+        if args.database:
+            p.write_database(args.database, outdir)
 
     def checksum(self, args) -> None:
         "verify checksum against provided value"

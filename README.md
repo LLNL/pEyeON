@@ -12,6 +12,8 @@ Validation is important when installing new software. Existing tools use a hash/
 EyeON provides an automated, consistent process across users to scan software files used for operational technologies. It's findings can be used to generate reports that can help in tracking software patterns to shed light on supply chain risks. This tool's main capabilities are focused on increasing the security of OT software. 
 
 ## Installation
+Eyeon can also be run in linux or WSL.
+
 ```bash
 git clone ssh://git@czgitlab.llnl.gov:7999/cir-software-assurance/peyeon.git
 ```
@@ -33,7 +35,8 @@ Run docker run script
 ./docker-run.sh
 ```
 
-This attaches current code directory as work directory in the container. 
+This attaches current code directory as work directory in the container. Files that need to be scanned should go in "tests" folder. If running in a docker container, the eyeon root directory is mounted to "/workdir", so place samples in "/workdir/samples" or "/workdir/tests/samples".
+
 Cd into workdir directory, install EyeON, and run 'rein' alias to build python dependencies:
 ```bash
 cd workdir
@@ -70,13 +73,13 @@ EyeON consists of two parts - an observe call and a parse call. Observe.py works
 CLI command:
 
 ```bash
-eyeon observe Obsidian.1.1.9.exe
+eyeon observe notepad++.exe
 ```
 
 Init file calls observe function in observe.py
 
 ```bash
-obs = eyeon.observe.Observe("./tests/Obsidian.1.1.9.exe")
+obs = eyeon.observe.Observe("./tests/binaries/x86/notepad++/notepad++.exe")
 ```
 The observation will output a json file containing unique identifying information such as hashes, modify date, certificate info, etc.
 
@@ -105,6 +108,14 @@ parse.py calls observe recursively, returning an observation for each file in a 
 ```bash
 obs = eyeon.parse.Parse(args.dir)
 ```
+
+#### Jupyter Notebook
+If you want to run jupyter, the `./docker-run.sh` script exposes port 8888. Launch it from the `/workdir` or eyeon root directory via `jupyter notebook --ip=0.0.0.0 --no-browser` and open the `demo.ipynb` notebook for a quick demonstration.
+
+
+#### Streamlit app
+In the `src` directory, there exist the bones of a data exploration applet. To generate data for this, add the database flag like `eyeon parse -d tests/data/20240925-eyeon/dbhelpers/20240925-eyeon.db`. Then, if necessary, update the database path variable in the `src/streamlit/eyeon_settings.toml`. Note that the path needs to point to the grandparent directory of the `dbhelpers` directory. This is a specific path for the streamlit app; the streamlit directory has more information in its own README.
+
 
 ## Future Work
 There will be a second part to this project, which will be to develop a cloud application that anonymizes and summarizes the findings to enable OT security analysis.

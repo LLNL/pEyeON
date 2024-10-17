@@ -10,25 +10,32 @@ requires-python=">=3.9"
 # author="LLNL"
 dependencies=[
     "jsonschema >= 4.17",
-    "lief <= 0.13.2",
+    "lief >= 0.13.2",
     "python-magic == 0.4.27",
     "pefile == 2023.2.7",
     # "unblob == 23.8.11",
     "telfhash == 0.9.8",
     "surfactant == 0.0.0rc5",
     "coverage >= 7.5.3",
+    "duckdb >= 1.0.0",
     "alive_progress >= 3.1.5",
+    "dynaconf>=3.2.6",
+    "streamlit>=1.37.0",
+    "jupyter>=1.1.1",
 ]
 
 [project.scripts]
 eyeon="eyeon.cli:main"
 
-[tools.setuptools.packages.find]
+[tool.setuptools.packages.find]
 # packages = ["src.eyeon"]
 # include = ["src"]
 where = ["src"]
 # find = {}
 # packages = ["eyeon", "eyeon.cli", "eyeon.observe", "eyeon.parse"]
+
+[tool.setuptools.package-data]
+database = ["*"]
 
 [tool.coverage.run]
 omit =["/usr/*"] # omit code coverage scans for /usr/*

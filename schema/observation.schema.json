@@ -28,6 +28,10 @@
       "type": "string",
       "description": "Import Hash calculated via pefile"
     },
+    "telfhash": {
+      "type": "string",
+      "description": "Import hashing technique used on ELF files"
+    },
     "magic": {
       "type": "string",
       "description": "`file` Magic output for given file"
@@ -105,6 +109,10 @@
         },
         "required": ["signers", "digest_algorithm"]
       }
+    },
+    "detect_it_easy": {
+      "type": "string",
+      "description": "Program that determines types of files for Windows, Linux and MacOS"
     }
   },
   "additionalProperties": false,
