@@ -9,6 +9,8 @@ from glob import glob
 from eyeon import observe
 from eyeon import parse
 
+import collections
+
 
 class GeneralDatabaseTestCase(unittest.TestCase):
     def writeObserve(self):
@@ -20,6 +22,14 @@ class GeneralDatabaseTestCase(unittest.TestCase):
 
     def checkDatabaseCreated(self) -> None:
         self.assertTrue(os.path.isfile(self.database_output))
+
+    def dict_compare(self, d01, d02):
+        d1 = collections.OrderedDict(sorted(d01.items()))
+        d2 = collections.OrderedDict(sorted(d02.items()))
+
+        for i1, i2 in zip(d1.items(), d2.items()):
+            self.assertEqual(i1[0], i2[0])
+            self.assertEqual(i1[1], i2[1])
 
     def validateDatabaseContents(self) -> None:
         # Read in the json, compare to observations table contents
@@ -50,10 +60,10 @@ class GeneralDatabaseTestCase(unittest.TestCase):
                 db_sigs.append(db_dict.pop("signatures"))
 
             if "metadata" in json_dict:
-                self.assertEqual(json_dict.pop("metadata"), json.loads((db_dict.pop("metadata"))))
+                self.dict_compare(json_dict.pop("metadata"), json.loads((db_dict.pop("metadata"))))
 
             if "defaults" in json_dict:
-                self.assertEqual(json_dict.pop("defaults"), json.loads((db_dict.pop("defaults"))))
+                self.dict_compare(json_dict.pop("defaults"), json.loads((db_dict.pop("defaults"))))
 
             for key in json_dict:
                 if isinstance(json_dict[key], str):
@@ -131,7 +141,7 @@ class X86ParseDatabaseTestCase(GeneralDatabaseTestCase):
     @classmethod
     def setUpClass(self):
         self.original_output = "./testresults"
-        self.database_output = "test_database"
+        self.database_output = "data/testing/test_database"
         self.PRS = parse.Parse("./binaries/x86/")
         self.PRS(result_path=self.original_output)
 
