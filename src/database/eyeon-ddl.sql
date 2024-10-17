@@ -50,6 +50,7 @@ CREATE TABLE observations (
 	sha256 VARCHAR,
 	target_os VARCHAR,
 	ssdeep VARCHAR,
+	strings VARCHAR[],
 	detect_it_easy VARCHAR,
 	defaults JSON,
 );
