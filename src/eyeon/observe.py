@@ -115,6 +115,8 @@ class Observe:
         elif lief.is_elf(file):
             self.set_telfhash(file)
             self.set_elf_metadata(file)
+        elif lief.is_macho(file):
+            self.set_macho_metadata(file)
         else:
             self.imphash = "N/A"
         self.set_magic(file)
@@ -334,6 +336,26 @@ class Observe:
                     return os.path.join(dirpath, file)
         return None
 
+    def set_metadata(self, file: str) -> None:
+        """Finds the metadata from surfactant"""
+        #import surfactant.plugin
+        import surfactant.infoextractors
+        from surfactant.plugin.hookspecs import extract_file_info
+        from surfactant.sbomtypes import Software # need this for extract_file_info
+        try:
+            # needs magic bytes to work
+            if not self.magic:
+                self.set_magic(file)
+
+            # get software object
+            software = Software.create_software_from_file(file)
+
+            # get metadata
+            self.metadata = extract_file_info(None, software, file, self.magic, None, None)
+        except Exception as e:
+            print(file, e)
+            self.metadata = {}
+
     def set_windows_metadata(self, file: str) -> None:
         """Finds the metadata from surfactant"""
         from surfactant.infoextractors.pe_file import extract_pe_info
@@ -350,6 +372,16 @@ class Observe:
 
         try:
             self.metadata = extract_elf_info(file)
+        except Exception as e:
+            print(file, e)
+            self.metadata = {}
+
+    def set_macho_metadata(self, file: str) -> None:
+        """Finds the metadata from surfactant"""
+        from surfactant.infoextractors.mach_o_file import extract_mach_o_info
+
+        try:
+            self.metadata = extract_mach_o_info(file)
         except Exception as e:
             print(file, e)
             self.metadata = {}
