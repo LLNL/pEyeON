@@ -114,6 +114,7 @@ class Observe:
             self.set_windows_metadata(file)
         elif lief.is_elf(file):
             self.set_telfhash(file)
+            self.set_elf_metadata(file)
         else:
             self.imphash = "N/A"
         self.set_magic(file)
@@ -339,6 +340,16 @@ class Observe:
 
         try:
             self.metadata = extract_pe_info(file)
+        except Exception as e:
+            print(file, e)
+            self.metadata = {}
+
+    def set_elf_metadata(self, file: str) -> None:
+        """Finds the metadata from surfactant"""
+        from surfactant.infoextractors.elf_file import extract_elf_info
+
+        try:
+            self.metadata = extract_elf_info(file)
         except Exception as e:
             print(file, e)
             self.metadata = {}
