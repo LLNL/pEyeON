@@ -28,8 +28,11 @@ class GeneralDatabaseTestCase(unittest.TestCase):
         d2 = collections.OrderedDict(sorted(d02.items()))
 
         for i1, i2 in zip(d1.items(), d2.items()):
-            self.assertEqual(i1[0], i2[0])
-            self.assertEqual(i1[1], i2[1])
+            self.assertEqual(i1[0], i2[0])  # compare keys
+            if isinstance(dict, i1[1]):
+                self.dict_compare(i1[1], i2[1])
+            else:
+                self.assertEqual(i1[1], i2[1])  # compare values
 
     def validateDatabaseContents(self) -> None:
         # Read in the json, compare to observations table contents
