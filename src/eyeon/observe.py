@@ -336,25 +336,6 @@ class Observe:
                     return os.path.join(dirpath, file)
         return None
 
-    def set_metadata(self, file: str) -> None:
-        """Finds the metadata from surfactant"""
-        #import surfactant.plugin
-        import surfactant.infoextractors
-        from surfactant.plugin.hookspecs import extract_file_info
-        from surfactant.sbomtypes import Software # need this for extract_file_info
-        try:
-            # needs magic bytes to work
-            if not self.magic:
-                self.set_magic(file)
-
-            # get software object
-            software = Software.create_software_from_file(file)
-
-            # get metadata
-            self.metadata = extract_file_info(None, software, file, self.magic, None, None)
-        except Exception as e:
-            print(file, e)
-            self.metadata = {}
 
     def set_windows_metadata(self, file: str) -> None:
         """Finds the metadata from surfactant"""
@@ -371,7 +352,24 @@ class Observe:
         from surfactant.infoextractors.elf_file import extract_elf_info
 
         try:
-            self.metadata = extract_elf_info(file)
+            test_metadata = extract_elf_info(file)
+            counter = 0
+            # fix SectionName sections
+            new_elf_note = []
+            for section_dict in test_metadata["elfNote"]:
+                replacement_dict = dict()
+                for key in section_dict:
+                    if key=="sectionName":
+                        #old_data = section_dict.pop("sectionName")
+                        #print(old_data)
+                        replacement_dict["sectionName"+str(counter)] = section_dict[key]
+                        counter += 1
+                    else:
+                        replacement_dict[key] = section_dict[key]
+                new_elf_note.append(replacement_dict)
+            test_metadata["elfNote"] = new_elf_note
+            self.metadata = test_metadata
+
         except Exception as e:
             print(file, e)
             self.metadata = {}
