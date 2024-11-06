@@ -355,6 +355,8 @@ class Observe:
             test_metadata = extract_elf_info(file)
             counter = 0
             # fix SectionName sections
+            del test_metadata["elfNote"]
+            '''
             new_elf_note = []
             for section_dict in test_metadata["elfNote"]:
                 replacement_dict = dict()
@@ -368,6 +370,7 @@ class Observe:
                         replacement_dict[key] = section_dict[key]
                 new_elf_note.append(replacement_dict)
             test_metadata["elfNote"] = new_elf_note
+            '''
             self.metadata = test_metadata
 
         except Exception as e:
