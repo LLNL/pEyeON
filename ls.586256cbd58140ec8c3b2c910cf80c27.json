@@ -1,5 +1,5 @@
 {
-    "uuid": "fd417c16-961f-4068-8778-8bbb3fa9806a",
+    "uuid": "30569fc9-0193-4f0d-b92d-ce15d7cbbee8",
     "bytecount": 138208,
     "filename": "ls",
     "signatures": [],
@@ -45,23 +45,28 @@
         "elfComment": [],
         "elfNote": [
             {
-                "sectionName0": ".note.gnu.property",
-                "name": "GNU",
-                "type": "NT_GNU_PROPERTY_TYPE_0",
-                "descdata": "\u0002\u0000\u0000\u00c0\u0004\u0000\u0000\u0000\u0003\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u0080\u0000\u00c0\u0004\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
-            },
-            {
-                "sectionName1": ".note.gnu.build-id",
-                "name": "GNU",
-                "type": "NT_GNU_BUILD_ID",
-                "desc": "897f49cafa98c11d63e619e7e40352f855249c13"
-            },
-            {
-                "sectionName2": ".note.ABI-tag",
-                "name": "GNU",
-                "type": "NT_GNU_ABI_TAG",
-                "os": "ELF_NOTE_OS_LINUX",
-                "abi": "3.2.0"
+                "NT_GNU_PROPERTY_TYPE_0": [
+                    {
+                        "sectionName": ".note.gnu.property",
+                        "name": "GNU",
+                        "descdata": "\u0002\u0000\u0000\u00c0\u0004\u0000\u0000\u0000\u0003\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0002\u0080\u0000\u00c0\u0004\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+                    }
+                ],
+                "NT_GNU_BUILD_ID": [
+                    {
+                        "sectionName": ".note.gnu.build-id",
+                        "name": "GNU",
+                        "desc": "897f49cafa98c11d63e619e7e40352f855249c13"
+                    }
+                ],
+                "NT_GNU_ABI_TAG": [
+                    {
+                        "sectionName": ".note.ABI-tag",
+                        "name": "GNU",
+                        "os": "ELF_NOTE_OS_LINUX",
+                        "abi": "3.2.0"
+                    }
+                ]
             }
         ],
         "elfOsAbi": "ELFOSABI_SYSV",
@@ -75,7 +80,7 @@
     },
     "magic": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=897f49cafa98c11d63e619e7e40352f855249c13, for GNU/Linux 3.2.0, stripped",
     "modtime": "2024-09-04 17:39:57",
-    "observation_ts": "2024-11-04 18:18:31",
+    "observation_ts": "2024-11-13 23:59:09",
     "permissions": "0o100755",
     "md5": "586256cbd58140ec8c3b2c910cf80c27",
     "sha1": "8b24bc69bd1e97d5d9932448d0f8badaaeb2dd38",

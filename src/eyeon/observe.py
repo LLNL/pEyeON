@@ -354,23 +354,29 @@ class Observe:
         try:
             test_metadata = extract_elf_info(file)
             counter = 0
-            # fix SectionName sections
-            del test_metadata["elfNote"]
-            '''
-            new_elf_note = []
-            for section_dict in test_metadata["elfNote"]:
-                replacement_dict = dict()
-                for key in section_dict:
-                    if key=="sectionName":
-                        #old_data = section_dict.pop("sectionName")
-                        #print(old_data)
-                        replacement_dict["sectionName"+str(counter)] = section_dict[key]
-                        counter += 1
-                    else:
-                        replacement_dict[key] = section_dict[key]
-                new_elf_note.append(replacement_dict)
-            test_metadata["elfNote"] = new_elf_note
-            '''
+            # fix elfnote section
+            og_elfnote = test_metadata["elfNote"]
+            new_elfnote_dict = dict()
+
+            # iterate through each elfnote dictionary
+            for elfnote_dict in og_elfnote:
+                # get type
+                type_key_value = elfnote_dict["type"]
+                # want to create this only if type_key_value has not been seen before
+                if type_key_value in new_elfnote_dict:
+                    type_key_list = new_elfnote_dict[type_key_value]
+                else:
+                    type_key_list = []
+                new_dict = dict()
+                for key in elfnote_dict:
+                    if not key == "type":
+                        # add to dict
+                        new_dict[key] = elfnote_dict[key]
+                type_key_list.append(new_dict)
+                # add the type_key into the elfNote dict
+                new_elfnote_dict[type_key_value] = type_key_list
+            new_elfnote = [new_elfnote_dict]
+            test_metadata["elfNote"] = new_elfnote
             self.metadata = test_metadata
 
         except Exception as e:
