@@ -84,7 +84,7 @@ class ObservationTestCase2(unittest.TestCase):
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100644")
-        self.assertEqual(len(self.OBS.signatures), 0)  # ls is unsigned, should have no signatures
+        self.assertEqual(len(self.OBS.signatures), 0)  # this file is unsigned, should have no signatures
 
     def testValidateJson(self) -> None:
         with open("../schema/observation.schema.json") as schem:
@@ -128,18 +128,7 @@ class ObservationTestCase3(unittest.TestCase):
         except ValueError:
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
-        # Unsigned
-        # self.assertEqual(self.OBS.authenticode_integrity, "OK")
-        # self.assertEqual(self.OBS.signatures[0]["verification"], "OK")
-        # self.assertEqual(self.OBS.authentihash, self.OBS.signatures[0]["sha1"])
-        # self.assertEqual(
-        #     self.OBS.signatures[0]["certs"][0]["issuer_sha256"],
-        #     "07821038ae6d90f2ea3bff5b6169ba0fb0b3b5cef57db18e7d48313da99e4a36",
-        # )
-        # self.assertEqual(
-        #     self.OBS.signatures[0]["certs"][1]["issuer_sha256"],
-        #     "07821038ae6d90f2ea3bff5b6169ba0fb0b3b5cef57db18e7d48313da99e4a36",
-        # )
+        self.assertEqual(self.OBS.permissions, "0o100755")
 
     def testConfigJson(self) -> None:
         vs = vars(self.OBS)
@@ -175,6 +164,7 @@ class ObservationTestCase4(unittest.TestCase):
         except ValueError:
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
+        self.assertEqual(self.OBS.permissions, "0o100644")
 
 
 # This is a Mac-O with 0 signatures, so we can test some of the logging functions
@@ -185,29 +175,29 @@ class ObservationTestCase5(unittest.TestCase):
             "./binaries/mach_o_dylib_test_no1/bin/hello_world", log_level=logging.INFO, log_file="./observe.log"
         )
 
-    # def testLog(self):  # check log is created and correct info logged
-    #     self.assertTrue(os.path.exists("./observe.log"))
-    #     with open("./observe.log", "r") as f:
-    #         log = f.read()
+    def testLog(self):  # check log is created and correct info logged
+        self.assertTrue(os.path.exists("./observe.log"))
+        with open("./observe.log", "r") as f:
+            log = f.read()
 
-    #     messages = []
-    #     for line in log.split("\n", maxsplit=3):
-    #         # check log formatting is correct for each line
-    #         if line:
-    #             components = line.split(" - ")  # seperator defined in observe
-    #             print(components)
+        messages = []
+        for line in log.split("\n", maxsplit=3):
+            # check log formatting is correct for each line
+            if line:
+                components = line.split(" - ")  # seperator defined in observe
+                print(components)
 
-    #             # order should be a datetime, then name, then loglevel
-    #             try:
-    #                 dt.datetime.strptime(components[0], "%Y-%m-%d %H:%M:%S,%f")
-    #             except ValueError:
-    #                 self.fail()
-    #             self.assertEqual(components[1], "eyeon.observe")
-    #             self.assertIn(components[2], ["INFO", "WARNING"])
-    #             messages.append(components[3])
+                # order should be a datetime, then name, then loglevel
+                try:
+                    dt.datetime.strptime(components[0], "%Y-%m-%d %H:%M:%S,%f")
+                except ValueError:
+                    self.fail()
+                self.assertEqual(components[1], "eyeon.observe")
+                self.assertIn(components[2], ["INFO", "WARNING"])
+                messages.append(components[3])
 
-    #     # check message correctly logged
-    #     self.assertIn("file ./binaries/mach_o_dylib_test_no1/bin/hello_world has no signatures.", messages)
+        # check message correctly logged
+        self.assertIn("file ./binaries/mach_o_dylib_test_no1/bin/hello_world has no signatures.", messages)
 
     def testToString(self):
         try:
@@ -219,6 +209,70 @@ class ObservationTestCase5(unittest.TestCase):
     def tearDownClass(self):
         os.remove("./observe.log")
 
+class ObservationTestCase6(unittest.TestCase):
+    @classmethod
+    def setUp(self) -> None:
+        self.OBS = observe.Observe("./binaries/macho_arm_files/hello_world")
+
+    def testVarsElf(self) -> None:
+        self.assertEqual(self.OBS.bytecount, 39224)
+        self.assertEqual(self.OBS.filename, "hello_world")
+        self.assertEqual(self.OBS.md5, "fef627973d231c07707d3483f6d22ac9")
+        self.assertEqual(self.OBS.sha1, "0d66561ca5dfb55376d2bee4bf883938ac229549")
+        self.assertEqual(
+            self.OBS.sha256, "e8569fc3f4f4a6de36a9b02f585853c6ffcab877a725373d06dad9b44e291088"
+        )
+        try:
+            dt.datetime.strptime(self.OBS.modtime, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            self.fail()
+        self.assertIsInstance(self.OBS.observation_ts, str)
+        self.assertEqual(self.OBS.permissions, "0o100755")
+        self.assertEqual(len(self.OBS.signatures), 0)  # ls is unsigned, should have no signatures
+
+    def testValidateJson(self) -> None:
+        with open("../schema/observation.schema.json") as schem:
+            schema = json.loads(schem.read())
+        obs_json = json.loads(json.dumps(vars(self.OBS)))
+        print(jsonschema.validate(instance=obs_json, schema=schema))
+
+    def testValidateSchema(self) -> None:
+        with open("../schema/observation.schema.json") as schem:
+            schema = json.loads(schem.read())
+
+        with open("../schema/meta.schema.json") as schem:
+            meta = json.loads(schem.read())
+
+        print(jsonschema.validate(instance=schema, schema=meta))
+
+    @classmethod
+    def tearDownClass(self) -> None:
+        try:
+            for j in glob("*.json"):
+                os.remove(j)
+        except FileNotFoundError:
+            pass
+
+class ObservationTestCase7(unittest.TestCase):
+    @classmethod
+    def setUp(self) -> None:
+        self.OBS = observe.Observe("./binaries/Windows_dll_test_no1/hello_world.exe")
+
+    def testVarsExe(self) -> None:
+        self.assertEqual(self.OBS.bytecount, 58880)
+        self.assertEqual(self.OBS.filename, "hello_world.exe")
+        self.assertEqual(self.OBS.md5, "c1550ecc547c89b2f24599c990a29184")
+        self.assertEqual(self.OBS.sha1, "e4e8ecba8d39ba23cf6f13498021049d62c3659c")
+        self.assertEqual(
+            self.OBS.sha256, "de22b757eaa0ba2b79378722e8057d3052edc87caf543b17d8267bd2713162a8"
+        )
+        try:
+            dt.datetime.strptime(self.OBS.modtime, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            self.fail()
+        self.assertIsInstance(self.OBS.observation_ts, str)
+        self.assertEqual(self.OBS.permissions, "0o100644")
+
 
 class TestFilePermissions(unittest.TestCase):
     def test_nonreadable_file(self):
@@ -229,6 +283,80 @@ class TestFilePermissions(unittest.TestCase):
 class TestFolderPermissions(unittest.TestCase):
     def test_nonreadable_folder(self):
         self.assertRaises(PermissionError, observe.Observe, "/root")
+
+with open("../schema/observation.schema.json") as schem:
+    schema = json.loads(schem.read())
+
+class TestJSONSchema(unittest.TestCase):
+    def test_json_valid_required_properties(self) -> None:
+        valid_data = {
+            "filename": "little_386.aout",
+            "bytecount": 4,
+            "magic": "Linux/i386 demand-paged executable (ZMAGIC)",  # noqa: E501
+            "md5": "90a2eac40885beab82e592192a2cadd1",
+            "observation_ts": "2024-12-04 22:27:45",
+            "sha1": "f265f86a2f7bde59b88a47e53c0893d66a55a6cc",
+            "sha256": "0dabc62368f8c774acf547ee84e794d172a72c0e8bb3c78d261a6e896ea60c42",
+            "uuid": "f1eba7e3-e4c0-43e8-91dc-009a85367517",
+        }
+        assert jsonschema.validate(instance=valid_data, schema=schema) is None
+
+    def test_json_invalid_required_properties(self) -> None:
+        invalid_data = {
+            "filename": "little_386.aout",
+            "bytecount": 4,
+            "magic": "Linux/i386 demand-paged executable (ZMAGIC)",  # noqa: E501
+            "md5": "90a2eac40885beab82e592192a2cadd1",
+            "observation_ts": "2024-12-04 22:27:45",
+            "sha1": "f265f86a2f7bde59b88a47e53c0893d66a55a6cc",
+            "sha256": "0dabc62368f8c774acf547ee84e794d172a72c0e8bb3c78d261a6e896ea60c42",
+            "uuid": "f1eba7e3-e4c0-43e8-91dc-009a85367517",
+            "invalid": "Invalid required property",
+        }
+        with self.assertRaises(jsonschema.exceptions.ValidationError):
+            assert jsonschema.validate(instance=invalid_data, schema=schema) is None
+
+    def test_type_mismatch(self) -> None:
+        invalid_type_data = {
+            "filename": "little_386.aout",
+            "bytecount": "four",
+            "magic": "Linux/i386 demand-paged executable (ZMAGIC)",  # noqa: E501
+            "md5": "90a2eac40885beab82e592192a2cadd1",
+            "observation_ts": "2024-12-04 22:27:45",
+            "sha1": "f265f86a2f7bde59b88a47e53c0893d66a55a6cc",
+            "sha256": "0dabc62368f8c774acf547ee84e794d172a72c0e8bb3c78d261a6e896ea60c42",
+            "uuid": "f1eba7e3-e4c0-43e8-91dc-009a85367517",
+        }
+        with self.assertRaises(jsonschema.exceptions.ValidationError):
+            assert jsonschema.validate(instance=invalid_type_data, schema=schema) is None
+
+    def test_missing_required_fields(self) -> None:
+        missing_data = {
+            "filename": "little_386.aout",
+            "bytecount": 4,
+            "magic": "Linux/i386 demand-paged executable (ZMAGIC)",  # noqa: E501
+            "md5": "90a2eac40885beab82e592192a2cadd1",
+            "observation_ts": "2024-12-04 22:27:45",
+            "sha256": "0dabc62368f8c774acf547ee84e794d172a72c0e8bb3c78d261a6e896ea60c42",
+            "uuid": "f1eba7e3-e4c0-43e8-91dc-009a85367517",
+        }
+        with self.assertRaises(jsonschema.exceptions.ValidationError):
+            assert jsonschema.validate(instance=missing_data, schema=schema) is None
+
+    def test_additional_properties(self) -> None:
+        additional_data = {
+            "filename": "little_386.aout",
+            "bytecount": 4,
+            "magic": "Linux/i386 demand-paged executable (ZMAGIC)",  # noqa: E501
+            "md5": "90a2eac40885beab82e592192a2cadd1",
+            "observation_ts": "2024-12-04 22:27:45",
+            "sha1": "f265f86a2f7bde59b88a47e53c0893d66a55a6cc",
+            "sha256": "0dabc62368f8c774acf547ee84e794d172a72c0e8bb3c78d261a6e896ea60c42",
+            "uuid": "f1eba7e3-e4c0-43e8-91dc-009a85367517",
+            "extra_property": "Extra property",
+        }
+        with self.assertRaises(jsonschema.exceptions.ValidationError):
+            assert jsonschema.validate(instance=additional_data, schema=schema) is None
 
 
 if __name__ == "__main__":
