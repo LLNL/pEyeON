@@ -1,1 +1,3 @@
-These tests have been borrowed from (Software Surfactant)[https://github.com/LLNL/Surfactant/tree/main/tests/data]
+Most of these test bins have been borrowed from LLNL's (Software Surfactant)[https://github.com/LLNL/Surfactant/tree/main/tests/data].
+
+The certificate test bins are from LLNL's (WinTap)[https://github.com/LLNL/Wintap/tree/main/Installers/Release].

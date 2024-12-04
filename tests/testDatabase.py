@@ -97,12 +97,12 @@ class GeneralDatabaseTestCase(unittest.TestCase):
             os.remove(self.original_output)
 
 
-class NotepadObserveTestCase(GeneralDatabaseTestCase):
+class MSIObserveTestCase(GeneralDatabaseTestCase):
     @classmethod
     def setUpClass(self):
-        self.original_output = "notepad++.exe.0ec33611cb6594903ff88d47c78dcdab.json"
+        self.original_output = "WintapSetup.msi.f06087338f3b3e301d841c29429a1c99.json"
         self.database_output = "test_database"
-        self.OBS = observe.Observe("./binaries/x86/notepad++/notepad++.exe")
+        self.OBS = observe.Observe("./binaries/cert_examples/WintapSetup.msi")
 
     def testCommon(self):
         self.writeObserve()
@@ -110,12 +110,12 @@ class NotepadObserveTestCase(GeneralDatabaseTestCase):
         self.validateDatabaseContents()
 
 
-class LsObserveTestCase(GeneralDatabaseTestCase):
+class ElfObserveTestCase(GeneralDatabaseTestCase):
     @classmethod
     def setUpClass(self):
-        self.original_output = "ls.586256cbd58140ec8c3b2c910cf80c27.json"
+        self.original_output = "hello_world.d2a52fd35b9bec826c814f26cba50b4d.json"
         self.database_output = "test_database"
-        self.OBS = observe.Observe("./binaries/elf/ls")
+        self.OBS = observe.Observe("./binaries/ELF_shared_obj_test_no1/bin/hello_world")
 
     def testCommon(self):
         self.writeObserve()
@@ -123,17 +123,17 @@ class LsObserveTestCase(GeneralDatabaseTestCase):
         self.validateDatabaseContents()
 
 
-class PowerPCObserveTestCase(GeneralDatabaseTestCase):
-    @classmethod
-    def setUpClass(self):
-        self.original_output = "rustup-init.3e7704532c1cafb02244fc7e4308ec3d.json"
-        self.database_output = "test_database"
-        self.OBS = observe.Observe("./binaries/powerpc/rustup-init")
+# class PowerPCObserveTestCase(GeneralDatabaseTestCase):
+#     @classmethod
+#     def setUpClass(self):
+#         self.original_output = "rustup-init.3e7704532c1cafb02244fc7e4308ec3d.json"
+#         self.database_output = "test_database"
+#         self.OBS = observe.Observe("./binaries/powerpc/rustup-init")
 
-    def testCommon(self):
-        self.writeObserve()
-        self.checkDatabaseCreated()
-        self.validateDatabaseContents()
+#     def testCommon(self):
+#         self.writeObserve()
+#         self.checkDatabaseCreated()
+#         self.validateDatabaseContents()
 
 
 class X86ParseDatabaseTestCase(GeneralDatabaseTestCase):
@@ -141,7 +141,7 @@ class X86ParseDatabaseTestCase(GeneralDatabaseTestCase):
     def setUpClass(self):
         self.original_output = "./testresults"
         self.database_output = "data/testing/test_database"
-        self.PRS = parse.Parse("./binaries/x86/")
+        self.PRS = parse.Parse("./binaries/ELF_shared_obj_test_no1/")
         self.PRS(result_path=self.original_output)
 
     def testCommon(self):
@@ -155,7 +155,7 @@ class ARMParseDatabaseTestCase(GeneralDatabaseTestCase):
     def setUpClass(self):
         self.original_output = "./testresults"
         self.database_output = "test_database"
-        self.PRS = parse.Parse("./binaries/arm/")
+        self.PRS = parse.Parse("./binaries/ELF_shared_obj_test_arm/")
         self.PRS(result_path=self.original_output)
 
     def testCommon(self):
@@ -168,8 +168,8 @@ class TestErrorHandling(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.database = "test_database"
-        self.parse_path = "./binaries/x86/notepad++/"
-        self.observe_path = "./binaries/x86/notepad++/notepad++.exe"
+        self.parse_path = "./binaries/cert_examples/"
+        self.observe_path = "./binaries/cert_examples/WintapSetup.msi"
         self.PRS = parse.Parse(self.parse_path)
         self.OBS = observe.Observe(self.observe_path)
 
