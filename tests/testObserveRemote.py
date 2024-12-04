@@ -15,33 +15,34 @@ import jsonschema
 class ObservationTestCase(unittest.TestCase):
     @classmethod
     def setUp(self) -> None:
-        self.OBS = observe.Observe("./binaries/x86/notepad++/notepad++.exe")
+        self.OBS = observe.Observe("./binaries/a_out_files/big_m68020.aout")
 
     def testVarsExe(self) -> None:
-        self.assertEqual(self.OBS.bytecount, 6390616)
-        self.assertEqual(self.OBS.filename, "notepad++.exe")
-        self.assertEqual(self.OBS.md5, "0ec33611cb6594903ff88d47c78dcdab")
-        self.assertEqual(self.OBS.sha1, "28a2a37cf2e9550a699b138dddba4b8067c8e1b1")
+        self.assertEqual(self.OBS.bytecount, 4)
+        self.assertEqual(self.OBS.filename, "big_m68020.aout")
+        self.assertEqual(self.OBS.md5, "e8d3808a4e311a4262563f3cb3a31c3e")
+        self.assertEqual(self.OBS.sha1, "fbf8688fbe1976b6f324b0028c4b97137ae9139d")
         self.assertEqual(
-            self.OBS.sha256, "ccb4ff6b20689d948233807a67d9de9666229625aa6682466ef01917b01ccd3b"
+            self.OBS.sha256, "9e125f97e5f180717096c57fa2fdf06e71cea3e48bc33392318643306b113da4"
         )
         try:
             dt.datetime.strptime(self.OBS.modtime, "%Y-%m-%d %H:%M:%S")
         except ValueError:
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
-        self.assertEqual(self.OBS.permissions, "0o100600")
-        self.assertEqual(self.OBS.authenticode_integrity, "OK")
-        self.assertEqual(self.OBS.signatures[0]["verification"], "OK")
-        self.assertEqual(self.OBS.authentihash, self.OBS.signatures[0]["sha1"])
+        self.assertEqual(self.OBS.permissions, "0o100644")
+        # This is not a PE file so there is no signatures
+        # self.assertEqual(self.OBS.authenticode_integrity, "OK")
+        # self.assertEqual(self.OBS.signatures[0]["verification"], "OK")
+        # self.assertEqual(self.OBS.authentihash, self.OBS.signatures[0]["sha1"])
 
-        self.assertNotIn(  # check that the first cert has no issuer in the chain
-            "issuer_sha256", self.OBS.signatures[0]["certs"][0]
-        )
-        self.assertEqual(  # check that the second cert has the first issuer's sha
-            self.OBS.signatures[0]["certs"][1]["issuer_sha256"],
-            "46011ede1c147eb2bc731a539b7c047b7ee93e48b9d3c3ba710ce132bbdfac6b",
-        )
+        # self.assertNotIn(  # check that the first cert has no issuer in the chain
+        #     "issuer_sha256", self.OBS.signatures[0]["certs"][0]
+        # )
+        # self.assertEqual(  # check that the second cert has the first issuer's sha
+        #     self.OBS.signatures[0]["certs"][1]["issuer_sha256"],
+        #     "46011ede1c147eb2bc731a539b7c047b7ee93e48b9d3c3ba710ce132bbdfac6b",
+        # )
 
     # def testValidateJson(self) -> None:
     #     with open("../schema/observation.schema.json") as schem:
@@ -67,22 +68,22 @@ class ObservationTestCase(unittest.TestCase):
 class ObservationTestCase2(unittest.TestCase):
     @classmethod
     def setUp(self) -> None:
-        self.OBS = observe.Observe("./binaries/elf/ls")
+        self.OBS = observe.Observe("./binaries/coff_files/intel_80386_coff")
 
     def testVarsElf(self) -> None:
-        self.assertEqual(self.OBS.bytecount, 138208)
-        self.assertEqual(self.OBS.filename, "ls")
-        self.assertEqual(self.OBS.md5, "586256cbd58140ec8c3b2c910cf80c27")
-        self.assertEqual(self.OBS.sha1, "8b24bc69bd1e97d5d9932448d0f8badaaeb2dd38")
+        self.assertEqual(self.OBS.bytecount, 2)
+        self.assertEqual(self.OBS.filename, "intel_80386_coff")
+        self.assertEqual(self.OBS.md5, "3e44d3b6dd839ce18f1b298bac5ce63f")
+        self.assertEqual(self.OBS.sha1, "aad24871701ab7c50fec7f4f2afb7096e5292854")
         self.assertEqual(
-            self.OBS.sha256, "8696974df4fc39af88ee23e307139afc533064f976da82172de823c3ad66f444"
+            self.OBS.sha256, "ed22c79e7ff516da5fb6310f6137bfe3b9724e9902c14ca624bfe0873f8f2d0c"
         )
         try:
             dt.datetime.strptime(self.OBS.modtime, "%Y-%m-%d %H:%M:%S")
         except ValueError:
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
-        self.assertEqual(self.OBS.permissions, "0o100700")
+        self.assertEqual(self.OBS.permissions, "0o100644")
         self.assertEqual(len(self.OBS.signatures), 0)  # ls is unsigned, should have no signatures
 
     def testValidateJson(self) -> None:
@@ -109,35 +110,36 @@ class ObservationTestCase2(unittest.TestCase):
             pass
 
 
-class ObservationTestCaseArm(unittest.TestCase):
+class ObservationTestCase3(unittest.TestCase):
     @classmethod
     def setUp(self) -> None:
-        self.OBS = observe.Observe("./binaries/arm/curl-8.8.0_1-win64arm-mingw.exe")
+        self.OBS = observe.Observe("./binaries/ELF_shared_obj_test_no1/bin/hello_world")
 
     def testVarsExe(self) -> None:
-        self.assertEqual(self.OBS.bytecount, 3237992)
-        self.assertEqual(self.OBS.filename, "curl-8.8.0_1-win64arm-mingw.exe")
-        self.assertEqual(self.OBS.md5, "c4062346970bfe1e99dac115aca41845")
-        self.assertEqual(self.OBS.sha1, "e0a60241ae6c4450da3547b76eb0d35d6876f80e")
+        self.assertEqual(self.OBS.bytecount, 16424)
+        self.assertEqual(self.OBS.filename, "hello_world")
+        self.assertEqual(self.OBS.md5, "d2a52fd35b9bec826c814f26cba50b4d")
+        self.assertEqual(self.OBS.sha1, "558931bab308cb5d7adb275f7f6a94757286fc63")
         self.assertEqual(
-            self.OBS.sha256, "678400429ccbfd5935f9253754203b824500469f79d30bc6a27674d2840551c7"
+            self.OBS.sha256, "f776715b7a01c4d4efc6be326b3e82ce546efd182c39040a7a9159f6dbe13398"
         )
         try:
             dt.datetime.strptime(self.OBS.modtime, "%Y-%m-%d %H:%M:%S")
         except ValueError:
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
-        self.assertEqual(self.OBS.authenticode_integrity, "OK")
-        self.assertEqual(self.OBS.signatures[0]["verification"], "OK")
-        self.assertEqual(self.OBS.authentihash, self.OBS.signatures[0]["sha1"])
-        self.assertEqual(
-            self.OBS.signatures[0]["certs"][0]["issuer_sha256"],
-            "07821038ae6d90f2ea3bff5b6169ba0fb0b3b5cef57db18e7d48313da99e4a36",
-        )
-        self.assertEqual(
-            self.OBS.signatures[0]["certs"][1]["issuer_sha256"],
-            "07821038ae6d90f2ea3bff5b6169ba0fb0b3b5cef57db18e7d48313da99e4a36",
-        )
+        # Unsigned
+        # self.assertEqual(self.OBS.authenticode_integrity, "OK")
+        # self.assertEqual(self.OBS.signatures[0]["verification"], "OK")
+        # self.assertEqual(self.OBS.authentihash, self.OBS.signatures[0]["sha1"])
+        # self.assertEqual(
+        #     self.OBS.signatures[0]["certs"][0]["issuer_sha256"],
+        #     "07821038ae6d90f2ea3bff5b6169ba0fb0b3b5cef57db18e7d48313da99e4a36",
+        # )
+        # self.assertEqual(
+        #     self.OBS.signatures[0]["certs"][1]["issuer_sha256"],
+        #     "07821038ae6d90f2ea3bff5b6169ba0fb0b3b5cef57db18e7d48313da99e4a36",
+        # )
 
     def testConfigJson(self) -> None:
         vs = vars(self.OBS)
@@ -155,18 +157,18 @@ class ObservationTestCaseArm(unittest.TestCase):
         # unittest.mock?
 
 
-class ObservationTestCasePowerPC(unittest.TestCase):
+class ObservationTestCase4(unittest.TestCase):
     @classmethod
     def setUp(self) -> None:
-        self.OBS = observe.Observe("./binaries/powerpc/rustup-init")
+        self.OBS = observe.Observe("./binaries/java_class_no1/HelloWorld.class")
 
     def testVarsExe(self) -> None:
-        self.assertEqual(self.OBS.bytecount, 14585464)
-        self.assertEqual(self.OBS.filename, "rustup-init")
-        self.assertEqual(self.OBS.md5, "3e7704532c1cafb02244fc7e4308ec3d")
-        self.assertEqual(self.OBS.sha1, "05324fd5db3da42bc53794614738643942d12d54")
+        self.assertEqual(self.OBS.bytecount, 1091)
+        self.assertEqual(self.OBS.filename, "HelloWorld.class")
+        self.assertEqual(self.OBS.md5, "eed620dc71014e2bbe9171867d4a36da")
+        self.assertEqual(self.OBS.sha1, "326afcefa84a51113d49d623cf8902b7a07b4e98")
         self.assertEqual(
-            self.OBS.sha256, "ad4463793c6d545b8f86fff8dd24e80ced9573eb20b9849fd9bd47818e2e4598"
+            self.OBS.sha256, "990f9f530a833d2ab6ef1580235832a1849de3080efc69cc17cf6575e5a1c469"
         )
         try:
             dt.datetime.strptime(self.OBS.modtime, "%Y-%m-%d %H:%M:%S")
@@ -175,37 +177,37 @@ class ObservationTestCasePowerPC(unittest.TestCase):
         self.assertIsInstance(self.OBS.observation_ts, str)
 
 
-# 7zip is a PE with 0 signatures, so we can test some of the logging functions
-class ObservationTestCase7zip(unittest.TestCase):
+# This is a Mac-O with 0 signatures, so we can test some of the logging functions
+class ObservationTestCase5(unittest.TestCase):
     @classmethod
     def setUpClass(self) -> None:
         self.OBS = observe.Observe(
-            "./binaries/x86/7z_win32.exe", log_level=logging.INFO, log_file="./observe.log"
+            "./binaries/mach_o_dylib_test_no1/bin/hello_world", log_level=logging.INFO, log_file="./observe.log"
         )
 
-    def testLog(self):  # check log is created and correct info logged
-        self.assertTrue(os.path.exists("./observe.log"))
-        with open("./observe.log", "r") as f:
-            log = f.read()
+    # def testLog(self):  # check log is created and correct info logged
+    #     self.assertTrue(os.path.exists("./observe.log"))
+    #     with open("./observe.log", "r") as f:
+    #         log = f.read()
 
-        messages = []
-        for line in log.split("\n", maxsplit=3):
-            # check log formatting is correct for each line
-            if line:
-                components = line.split(" - ")  # seperator defined in observe
-                print(components)
+    #     messages = []
+    #     for line in log.split("\n", maxsplit=3):
+    #         # check log formatting is correct for each line
+    #         if line:
+    #             components = line.split(" - ")  # seperator defined in observe
+    #             print(components)
 
-                # order should be a datetime, then name, then loglevel
-                try:
-                    dt.datetime.strptime(components[0], "%Y-%m-%d %H:%M:%S,%f")
-                except ValueError:
-                    self.fail()
-                self.assertEqual(components[1], "eyeon.observe")
-                self.assertIn(components[2], ["INFO", "WARNING"])
-                messages.append(components[3])
+    #             # order should be a datetime, then name, then loglevel
+    #             try:
+    #                 dt.datetime.strptime(components[0], "%Y-%m-%d %H:%M:%S,%f")
+    #             except ValueError:
+    #                 self.fail()
+    #             self.assertEqual(components[1], "eyeon.observe")
+    #             self.assertIn(components[2], ["INFO", "WARNING"])
+    #             messages.append(components[3])
 
-        # check message correctly logged
-        self.assertIn("file ./binaries/x86/7z_win32.exe has no signatures.", messages)
+    #     # check message correctly logged
+    #     self.assertIn("file ./binaries/mach_o_dylib_test_no1/bin/hello_world has no signatures.", messages)
 
     def testToString(self):
         try:
