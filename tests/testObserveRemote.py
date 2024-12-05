@@ -31,25 +31,6 @@ class ObservationTestCase(unittest.TestCase):
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100644")
-        # This is not a PE file so there is no signatures
-        # self.assertEqual(self.OBS.authenticode_integrity, "OK")
-        # self.assertEqual(self.OBS.signatures[0]["verification"], "OK")
-        # self.assertEqual(self.OBS.authentihash, self.OBS.signatures[0]["sha1"])
-
-        # self.assertNotIn(  # check that the first cert has no issuer in the chain
-        #     "issuer_sha256", self.OBS.signatures[0]["certs"][0]
-        # )
-        # self.assertEqual(  # check that the second cert has the first issuer's sha
-        #     self.OBS.signatures[0]["certs"][1]["issuer_sha256"],
-        #     "46011ede1c147eb2bc731a539b7c047b7ee93e48b9d3c3ba710ce132bbdfac6b",
-        # )
-
-    # def testValidateJson(self) -> None:
-    #     with open("../schema/observation.schema.json") as schem:
-    #         schema = json.loads(schem.read())
-    #     vs = vars(self.OBS)
-    #     obs_json = json.loads(self.OBS._safe_serialize(vs))
-    #     print(jsonschema.validate(instance=obs_json, schema=schema))
 
     def testConfigJson(self) -> None:
         vs = vars(self.OBS)
@@ -209,6 +190,7 @@ class ObservationTestCase5(unittest.TestCase):
     def tearDownClass(self):
         os.remove("./observe.log")
 
+
 class ObservationTestCase6(unittest.TestCase):
     @classmethod
     def setUp(self) -> None:
@@ -253,6 +235,7 @@ class ObservationTestCase6(unittest.TestCase):
         except FileNotFoundError:
             pass
 
+
 class ObservationTestCase7(unittest.TestCase):
     @classmethod
     def setUp(self) -> None:
@@ -273,6 +256,7 @@ class ObservationTestCase7(unittest.TestCase):
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100644")
 
+
 class ObservationTestCase8(unittest.TestCase):
     @classmethod
     def setUp(self) -> None:
@@ -292,6 +276,27 @@ class ObservationTestCase8(unittest.TestCase):
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100755")
+
+
+class ObservationTestCase9(unittest.TestCase):
+    @classmethod
+    def setUp(self) -> None:
+        self.OBS = observe.Observe("./binaries/msitest_no1/test.msi")
+
+    def testVarsExe(self) -> None:
+        self.assertEqual(self.OBS.bytecount, 12288)
+        self.assertEqual(self.OBS.filename, "test.msi")
+        self.assertEqual(self.OBS.md5, "ebe91666b88d9acccbea8da417f22422")
+        self.assertEqual(self.OBS.sha1, "8de8e4289c7956a370a64aa814f40bdc1b407d00")
+        self.assertEqual(
+            self.OBS.sha256, "f9c66eb5a1f6c52c8d7ef2fb3bb0e8e0a0c103ae92048ce6b678152542a77c83"
+        )
+        try:
+            dt.datetime.strptime(self.OBS.modtime, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            self.fail()
+        self.assertIsInstance(self.OBS.observation_ts, str)
+        self.assertEqual(self.OBS.permissions, "0o100644")
 
 
 class TestFilePermissions(unittest.TestCase):
