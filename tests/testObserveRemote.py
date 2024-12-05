@@ -273,6 +273,26 @@ class ObservationTestCase7(unittest.TestCase):
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100644")
 
+class ObservationTestCase8(unittest.TestCase):
+    @classmethod
+    def setUp(self) -> None:
+        self.OBS = observe.Observe("./binaries/powerpc/hello_world_ppc")
+
+    def testVarsExe(self) -> None:
+        self.assertEqual(self.OBS.bytecount, 71056)
+        self.assertEqual(self.OBS.filename, "hello_world_ppc")
+        self.assertEqual(self.OBS.md5, "0c51f3e375a077b1ab85106cd8339f1d")
+        self.assertEqual(self.OBS.sha1, "ff06f8bc9a328dbba9cd6cdb9d573ae0a9b8e172")
+        self.assertEqual(
+            self.OBS.sha256, "d01d7dbd0b47fa1f7b1b54f35e48b64051c0b5b128a9ecbe8d8cb311e5ff4508"
+        )
+        try:
+            dt.datetime.strptime(self.OBS.modtime, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            self.fail()
+        self.assertIsInstance(self.OBS.observation_ts, str)
+        self.assertEqual(self.OBS.permissions, "0o100755")
+
 
 class TestFilePermissions(unittest.TestCase):
     def test_nonreadable_file(self):
