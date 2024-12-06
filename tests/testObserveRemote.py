@@ -111,6 +111,15 @@ class ObservationTestCase3(unittest.TestCase):
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100755")
 
+    def test_detect_it_easy(self) -> None:
+        expected_output = (
+            "ELF64\n"
+            "    Compiler: gcc((Ubuntu 11.3.0-1ubuntu1~22.04) 11.3.0)[DYN AMD64-64]\n"
+            "    Library: GLIBC(2.34)[DYN AMD64-64]\n\n"
+        )
+        self.assertEqual(self.OBS.detect_it_easy, expected_output)
+
+
     def testConfigJson(self) -> None:
         vs = vars(self.OBS)
         obs_json = json.loads(self.OBS._safe_serialize(vs))
@@ -147,13 +156,20 @@ class ObservationTestCase4(unittest.TestCase):
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100644")
 
+    def test_detect_it_easy(self) -> None:
+        expected_output = (
+            "Binary\n"
+            "    Format: Java Class File (.CLASS)(Java SE 11)\n\n"
+        )
+        self.assertEqual(self.OBS.detect_it_easy, expected_output)
+
 
 # This is a Mac-O with 0 signatures, so we can test some of the logging functions
 class ObservationTestCase5(unittest.TestCase):
     @classmethod
     def setUpClass(self) -> None:
         self.OBS = observe.Observe(
-            "./binaries/mach_o_dylib_test_no1/bin/hello_world", log_level=logging.INFO, log_file="./observe.log"
+            "./binaries/srectest_no1/HexFile.hex", log_level=logging.INFO, log_file="./observe.log"
         )
 
     def testLog(self):  # check log is created and correct info logged
@@ -165,7 +181,7 @@ class ObservationTestCase5(unittest.TestCase):
         for line in log.split("\n", maxsplit=3):
             # check log formatting is correct for each line
             if line:
-                components = line.split(" - ")  # seperator defined in observe
+                components = line.split(" - ")  # separator defined in observe
                 print(components)
 
                 # order should be a datetime, then name, then loglevel
@@ -178,7 +194,7 @@ class ObservationTestCase5(unittest.TestCase):
                 messages.append(components[3])
 
         # check message correctly logged
-        self.assertIn("file ./binaries/mach_o_dylib_test_no1/bin/hello_world has no signatures.", messages)
+        self.assertIn("file ./binaries/srectest_no1/HexFile.hex has no signatures.", messages)
 
     def testToString(self):
         try:
@@ -186,9 +202,9 @@ class ObservationTestCase5(unittest.TestCase):
         except Exception as e:
             self.fail(f"Observe.__str__ raised exception {e} unexpectedly!")
 
-    @classmethod
-    def tearDownClass(self):
-        os.remove("./observe.log")
+    # @classmethod
+    # def tearDownClass(self):
+    #     os.remove("./observe.log")
 
 
 class ObservationTestCase6(unittest.TestCase):
@@ -210,7 +226,13 @@ class ObservationTestCase6(unittest.TestCase):
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100755")
-        self.assertEqual(len(self.OBS.signatures), 0)  # ls is unsigned, should have no signatures
+        self.assertEqual(len(self.OBS.signatures), 0)  # unsigned, should have no signatures
+
+    def test_detect_it_easy(self) -> None:
+        expected_output = (
+            "Mach-O64\n\n"
+        )
+        self.assertEqual(self.OBS.detect_it_easy, expected_output)
 
     def testValidateJson(self) -> None:
         with open("../schema/observation.schema.json") as schem:
@@ -277,6 +299,14 @@ class ObservationTestCase8(unittest.TestCase):
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100755")
 
+    def test_detect_it_easy(self) -> None:
+        expected_output = (
+            "ELF64\n"
+            "    Compiler: gcc((GNU) 14.2.0)[EXEC PPC64-64]\n"
+            "    Library: GLIBC(2.34)[EXEC PPC64-64]\n\n"
+        )
+        self.assertEqual(self.OBS.detect_it_easy, expected_output)
+
 
 class ObservationTestCase9(unittest.TestCase):
     @classmethod
@@ -297,6 +327,38 @@ class ObservationTestCase9(unittest.TestCase):
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100644")
+
+
+class ObservationTestCase10(unittest.TestCase):
+    @classmethod
+    def setUp(self) -> None:
+        self.OBS = observe.Observe("./binaries/Wintap.exe")
+
+    def testVarsExe(self) -> None:
+        self.assertEqual(self.OBS.bytecount, 201080)
+        self.assertEqual(self.OBS.filename, "Wintap.exe")
+        self.assertEqual(self.OBS.md5, "2950c0020a37b132718f5a832bc5cabd")
+        self.assertEqual(self.OBS.sha1, "1585373cc8ab4f22ce6e553be54eacf835d63a95")
+        self.assertEqual(
+            self.OBS.sha256, "bdd73b73b50350a55e27f64f022db0f62dd28a0f1d123f3468d3f0958c5fcc39"
+        )
+        try:
+            dt.datetime.strptime(self.OBS.modtime, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            self.fail()
+        self.assertIsInstance(self.OBS.observation_ts, str)
+        self.assertEqual(self.OBS.permissions, "0o100777")
+        self.assertEqual(self.OBS.authenticode_integrity, "OK")
+        self.assertEqual(self.OBS.signatures[0]["verification"], "OK")
+        self.assertEqual(self.OBS.authentihash, self.OBS.signatures[0]["sha1"])
+
+        self.assertNotIn(  # check that the first cert has no issuer in the chain
+            "issuer_sha256", self.OBS.signatures[0]["certs"][0]
+        )
+        self.assertEqual(  # check that the second cert has the first issuer's sha
+            self.OBS.signatures[0]["certs"][1]["issuer_sha256"],
+            "552f7bdcf1a7af9e6ce672017f4f12abf77240c78e761ac203d1d9d20ac89988",
+        )
 
 
 class TestFilePermissions(unittest.TestCase):

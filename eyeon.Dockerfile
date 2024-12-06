@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 ubuntu:22.04
+FROM amd64/ubuntu:22.04
 
 ARG USER_ID
 ARG OUN
