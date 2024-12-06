@@ -17,7 +17,7 @@ class ObservationTestCase(unittest.TestCase):
     def setUp(self) -> None:
         self.OBS = observe.Observe("./binaries/a_out_files/big_m68020.aout")
 
-    def testVarsExe(self) -> None:
+    def testVars(self) -> None:
         self.assertEqual(self.OBS.bytecount, 4)
         self.assertEqual(self.OBS.filename, "big_m68020.aout")
         self.assertEqual(self.OBS.md5, "e8d3808a4e311a4262563f3cb3a31c3e")
@@ -51,7 +51,7 @@ class ObservationTestCase2(unittest.TestCase):
     def setUp(self) -> None:
         self.OBS = observe.Observe("./binaries/coff_files/intel_80386_coff")
 
-    def testVarsElf(self) -> None:
+    def testVars(self) -> None:
         self.assertEqual(self.OBS.bytecount, 2)
         self.assertEqual(self.OBS.filename, "intel_80386_coff")
         self.assertEqual(self.OBS.md5, "3e44d3b6dd839ce18f1b298bac5ce63f")
@@ -96,7 +96,7 @@ class ObservationTestCase3(unittest.TestCase):
     def setUp(self) -> None:
         self.OBS = observe.Observe("./binaries/ELF_shared_obj_test_no1/bin/hello_world")
 
-    def testVarsExe(self) -> None:
+    def testVars(self) -> None:
         self.assertEqual(self.OBS.bytecount, 16424)
         self.assertEqual(self.OBS.filename, "hello_world")
         self.assertEqual(self.OBS.md5, "d2a52fd35b9bec826c814f26cba50b4d")
@@ -141,7 +141,7 @@ class ObservationTestCase4(unittest.TestCase):
     def setUp(self) -> None:
         self.OBS = observe.Observe("./binaries/java_class_no1/HelloWorld.class")
 
-    def testVarsExe(self) -> None:
+    def testVars(self) -> None:
         self.assertEqual(self.OBS.bytecount, 1091)
         self.assertEqual(self.OBS.filename, "HelloWorld.class")
         self.assertEqual(self.OBS.md5, "eed620dc71014e2bbe9171867d4a36da")
@@ -202,9 +202,9 @@ class ObservationTestCase5(unittest.TestCase):
         except Exception as e:
             self.fail(f"Observe.__str__ raised exception {e} unexpectedly!")
 
-    # @classmethod
-    # def tearDownClass(self):
-    #     os.remove("./observe.log")
+    @classmethod
+    def tearDownClass(self):
+        os.remove("./observe.log")
 
 
 class ObservationTestCase6(unittest.TestCase):
@@ -212,7 +212,7 @@ class ObservationTestCase6(unittest.TestCase):
     def setUp(self) -> None:
         self.OBS = observe.Observe("./binaries/macho_arm_files/hello_world")
 
-    def testVarsElf(self) -> None:
+    def testVars(self) -> None:
         self.assertEqual(self.OBS.bytecount, 39224)
         self.assertEqual(self.OBS.filename, "hello_world")
         self.assertEqual(self.OBS.md5, "fef627973d231c07707d3483f6d22ac9")
@@ -263,7 +263,7 @@ class ObservationTestCase7(unittest.TestCase):
     def setUp(self) -> None:
         self.OBS = observe.Observe("./binaries/Windows_dll_test_no1/hello_world.exe")
 
-    def testVarsExe(self) -> None:
+    def testVars(self) -> None:
         self.assertEqual(self.OBS.bytecount, 58880)
         self.assertEqual(self.OBS.filename, "hello_world.exe")
         self.assertEqual(self.OBS.md5, "c1550ecc547c89b2f24599c990a29184")
@@ -284,7 +284,7 @@ class ObservationTestCase8(unittest.TestCase):
     def setUp(self) -> None:
         self.OBS = observe.Observe("./binaries/powerpc/hello_world_ppc")
 
-    def testVarsExe(self) -> None:
+    def testVars(self) -> None:
         self.assertEqual(self.OBS.bytecount, 71056)
         self.assertEqual(self.OBS.filename, "hello_world_ppc")
         self.assertEqual(self.OBS.md5, "0c51f3e375a077b1ab85106cd8339f1d")
@@ -313,7 +313,7 @@ class ObservationTestCase9(unittest.TestCase):
     def setUp(self) -> None:
         self.OBS = observe.Observe("./binaries/msitest_no1/test.msi")
 
-    def testVarsExe(self) -> None:
+    def testVars(self) -> None:
         self.assertEqual(self.OBS.bytecount, 12288)
         self.assertEqual(self.OBS.filename, "test.msi")
         self.assertEqual(self.OBS.md5, "ebe91666b88d9acccbea8da417f22422")
@@ -334,7 +334,7 @@ class ObservationTestCase10(unittest.TestCase):
     def setUp(self) -> None:
         self.OBS = observe.Observe("./binaries/Wintap.exe")
 
-    def testVarsExe(self) -> None:
+    def testVars(self) -> None:
         self.assertEqual(self.OBS.bytecount, 201080)
         self.assertEqual(self.OBS.filename, "Wintap.exe")
         self.assertEqual(self.OBS.md5, "2950c0020a37b132718f5a832bc5cabd")
