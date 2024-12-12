@@ -14,7 +14,7 @@ class CliTestCase(unittest.TestCase):
         )
 
         self.cli3 = CommandLine(
-            "checksum notepad++.exe -a sha1 28a2a37cf2e9550a699b138dddba4b8067c8e1b1".split()
+            "checksum WintapSetup.msi -a sha1 ffb3f6b7d55dfbd293a922e2bfa7ba0110d2ff9c".split()
         )
 
     def testObserveArgs(self) -> None:
@@ -34,9 +34,9 @@ class CliTestCase(unittest.TestCase):
         self.assertEqual(self.cli2.args.func, self.cli2.parse)
 
     def testChecksumArgs(self):
-        self.assertEqual(self.cli3.args.file, "notepad++.exe")
+        self.assertEqual(self.cli3.args.file, "WintapSetup.msi")
         self.assertEqual(self.cli3.args.algorithm, "sha1")
-        self.assertEqual(self.cli3.args.cksum, "28a2a37cf2e9550a699b138dddba4b8067c8e1b1")
+        self.assertEqual(self.cli3.args.cksum, "ffb3f6b7d55dfbd293a922e2bfa7ba0110d2ff9c")
         self.assertEqual(self.cli3.args.func, self.cli3.checksum)
 
 
