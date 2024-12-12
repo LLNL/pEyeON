@@ -164,12 +164,12 @@ class ObservationTestCase4(unittest.TestCase):
         self.assertEqual(self.OBS.detect_it_easy, expected_output)
 
 
-# This is a Mac-O with 0 signatures, so we can test some of the logging functions
+# This is a Mach-O with 0 signatures, so we can test some of the logging functions
 class ObservationTestCase5(unittest.TestCase):
     @classmethod
     def setUpClass(self) -> None:
         self.OBS = observe.Observe(
-            "./binaries/srectest_no1/HexFile.hex", log_level=logging.INFO, log_file="./observe.log"
+            "./binaries/NET_app_config_test_no1/ConsoleApp2.exe", log_level=logging.INFO, log_file="./observe.log"
         )
 
     def testLog(self):  # check log is created and correct info logged
@@ -194,7 +194,7 @@ class ObservationTestCase5(unittest.TestCase):
                 messages.append(components[3])
 
         # check message correctly logged
-        self.assertIn("file ./binaries/srectest_no1/HexFile.hex has no signatures.", messages)
+        self.assertIn("file ./binaries/NET_app_config_test_no1/ConsoleApp2.exe has no signatures.", messages)
 
     def testToString(self):
         try:
