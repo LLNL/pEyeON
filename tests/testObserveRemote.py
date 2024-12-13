@@ -112,6 +112,7 @@ class ObservationTestCase3(unittest.TestCase):
         self.assertEqual(self.OBS.permissions, "0o100700")
 
     def test_detect_it_easy(self) -> None:
+
         expected_output = (
             "ELF64\n"
             "    Compiler: gcc((Ubuntu 11.3.0-1ubuntu1~22.04) 11.3.0)[DYN AMD64-64]\n"
@@ -228,6 +229,7 @@ class ObservationTestCase6(unittest.TestCase):
         self.assertEqual(len(self.OBS.signatures), 0)  # unsigned, should have no signatures
 
     def test_detect_it_easy(self) -> None:
+        self.OBS.set_detect_it_easy("./binaries/macho_arm_files/hello_world")
         expected_output = (
             "Mach-O64\n\n"
         )
