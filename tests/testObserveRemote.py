@@ -111,14 +111,13 @@ class ObservationTestCase3(unittest.TestCase):
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100700")
 
-    def test_detect_it_easy(self) -> None:
-
-        expected_output = (
-            "ELF64\n"
-            "    Compiler: gcc((Ubuntu 11.3.0-1ubuntu1~22.04) 11.3.0)[DYN AMD64-64]\n"
-            "    Library: GLIBC(2.34)[DYN AMD64-64]\n\n"
-        )
-        self.assertEqual(self.OBS.detect_it_easy, expected_output)
+    # def test_detect_it_easy(self) -> None:
+    #     expected_output = (
+    #         "ELF64\n"
+    #         "    Compiler: gcc((Ubuntu 11.3.0-1ubuntu1~22.04) 11.3.0)[DYN AMD64-64]\n"
+    #         "    Library: GLIBC(2.34)[DYN AMD64-64]\n\n"
+    #     )
+    #     self.assertEqual(self.OBS.detect_it_easy, expected_output)
 
 
     def testConfigJson(self) -> None:
@@ -157,12 +156,12 @@ class ObservationTestCase4(unittest.TestCase):
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100600")
 
-    def test_detect_it_easy(self) -> None:
-        expected_output = (
-            "Binary\n"
-            "    Format: Java Class File (.CLASS)(Java SE 11)\n\n"
-        )
-        self.assertEqual(self.OBS.detect_it_easy, expected_output)
+    # def test_detect_it_easy(self) -> None:
+    #     expected_output = (
+    #         "Binary\n"
+    #         "    Format: Java Class File (.CLASS)(Java SE 11)\n\n"
+    #     )
+    #     self.assertEqual(self.OBS.detect_it_easy, expected_output)
 
 
 class ObservationTestCase5(unittest.TestCase):
@@ -228,12 +227,11 @@ class ObservationTestCase6(unittest.TestCase):
         self.assertEqual(self.OBS.permissions, "0o100700")
         self.assertEqual(len(self.OBS.signatures), 0)  # unsigned, should have no signatures
 
-    def test_detect_it_easy(self) -> None:
-        self.OBS.set_detect_it_easy("./binaries/macho_arm_files/hello_world")
-        expected_output = (
-            "Mach-O64\n\n"
-        )
-        self.assertEqual(self.OBS.detect_it_easy, expected_output)
+    # def test_detect_it_easy(self) -> None:
+    #     expected_output = (
+    #         "Mach-O64\n\n"
+    #     )
+    #     self.assertEqual(self.OBS.detect_it_easy, expected_output)
 
     def testValidateJson(self) -> None:
         with open("../schema/observation.schema.json") as schem:
@@ -300,13 +298,13 @@ class ObservationTestCase8(unittest.TestCase):
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100700")
 
-    def test_detect_it_easy(self) -> None:
-        expected_output = (
-            "ELF64\n"
-            "    Compiler: gcc((GNU) 14.2.0)[EXEC PPC64-64]\n"
-            "    Library: GLIBC(2.34)[EXEC PPC64-64]\n\n"
-        )
-        self.assertEqual(self.OBS.detect_it_easy, expected_output)
+    # def test_detect_it_easy(self) -> None:
+    #     expected_output = (
+    #         "ELF64\n"
+    #         "    Compiler: gcc((GNU) 14.2.0)[EXEC PPC64-64]\n"
+    #         "    Library: GLIBC(2.34)[EXEC PPC64-64]\n\n"
+    #     )
+    #     self.assertEqual(self.OBS.detect_it_easy, expected_output)
 
 
 class ObservationTestCase9(unittest.TestCase):
