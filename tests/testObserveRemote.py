@@ -30,7 +30,7 @@ class ObservationTestCase(unittest.TestCase):
         except ValueError:
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
-        self.assertEqual(self.OBS.permissions, "0o100644")
+        self.assertEqual(self.OBS.permissions, "0o100600")
 
     def testConfigJson(self) -> None:
         vs = vars(self.OBS)
@@ -64,7 +64,7 @@ class ObservationTestCase2(unittest.TestCase):
         except ValueError:
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
-        self.assertEqual(self.OBS.permissions, "0o100644")
+        self.assertEqual(self.OBS.permissions, "0o100600")
         self.assertEqual(len(self.OBS.signatures), 0)  # this file is unsigned, should have no signatures
 
     def testValidateJson(self) -> None:
@@ -109,7 +109,7 @@ class ObservationTestCase3(unittest.TestCase):
         except ValueError:
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
-        self.assertEqual(self.OBS.permissions, "0o100755")
+        self.assertEqual(self.OBS.permissions, "0o100700")
 
     def test_detect_it_easy(self) -> None:
         expected_output = (
@@ -154,7 +154,7 @@ class ObservationTestCase4(unittest.TestCase):
         except ValueError:
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
-        self.assertEqual(self.OBS.permissions, "0o100644")
+        self.assertEqual(self.OBS.permissions, "0o100600")
 
     def test_detect_it_easy(self) -> None:
         expected_output = (
@@ -164,7 +164,6 @@ class ObservationTestCase4(unittest.TestCase):
         self.assertEqual(self.OBS.detect_it_easy, expected_output)
 
 
-# This is a Mach-O with 0 signatures, so we can test some of the logging functions
 class ObservationTestCase5(unittest.TestCase):
     @classmethod
     def setUpClass(self) -> None:
@@ -225,7 +224,7 @@ class ObservationTestCase6(unittest.TestCase):
         except ValueError:
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
-        self.assertEqual(self.OBS.permissions, "0o100755")
+        self.assertEqual(self.OBS.permissions, "0o100700")
         self.assertEqual(len(self.OBS.signatures), 0)  # unsigned, should have no signatures
 
     def test_detect_it_easy(self) -> None:
@@ -276,7 +275,7 @@ class ObservationTestCase7(unittest.TestCase):
         except ValueError:
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
-        self.assertEqual(self.OBS.permissions, "0o100644")
+        self.assertEqual(self.OBS.permissions, "0o100600")
 
 
 class ObservationTestCase8(unittest.TestCase):
@@ -297,7 +296,7 @@ class ObservationTestCase8(unittest.TestCase):
         except ValueError:
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
-        self.assertEqual(self.OBS.permissions, "0o100755")
+        self.assertEqual(self.OBS.permissions, "0o100700")
 
     def test_detect_it_easy(self) -> None:
         expected_output = (
@@ -326,7 +325,7 @@ class ObservationTestCase9(unittest.TestCase):
         except ValueError:
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
-        self.assertEqual(self.OBS.permissions, "0o100644")
+        self.assertEqual(self.OBS.permissions, "0o100600")
 
 
 class ObservationTestCase10(unittest.TestCase):
@@ -347,7 +346,7 @@ class ObservationTestCase10(unittest.TestCase):
         except ValueError:
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
-        self.assertEqual(self.OBS.permissions, "0o100777")
+        self.assertEqual(self.OBS.permissions, "0o100700")
         self.assertEqual(self.OBS.authenticode_integrity, "OK")
         self.assertEqual(self.OBS.signatures[0]["verification"], "OK")
         self.assertEqual(self.OBS.authentihash, self.OBS.signatures[0]["sha1"])
