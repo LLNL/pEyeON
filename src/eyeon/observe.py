@@ -235,7 +235,7 @@ class Observe:
             vf = ""
 
             for k, v in VERIFICATION_FLAGS.items():
-                if flag & k:
+                if flag.value & k:
                     if len(vf):
                         vf += " | "
                     vf += v

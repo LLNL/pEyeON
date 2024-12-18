@@ -119,3 +119,5 @@ In the `src` directory, there exist the bones of a data exploration applet. To g
 
 ## Future Work
 There will be a second part to this project, which will be to develop a cloud application that anonymizes and summarizes the findings to enable OT security analysis.
+
+SPDX-License-Identifier: MIT
