@@ -400,7 +400,7 @@ class Observe:
                 if not os.path.exists(database):  # create the table if database is new
                     # create table and views from sql
                     db_path = os.path.dirname(database)
-                    if db_path != '':
+                    if db_path != "":
                         os.makedirs(db_path, exist_ok=True)
                     con = duckdb.connect(database)  # creates or connects
                     con.sql(files("database").joinpath("eyeon-ddl.sql").read_text())

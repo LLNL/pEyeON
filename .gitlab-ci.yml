@@ -138,4 +138,3 @@ sbom:
     name: sbom
     paths:
       - _manifest # upload the sbom to gitlab
-

@@ -110,6 +110,7 @@ class WintapCertCorrupt(CorruptFileTestCase):
         self.configJson()
         self.validateSchema()
 
+
 class WintapBreakAuthenticode(CorruptFileTestCase):
     def setUp(self):
         self.binpath = "./binaries/Wintap/Wintap.exe"
