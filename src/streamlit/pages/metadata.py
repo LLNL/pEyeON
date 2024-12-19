@@ -3,7 +3,8 @@ from pages._base_page import BasePageLayout
 from pages.pages import app_pages
 from common.utils import sidebar_config
 from utils.config import settings
-import pandas as pd
+
+# import pandas as pd
 import streamlit as st
 import altair as alt
 import common.dqautil as du

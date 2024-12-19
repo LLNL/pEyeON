@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 
 class BasePageLayout(ABC):
-    def __init__(self):
+    def __init__(self):  # noqa: B027
         pass
 
     @abstractmethod

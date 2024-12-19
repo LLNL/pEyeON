@@ -20,15 +20,18 @@ class CommandLine:
             prog="eyeon",
             description="Eye on Operational techNology, an update tracker for OT devices",
         )
-        parser.add_argument(
+
+        shared_args = argparse.ArgumentParser(add_help=False)
+        shared_args.add_argument(
             "-o",
             "--output-dir",
             help="Path to results directory. Defaults to $pwd. Can set on $EYEON_OUTPUT.",
         )
-        parser.add_argument(
+
+        shared_args.add_argument(
             "-g", "--log-file", help="Output file for log. If none, prints to console."
         )
-        parser.add_argument(
+        shared_args.add_argument(
             "-v",
             "--log-level",
             default=logging.ERROR,
@@ -46,7 +49,9 @@ class CommandLine:
         subparsers = parser.add_subparsers(required=True, help="sub-command help")
 
         # Create parser for observe command
-        observe_parser = subparsers.add_parser("observe", help="observe help", parents=[db_parser])
+        observe_parser = subparsers.add_parser(
+            "observe", help="observe help", parents=[db_parser, shared_args]
+        )
         observe_parser.add_argument("filename", help="Name of file to scan")
         observe_parser.add_argument(
             "-l",
@@ -56,7 +61,9 @@ class CommandLine:
         observe_parser.set_defaults(func=self.observe)
 
         # Create parser for parse command
-        parse_parser = subparsers.add_parser("parse", help="parse help", parents=[db_parser])
+        parse_parser = subparsers.add_parser(
+            "parse", help="parse help", parents=[db_parser, shared_args]
+        )
         parse_parser.add_argument("dir", help="Name of directory to scan")
         parse_parser.add_argument(
             "--threads",
@@ -68,17 +75,17 @@ class CommandLine:
         parse_parser.set_defaults(func=self.parse)
 
         # Create parser for checksum command
-        parse_parser = subparsers.add_parser("checksum", help="checksum help")
-        parse_parser.add_argument("file", help="file you want to checksum")
-        parse_parser.add_argument("cksum", help="expected checksum (md5, sha1, sha256) of file")
-        parse_parser.add_argument(
+        checksum_parser = subparsers.add_parser("checksum", help="checksum help")
+        checksum_parser.add_argument("file", help="file you want to checksum")
+        checksum_parser.add_argument("cksum", help="expected checksum (md5, sha1, sha256) of file")
+        checksum_parser.add_argument(
             "-a",
             "--algorithm",
             choices=["md5", "sha1", "sha256"],
             default="md5",
             help="Specify the hash algorithm (default: md5)",
         )
-        parse_parser.set_defaults(func=self.checksum)
+        checksum_parser.set_defaults(func=self.checksum)
 
         # new
         if testargs:
