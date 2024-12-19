@@ -17,7 +17,8 @@ def simple(dbrows):
 
 def singlerow(rowsDF: DataFrame):
     """
-    Rotate the dataframe 90 degrees, making column names, column 1 values and row values columns 2-N.
+    Rotate the dataframe 90 degrees,
+    making column names, column 1 values and row values columns 2-N.
     """
     form = rowsDF.df().transpose()
     form.columns = ["Value"]
@@ -30,6 +31,6 @@ def display_node(pid_hash):
     # TODO: support multiple nodes with something like this:
     # pid_hashes=sel["nodes"]
     # node = con.executemany("select * from process_summary where pid_hash in (?)", [[pid_hashes]])
-    cols = node.columns
+    cols = node.columns  # noqa: F841
 
     singlerow(node)

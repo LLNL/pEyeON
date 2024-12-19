@@ -1,12 +1,11 @@
 [manufacturer]
-org = test_manf
+org = "test_manf"
 
 [location]
-location = test_loc
-fileLocation = /this/is/a/test
+location = "test_loc"
+fileLocation = "/this/is/a/test"
 
 [machines]
-machines = test_machine
-Os = TestOS
+machines = "test_machine"
+Os = "TestOS"
 Version = 3.01
-X-Version : 3

@@ -27,7 +27,7 @@ class CommandLine:
             "--output-dir",
             help="Path to results directory. Defaults to $pwd. Can set on $EYEON_OUTPUT.",
         )
-        
+
         shared_args.add_argument(
             "-g", "--log-file", help="Output file for log. If none, prints to console."
         )
@@ -49,7 +49,9 @@ class CommandLine:
         subparsers = parser.add_subparsers(required=True, help="sub-command help")
 
         # Create parser for observe command
-        observe_parser = subparsers.add_parser("observe", help="observe help", parents=[db_parser, shared_args])
+        observe_parser = subparsers.add_parser(
+            "observe", help="observe help", parents=[db_parser, shared_args]
+        )
         observe_parser.add_argument("filename", help="Name of file to scan")
         observe_parser.add_argument(
             "-l",
@@ -59,7 +61,9 @@ class CommandLine:
         observe_parser.set_defaults(func=self.observe)
 
         # Create parser for parse command
-        parse_parser = subparsers.add_parser("parse", help="parse help", parents=[db_parser, shared_args])
+        parse_parser = subparsers.add_parser(
+            "parse", help="parse help", parents=[db_parser, shared_args]
+        )
         parse_parser.add_argument("dir", help="Name of directory to scan")
         parse_parser.add_argument(
             "--threads",

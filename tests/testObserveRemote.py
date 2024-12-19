@@ -65,7 +65,9 @@ class ObservationTestCase2(unittest.TestCase):
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100600")
-        self.assertEqual(len(self.OBS.signatures), 0)  # this file is unsigned, should have no signatures
+        self.assertEqual(
+            len(self.OBS.signatures), 0
+        )  # this file is unsigned, should have no signatures
 
     def testValidateJson(self) -> None:
         with open("../schema/observation.schema.json") as schem:
@@ -119,7 +121,6 @@ class ObservationTestCase3(unittest.TestCase):
     #     )
     #     self.assertEqual(self.OBS.detect_it_easy, expected_output)
 
-
     def testConfigJson(self) -> None:
         vs = vars(self.OBS)
         obs_json = json.loads(self.OBS._safe_serialize(vs))
@@ -168,7 +169,9 @@ class ObservationTestCase5(unittest.TestCase):
     @classmethod
     def setUpClass(self) -> None:
         self.OBS = observe.Observe(
-            "./binaries/NET_app_config_test_no1/ConsoleApp2.exe", log_level=logging.INFO, log_file="./observe.log"
+            "./binaries/NET_app_config_test_no1/ConsoleApp2.exe",
+            log_level=logging.INFO,
+            log_file="./observe.log",
         )
 
     def testLog(self):  # check log is created and correct info logged
@@ -193,7 +196,9 @@ class ObservationTestCase5(unittest.TestCase):
                 messages.append(components[3])
 
         # check message correctly logged
-        self.assertIn("file ./binaries/NET_app_config_test_no1/ConsoleApp2.exe has no signatures.", messages)
+        self.assertIn(
+            "file ./binaries/NET_app_config_test_no1/ConsoleApp2.exe has no signatures.", messages
+        )
 
     def testToString(self):
         try:
@@ -370,8 +375,10 @@ class TestFolderPermissions(unittest.TestCase):
     def test_nonreadable_folder(self):
         self.assertRaises(PermissionError, observe.Observe, "/root")
 
+
 with open("../schema/observation.schema.json") as schem:
     schema = json.loads(schem.read())
+
 
 class TestJSONSchema(unittest.TestCase):
     def test_json_valid_required_properties(self) -> None:
