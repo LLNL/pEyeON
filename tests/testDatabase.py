@@ -97,12 +97,12 @@ class GeneralDatabaseTestCase(unittest.TestCase):
             os.remove(self.original_output)
 
 
-class MSIObserveTestCase(GeneralDatabaseTestCase):
+class ExeObserveTestCase(GeneralDatabaseTestCase):
     @classmethod
     def setUpClass(self):
-        self.original_output = "WintapSetup.msi.f06087338f3b3e301d841c29429a1c99.json"
+        self.original_output = "Wintap.exe.2950c0020a37b132718f5a832bc5cabd.json"
         self.database_output = "test_database"
-        self.OBS = observe.Observe("./binaries/cert_examples/WintapSetup.msi")
+        self.OBS = observe.Observe("./binaries/Wintap/Wintap.exe")
 
     def testCommon(self):
         self.writeObserve()
@@ -168,8 +168,8 @@ class TestErrorHandling(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.database = "test_database"
-        self.parse_path = "./binaries/cert_examples/"
-        self.observe_path = "./binaries/cert_examples/WintapSetup.msi"
+        self.parse_path = "./binaries/Wintap/"
+        self.observe_path = "./binaries/Wintap/Wintap.exe"
         self.PRS = parse.Parse(self.parse_path)
         self.OBS = observe.Observe(self.observe_path)
 
