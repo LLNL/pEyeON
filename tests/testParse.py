@@ -12,33 +12,33 @@ class X86ParseTestCase(unittest.TestCase):
         self.assertTrue(os.path.isdir("./testresults"))
         self.assertTrue(os.path.isdir("./testresults/certs"))
         self.assertTrue(
-            os.path.isfile("./testresults/notepad++.exe.0ec33611cb6594903ff88d47c78dcdab.json")
+            os.path.isfile("./testresults/Wintap.exe.2950c0020a37b132718f5a832bc5cabd.json")
         )
         self.assertTrue(
-            os.path.isfile("./testresults/7z_win32.exe.8515170956d36ef9da3082a7c22e8213.json")
+            os.path.isfile("./testresults/WintapSetup.msi.f06087338f3b3e301d841c29429a1c99.json")
         )
 
     def certExtracted(self) -> None:
         self.assertTrue(
             os.path.isfile(
-                "./testresults/certs/46011ede1c147eb2bc731a539b7c047b7ee93e48b9d3c3ba710ce132bbdfac6b.crt"  # noqa: E501
+                "./testresults/certs/552f7bdcf1a7af9e6ce672017f4f12abf77240c78e761ac203d1d9d20ac89988.crt"  # noqa: E501
             )
         )
         self.assertTrue(
             os.path.isfile(
-                "./testresults/certs/866b46dc0876c0b9c85afe6569e49352a021c255c8e7680df6ac1fdbad677033.crt"  # noqa: E501
+                "./testresults/certs/33846b545a49c9be4903c60e01713c1bd4e4ef31ea65cd95d69e62794f30b941.crt"  # noqa: E501
             )
         )  # noqa: E501
 
-    def validateNotepadJson(self) -> None:
-        with open("./testresults/notepad++.exe.0ec33611cb6594903ff88d47c78dcdab.json") as schem:
+    def validateWintapExeJson(self) -> None:
+        with open("./testresults/Wintap.exe.2950c0020a37b132718f5a832bc5cabd.json") as schem:
             schema = json.loads(schem.read())
-        self.assertEqual(schema["bytecount"], 6390616)
-        self.assertEqual(schema["filename"], "notepad++.exe")
-        self.assertEqual(schema["md5"], "0ec33611cb6594903ff88d47c78dcdab")
-        self.assertEqual(schema["sha1"], "28a2a37cf2e9550a699b138dddba4b8067c8e1b1")
+        self.assertEqual(schema["bytecount"], 201080)
+        self.assertEqual(schema["filename"], "Wintap.exe")
+        self.assertEqual(schema["md5"], "2950c0020a37b132718f5a832bc5cabd")
+        self.assertEqual(schema["sha1"], "1585373cc8ab4f22ce6e553be54eacf835d63a95")
         self.assertEqual(
-            schema["sha256"], "ccb4ff6b20689d948233807a67d9de9666229625aa6682466ef01917b01ccd3b"
+            schema["sha256"], "bdd73b73b50350a55e27f64f022db0f62dd28a0f1d123f3468d3f0958c5fcc39"
         )
         self.assertEqual(schema["authenticode_integrity"], "OK")
         self.assertEqual(schema["signatures"][0]["verification"], "OK")
@@ -49,20 +49,20 @@ class X86ParseTestCase(unittest.TestCase):
         )
         self.assertEqual(  # check that the second cert has the first issuer's sha
             schema["signatures"][0]["certs"][1]["issuer_sha256"],
-            "46011ede1c147eb2bc731a539b7c047b7ee93e48b9d3c3ba710ce132bbdfac6b",
+            "552f7bdcf1a7af9e6ce672017f4f12abf77240c78e761ac203d1d9d20ac89988",
         )
 
-    def validate7zipJson(self) -> None:
-        with open("./testresults/7z_win32.exe.8515170956d36ef9da3082a7c22e8213.json") as schem:
+    def validateWintapSetupMsiJson(self) -> None:
+        with open("./testresults/WintapSetup.msi.f06087338f3b3e301d841c29429a1c99.json") as schem:
             schema = json.loads(schem.read())
-        self.assertEqual(schema["bytecount"], 1330263)
-        self.assertEqual(schema["filename"], "7z_win32.exe")
-        self.assertEqual(schema["md5"], "8515170956d36ef9da3082a7c22e8213")
-        self.assertEqual(schema["sha1"], "66c835bdf217d1ceb2d73f7b8b27d7ccca212b38")
+        self.assertEqual(schema["bytecount"], 13679616)
+        self.assertEqual(schema["filename"], "WintapSetup.msi")
+        self.assertEqual(schema["md5"], "f06087338f3b3e301d841c29429a1c99")
+        self.assertEqual(schema["sha1"], "ffb3f6b7d55dfbd293a922e2bfa7ba0110d2ff9c")
         self.assertEqual(
-            schema["sha256"], "1ea62e6b152e4b7dbadf45289e04bf4ea7431c7928a9b3c6ba5e4c06fe368085"
+            schema["sha256"], "7bc438c474f01502c7f6e2447b7c525888c86c25c4d0703495c20fe22a71ddc0"
         )
-        self.assertFalse(schema["signatures"])  # 7zip has no signatures
+        self.assertFalse(schema["signatures"])  # WintapSetup.msi has no signatures
 
     @classmethod
     def tearDownClass(self) -> None:
@@ -72,14 +72,14 @@ class X86ParseTestCase(unittest.TestCase):
 class X86SinglethreadTestCase(X86ParseTestCase):
     @classmethod
     def setUpClass(self) -> None:
-        self.PRS = parse.Parse("./binaries/x86/", logging.WARNING, "./testParse.log")
+        self.PRS = parse.Parse("./binaries/Wintap", logging.WARNING, "./testParse.log")
         self.PRS(result_path="testresults")  # run scan
 
     def testCommon(self):
         self.checkOutputs()
         self.certExtracted()
-        self.validateNotepadJson()
-        self.validate7zipJson()
+        self.validateWintapExeJson()
+        self.validateWintapSetupMsiJson()
 
     def testLogCreated(self):
         self.assertTrue(os.path.isfile("./testParse.log"))
@@ -93,27 +93,27 @@ class X86SinglethreadTestCase(X86ParseTestCase):
 class X86TwoThreadTestCase(X86ParseTestCase):
     @classmethod
     def setUpClass(self) -> None:
-        self.PRS = parse.Parse("./binaries/x86/")
+        self.PRS = parse.Parse("./binaries/Wintap")
         self.PRS(result_path="testresults", threads=2)
 
     def testCommon(self):
         self.checkOutputs()
         self.certExtracted()
-        self.validateNotepadJson()
-        self.validate7zipJson()
+        self.validateWintapExeJson()
+        self.validateWintapSetupMsiJson()
 
 
 class X86ThreeThreadTestCase(X86ParseTestCase):
     @classmethod
     def setUpClass(self) -> None:
-        self.PRS = parse.Parse("./binaries/x86/")
+        self.PRS = parse.Parse("./binaries/Wintap")
         self.PRS(result_path="testresults", threads=3)
 
     def testCommon(self):
         self.checkOutputs()
         self.certExtracted()
-        self.validateNotepadJson()
-        self.validate7zipJson()
+        self.validateWintapExeJson()
+        self.validateWintapSetupMsiJson()
 
 
 if __name__ == "__main__":

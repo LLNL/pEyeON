@@ -1,6 +1,6 @@
 # pEyeON
 
-EyeON is a CLI tool that allows users to get software data pertaining to their machines by performing threat and inventory analysis. It can be used to quickly verify that the software and firmware used in OT environments are secure. 
+EyeON is a CLI tool that allows users to get software data pertaining to their machines by performing threat and inventory analysis. It can be used to quickly generate manifests of installed software or potential firmare patches. The manifests can be used to verify that the software and firmware used in OT environments are secure. 
 
 <p align="center">
 <img src="Photo/EyeON_Mascot.png" width="300" height="270">
@@ -9,21 +9,21 @@ EyeON is a CLI tool that allows users to get software data pertaining to their m
 
 Validation is important when installing new software. Existing tools use a hash/signature check to validate that the software has not been tampered. Knowing that the software works as intended saves a lot of time and energy, but just performing these hash/signature checks doesn't provide all the information needed to understand supply chain threats. 
 
-EyeON provides an automated, consistent process across users to scan software files used for operational technologies. It's findings can be used to generate reports that can help in tracking software patterns to shed light on supply chain risks. This tool's main capabilities are focused on increasing the security of OT software. 
+EyeON provides an automated, consistent process across users to scan software files used for operational technologies. Its findings can be used to generate reports that track software patterns, shedding light on supply chain risks. This tool's main capabilities are focused on increasing the visibility of OT software landscape. 
 
 ## Installation
 Eyeon can also be run in linux or WSL.
 
 ```bash
-git clone ssh://git@czgitlab.llnl.gov:7999/cir-software-assurance/peyeon.git
+git clone \<ssh github link\>
 ```
 or 
 ```bash
-git clone https://lc.llnl.gov/gitlab/cir-software-assurance/peyeon.git
+git clone \<https github link\>
 ```
 
 ### Dockerfile
-This dockerfile contains all the pertinent tools specific to data extraction. The three tools mainly needed are ssdeep, libmagic, and tlsh. There are a couple variables that need to be changed in order for it to work.
+This dockerfile contains all the pertinent tools specific to data extraction. The main tools needed are `ssdeep`, `libmagic`, `tlsh`, and `detect-it-easy`. There are a couple variables that need to be changed in order for it to work.
 
 Run docker build script
 ```bash
@@ -35,7 +35,7 @@ Run docker run script
 ./docker-run.sh
 ```
 
-This attaches current code directory as work directory in the container. Files that need to be scanned should go in "tests" folder. If running in a docker container, the eyeon root directory is mounted to "/workdir", so place samples in "/workdir/samples" or "/workdir/tests/samples".
+This attaches current the code directory as a working directory in the container. Files that need to be scanned should go in "tests" folder. If running in a docker container, the eyeon root directory is mounted to "/workdir", so place samples in "/workdir/samples" or "/workdir/tests/samples".
 
 Cd into workdir directory, install EyeON, and run 'rein' alias to build python dependencies:
 ```bash
@@ -64,7 +64,7 @@ eyeon observe --help
 eyeon parse --help
 ```
 
-EyeON consists of two parts - an observe call and a parse call. Observe.py works on a single file to return a suite of identifying metrics. Both of these can be run either from a library import or a CLI command.
+EyeON consists of two parts - an observe call and a parse call. `observe.py` works on a single file to return a suite of identifying metrics, whereas `parse.py` expects a folder. Both of these can be run either from a library import or a CLI command.
 
 #### Observe
 
@@ -119,3 +119,5 @@ In the `src` directory, there exist the bones of a data exploration applet. To g
 
 ## Future Work
 There will be a second part to this project, which will be to develop a cloud application that anonymizes and summarizes the findings to enable OT security analysis.
+
+SPDX-License-Identifier: MIT
