@@ -180,7 +180,7 @@ class Observe:
         try:
             dp = "/usr/bin"
             self.detect_it_easy = subprocess.run(
-                [os.path.join(dp, "diec"), file], capture_output=True, timeout=10
+                [os.path.join(dp, "diec"), file], capture_output=True, timeout=30
             ).stdout.decode("utf-8")
         except KeyError:
             log.warning("No $DIEPATH set. See README.md for more information.")
