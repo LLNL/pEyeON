@@ -114,6 +114,9 @@ class Observe:
             self.set_windows_metadata(file)
         elif lief.is_elf(file):
             self.set_telfhash(file)
+            self.set_elf_metadata(file)
+        elif lief.is_macho(file):
+            self.set_macho_metadata(file)
         else:
             self.imphash = "N/A"
         self.set_magic(file)
@@ -333,12 +336,59 @@ class Observe:
                     return os.path.join(dirpath, file)
         return None
 
+
     def set_windows_metadata(self, file: str) -> None:
         """Finds the metadata from surfactant"""
         from surfactant.infoextractors.pe_file import extract_pe_info
 
         try:
             self.metadata = extract_pe_info(file)
+        except Exception as e:
+            print(file, e)
+            self.metadata = {}
+
+    def set_elf_metadata(self, file: str) -> None:
+        """Finds the metadata from surfactant"""
+        from surfactant.infoextractors.elf_file import extract_elf_info
+
+        try:
+            test_metadata = extract_elf_info(file)
+            counter = 0
+            # fix elfnote section
+            og_elfnote = test_metadata["elfNote"]
+            new_elfnote_dict = dict()
+
+            # iterate through each elfnote dictionary
+            for elfnote_dict in og_elfnote:
+                # get type
+                type_key_value = elfnote_dict["type"]
+                # want to create this only if type_key_value has not been seen before
+                if type_key_value in new_elfnote_dict:
+                    type_key_list = new_elfnote_dict[type_key_value]
+                else:
+                    type_key_list = []
+                new_dict = dict()
+                for key in elfnote_dict:
+                    if not key == "type":
+                        # add to dict
+                        new_dict[key] = elfnote_dict[key]
+                type_key_list.append(new_dict)
+                # add the type_key into the elfNote dict
+                new_elfnote_dict[type_key_value] = type_key_list
+            new_elfnote = [new_elfnote_dict]
+            test_metadata["elfNote"] = new_elfnote
+            self.metadata = test_metadata
+
+        except Exception as e:
+            print(file, e)
+            self.metadata = {}
+
+    def set_macho_metadata(self, file: str) -> None:
+        """Finds the metadata from surfactant"""
+        from surfactant.infoextractors.mach_o_file import extract_mach_o_info
+
+        try:
+            self.metadata = extract_mach_o_info(file)
         except Exception as e:
             print(file, e)
             self.metadata = {}
