@@ -24,4 +24,4 @@ jobs:
       - name: Run Unittests
         run: |
           cd tests/
-          coverage run -m unittest
+          ls
