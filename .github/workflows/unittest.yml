@@ -14,8 +14,9 @@ jobs:
       - name: Virtual Environment Setup
         run: |
           python3 -m venv .venv
+          pwd
       - name: Install Dependencies
         run: |
           source .venv/bin/activate
-          pip install dist/eyeon-1.0-py3-none-any.whl
+          pip install dist/eyeon-*.whl
           echo "Packages installed"
