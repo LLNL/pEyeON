@@ -15,8 +15,9 @@ jobs:
         run: |
           python3 -m venv .venv
           pwd
+          ls
       - name: Install Dependencies
         run: |
           source .venv/bin/activate
-          pip install dist/eyeon-*.whl
+          pip3 install dist/eyeon*.whl
           echo "Packages installed"
