@@ -21,3 +21,7 @@ jobs:
           python3 -m build
           pip install dist/eyeon*.whl
           echo "Packages installed"
+      - name: Run Unittests
+        run: |
+          cd tests/
+          python3 -m unittest
