@@ -17,11 +17,12 @@ jobs:
       - name: Install Dependencies
         run: |
           source .venv/bin/activate
-          pip install build coverage
+          pip install build
           python3 -m build
           pip install dist/eyeon*.whl
           echo "Packages installed"
       - name: Run Unittests
         run: |
+          source .venv/bin/activate
           cd tests/
-          ls
+          coverage run -m unittest
