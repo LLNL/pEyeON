@@ -17,7 +17,7 @@ jobs:
       - name: Install Dependencies
         run: |
           source .venv/bin/activate
-          pip install build
+          pip install build coverage
           python3 -m build
           pip install dist/eyeon*.whl
           echo "Packages installed"
