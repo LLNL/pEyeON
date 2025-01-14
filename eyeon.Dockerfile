@@ -1,13 +1,16 @@
-FROM amd64/ubuntu:22.04
+FROM amd64/ubuntu:25.04
+
+RUN userdel -r ubuntu  # get rid of default user 
 
 ARG USER_ID
 ARG OUN
 
 RUN apt-get update \
-    && apt-get install -y python3 python3-pip python3-dev python3-venv libmagic1 git make wget unzip build-essential vim ssdeep jq \
-    && groupadd -g $USER_ID $OUN \
-    && useradd -ms /bin/bash $OUN -u $USER_ID -g $USER_ID \
-    && pip3 install build sphinx pre-commit black
+    && apt-get install -y python3 python3-pip python3-dev python3-venv libmagic1 git make wget unzip build-essential vim ssdeep jq curl \
+    && apt-get clean
+RUN groupadd -g $USER_ID $OUN \
+    && useradd -ms /bin/bash $OUN -u $USER_ID -g $USER_ID
+RUN apt-get install -y python3-build # python3-sphinx python3-pre-commit python3-black
 
 
 RUN echo "alias build='python3 -m build'" >> /home/$OUN/.bashrc \
@@ -25,18 +28,12 @@ RUN cd /opt && git clone https://github.com/trendmicro/tlsh.git \
     && cd /opt/tlsh \
     && ./make.sh
 
-RUN pip3 install telfhash
 
-RUN apt-get update && \
-    apt-get install -y curl && \
-    mkdir -p /opt/die && \
-    apt-get clean
-
-RUN curl -L -o /opt/die/die_3.09_Ubuntu_22.04_amd64.deb \
-    https://github.com/horsicq/DIE-engine/releases/download/3.09/die_3.09_Ubuntu_22.04_amd64.deb && \
-    apt-get install -y /opt/die/die_3.09_Ubuntu_22.04_amd64.deb && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+RUN mkdir -p /opt/die \
+    && curl -L -o /opt/die/die_3.10_Ubuntu_24.04_amd64.deb https://github.com/horsicq/DIE-engine/releases/download/3.10/die_3.10_Ubuntu_24.04_amd64.deb \
+    && apt-get install -y /opt/die/die_3.10_Ubuntu_24.04_amd64.deb \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 USER $OUN
 
