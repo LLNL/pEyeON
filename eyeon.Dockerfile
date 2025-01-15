@@ -6,12 +6,12 @@ ARG USER_ID
 ARG OUN
 
 RUN apt-get update \
-    && apt-get install -y python3 python3-pip python3-dev python3-venv libmagic1 git make wget unzip build-essential vim ssdeep jq curl \
+    && apt-get install -y \
+      python3 python3-pip python3-dev python3-venv python3-build \
+      libmagic1 git make wget unzip build-essential vim ssdeep jq curl \
     && apt-get clean
 RUN groupadd -g $USER_ID $OUN \
     && useradd -ms /bin/bash $OUN -u $USER_ID -g $USER_ID
-RUN apt-get install -y python3-build # python3-sphinx python3-pre-commit python3-black
-
 
 RUN echo "alias build='python3 -m build'" >> /home/$OUN/.bashrc \
     && echo "alias clean='rm -rf /workdir/dist'" >> /home/$OUN/.bashrc \
