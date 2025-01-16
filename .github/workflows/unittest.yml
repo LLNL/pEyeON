@@ -1,0 +1,29 @@
+name: Eyeon Unit Testing
+on: [push]
+jobs:
+  testing:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set Up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Virtual Environment Setup
+        run: |
+          python3 -m venv .venv
+      - name: Install Dependencies
+        run: |
+          source .venv/bin/activate
+          pip install build
+          python3 -m build
+          pip install dist/eyeon*.whl
+          echo "Packages installed"
+      - name: Run Unittests
+        run: |
+          source .venv/bin/activate
+          cd tests/
+          coverage run -m unittest
+          coverage report

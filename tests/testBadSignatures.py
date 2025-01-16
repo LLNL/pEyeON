@@ -61,7 +61,7 @@ class CorruptFileTestCase(unittest.TestCase):
         self.assertIsInstance(self.OBS.observation_ts, str)
 
         if magic:  # magic bytes may change during gitlab job, can't always test
-            self.assertEqual(self.OBS.magic, magic)
+            self.assertIn(magic, self.OBS.magic)
 
         # check signature and authenticode
         self.assertEqual(self.OBS.signatures[0]["verification"], sigflag)

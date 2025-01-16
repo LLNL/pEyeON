@@ -2,6 +2,10 @@
 
 EyeON is a CLI tool that allows users to get software data pertaining to their machines by performing threat and inventory analysis. It can be used to quickly generate manifests of installed software or potential firmare patches. These manifests are then submitted to a database and LLNL can use them to continuously monitor OT software for threats.
 
+[![CI Test Status](https://github.com/LLNL/pEyeON/actions/workflows/unittest.yml/badge.svg)](https://github.com/LLNL/pEyeON/actions/workflows/unittest.yml)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/LLNL/pEyeON/main.svg)]()
+[![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/LLNL/pEyeON/blob/main/LICENSE)
+
 <p align="center">
 <img src="Photo/EyeON_Mascot.png" width="300" height="270">
 
