@@ -9,3 +9,4 @@ dist
 # *.exe
 outputs/
 docs/build
+_version.py
