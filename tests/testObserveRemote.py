@@ -330,7 +330,7 @@ class ObservationTestCase9(unittest.TestCase):
         except ValueError:
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
-        self.assertEqual(self.OBS.permissions, "0o100600")
+        self.assertEqual(self.OBS.permissions, "0o100644")
 
 
 class ObservationTestCase10(unittest.TestCase):
