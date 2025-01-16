@@ -1,6 +1,6 @@
 # pEyeON
 
-EyeON is a CLI tool that allows users to get software data pertaining to their machines by performing threat and inventory analysis. It can be used to quickly generate manifests of installed software or potential firmare patches. The manifests can be used to verify that the software and firmware used in OT environments are secure. 
+EyeON is a CLI tool that allows users to get software data pertaining to their machines by performing threat and inventory analysis. It can be used to quickly generate manifests of installed software or potential firmare patches. These manifests are then submitted to a database and LLNL can use them to continuously monitor OT software for threats.
 
 <p align="center">
 <img src="Photo/EyeON_Mascot.png" width="300" height="270">
@@ -15,11 +15,11 @@ EyeON provides an automated, consistent process across users to scan software fi
 Eyeon can also be run in linux or WSL.
 
 ```bash
-git clone \<ssh github link\>
+git clone git@github.com:LLNL/pEyeON.git
 ```
 or 
 ```bash
-git clone \<https github link\>
+git clone https://github.com/LLNL/pEyeON.git
 ```
 
 ### Dockerfile
