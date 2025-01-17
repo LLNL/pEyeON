@@ -6,13 +6,13 @@ build-backend = "setuptools.build_meta"
 name = "eyeon"
 description = "EyeON update tracking utility"
 requires-python = ">=3.9"
-# authors = [
+authors = [
     {name = "Seth Lyles", email = "lyles6@llnl.gov"},
     {name = "Wangmo Tenzing", email = "tenzing1@llnl.gov"},
     {name = "Jack Mooney", email = "mooney7@llnl.gov"},
     {name = "Grant Johnson", email = "johnson30@llnl.gov"},
     {name = "Isabel Gardner", email = "gardner59@llnl.gov"},
-    {name = "Grant Espe", email = "espe1@llnl.gov"og}
+    {name = "Grant Espe", email = "espe1@llnl.gov"}
 ]
 maintainers = [
     {name = "Seth Lyles", email = "lyles6@llnl.gov"},
