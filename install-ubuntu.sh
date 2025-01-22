@@ -2,9 +2,9 @@
 
 export eyeon_dir=$(pwd)
 # dependencies
-apt update
+apt-get update
 DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC \
-    apt install -y python3 python3-pip python3-dev python3-venv \
+    apt-get install -y python3 python3-pip python3-dev python3-venv \
     libmagic1 git make wget unzip build-essential vim ssdeep jq
 
 # cmake, have to build telfhash
@@ -20,9 +20,12 @@ cd /opt && git clone https://github.com/trendmicro/tlsh.git
 cd /opt/tlsh
 ./make.sh
 
+mkdir /opt/die && cd /opt/die
+wget https://github.com/horsicq/DIE-engine/releases/download/${DIE}/die_${DIE}_Ubuntu_24.04_amd64.deb
+apt-get install -y die_${DIE}_Ubuntu_24.04_amd64.deb
+apt-get clean
+
 cd $eyeon_dir
 # set up virtual environment
 python3 -m venv eye && source eye/bin/activate
-pip install build sphinx
-python3 -m build
-pip install ./dist/eyeon-*.whl
+pip install peyeon
