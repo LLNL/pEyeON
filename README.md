@@ -18,16 +18,12 @@ EyeON provides an automated, consistent process across users to scan software fi
 ## Installation
 Eyeon can also be run in linux or WSL.
 
-The simplest install can be done with pip:
+The simplest install can be done with `pip`:
 ```bash
 pip install peyeon
 ```
 
-However, this does not install a couple key dependencies, namely libmagic, ssdeep, and tlsh. A better way to install is via the docker scripts on the github page:
-```bash
-wget 
-```
-
+However, this does not install several key dependencies, namely `libmagic`, `ssdeep`, and `tlsh`. A better way to install is via the container or install scripts on the github page.
 
 ### Dockerfile
 This dockerfile contains all the pertinent tools specific to data extraction. The main tools needed are `ssdeep`, `libmagic`, `tlsh`, and `detect-it-easy`. We have written some convenient scripts:
