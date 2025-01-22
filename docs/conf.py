@@ -47,9 +47,9 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "images.toml"]
 
 html_theme = "alabaster"
 html_theme_options = {
-    "description": "Surfactant",
+    "description": "EyeON",
     "github_user": "LLNL",
-    "github_repo": "Surfactant",
+    "github_repo": "pEyeON",
     "github_button": "true",
     "github_banner": "true",
     "badge_branch": "main",
