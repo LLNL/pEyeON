@@ -18,36 +18,40 @@ EyeON provides an automated, consistent process across users to scan software fi
 ## Installation
 Eyeon can also be run in linux or WSL.
 
+The simplest install can be done with `pip`:
 ```bash
-git clone git@github.com:LLNL/pEyeON.git
+pip install peyeon
 ```
-or 
-```bash
-git clone https://github.com/LLNL/pEyeON.git
-```
+
+However, this does not install several key dependencies, namely `libmagic`, `ssdeep`, and `tlsh`. A better way to install is via the container or install scripts on the github page.
 
 ### Dockerfile
-This dockerfile contains all the pertinent tools specific to data extraction. The main tools needed are `ssdeep`, `libmagic`, `tlsh`, and `detect-it-easy`. There are a couple variables that need to be changed in order for it to work.
-
-Run docker build script
+This dockerfile contains all the pertinent tools specific to data extraction. The main tools needed are `ssdeep`, `libmagic`, `tlsh`, and `detect-it-easy`. We have written some convenient scripts:
 ```bash
-./docker-build.sh
+wget https://github.com/LLNL/pEyeON/blob/main/docker-build.sh \
+     https://github.com/LLNL/pEyeON/blob/main/docker-run.sh \
+     https://github.com/LLNL/pEyeON/blob/main/eyeon.Dockerfile
+chmod +x docker-build.sh && ./docker-build.sh
+chmod +x docker-run.sh && ./docker-run.sh
 ```
 
-Run docker run script
-```bash
-./docker-run.sh
-```
+This attaches the current directory as a working directory in the container. Files that need to be scanned should go in "tests" folder. If running in a docker container, the eyeon root directory is mounted to "/workdir", so place samples in "/workdir/samples" or "/workdir/tests/samples".
 
-This attaches current the code directory as a working directory in the container. Files that need to be scanned should go in "tests" folder. If running in a docker container, the eyeon root directory is mounted to "/workdir", so place samples in "/workdir/samples" or "/workdir/tests/samples".
-
-Cd into workdir directory, install EyeON, and run 'rein' alias to build python dependencies:
+Cd into workdir directory:
 ```bash
 cd workdir
-rein
 ```
 
 EyeON commands should work now.
+
+Alternatively, to install on a clean Ubuntu VM:
+```bash
+wget https://github.com/LLNL/pEyeON/blob/main/install-ubuntu.sh
+chmod +x install-ubuntu.sh && ./install-ubuntu.sh
+```
+
+To request other options for install, please create an issue on our GitHub page.
+
 
 ## Usage
 
@@ -72,20 +76,20 @@ EyeON consists of two parts - an observe call and a parse call. `observe.py` wor
 
 #### Observe
 
-1. This CLI command calls the observe function and makes an observation of a file. 
+1. This CLI command calls the `observe` function and makes an observation of a file. 
 
 CLI command:
 
 ```bash
-eyeon observe notepad++.exe
+eyeon observe demo.ipynb
 ```
 
-Init file calls observe function in observe.py
+Init file calls observe function in `observe.py`
 
 ```bash
-obs = eyeon.observe.Observe("./tests/binaries/x86/notepad++/notepad++.exe")
+obs = eyeon.observe.Observe("demo.ipynb")
 ```
-The observation will output a json file containing unique identifying information such as hashes, modify date, certificate info, etc.
+The observation will create a json file containing unique identifying information such as hashes, modify date, certificate info, etc.
 
 Example json file:
 
@@ -107,7 +111,7 @@ Example json file:
 ```
 
 #### Parse
-parse.py calls observe recursively, returning an observation for each file in a directory. 
+`parse.py` calls `observe` recursively, returning an observation for each file in a directory. 
 
 ```bash
 obs = eyeon.parse.Parse(args.dir)
