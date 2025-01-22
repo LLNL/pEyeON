@@ -15,7 +15,7 @@ RUN groupadd -g $USER_ID $OUN \
 
 RUN echo "alias build='python3 -m build'" >> /home/$OUN/.bashrc \
     && echo "alias clean='rm -rf /workdir/dist'" >> /home/$OUN/.bashrc \
-    && echo "alias rein='build && pip uninstall -y eyeon && pip install /workdir/dist/eyeon*.whl'" >> /home/$OUN/.bashrc \
+    && echo "alias rein='build && pip uninstall -y eyeon && pip install /workdir/dist/peyeon*.whl'" >> /home/$OUN/.bashrc \
     && echo "alias eye='source /eye/bin/activate'" >> /home/$OUN/.bashrc
 
 RUN wget https://github.com/Kitware/CMake/releases/download/v3.30.3/cmake-3.30.3-linux-x86_64.sh \
