@@ -1,0 +1,27 @@
+name: Container Build Test
+on: 
+  pull_request:
+    branches:
+      - main  
+  push:
+    paths:
+      - eyeon.Dockerfile
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker Image
+        run: |
+            docker buildx build --build-arg "OUN=$(whoami)" --build-arg "USER_ID=$(id -u $OUN)" -f eyeon.Dockerfile --platform linux/amd64 --load -t peyeon:buildx .
+    
+      - name: Run Test Command
+        run: |
+            docker run --rm peyeon:buildx sh -c "eyeon --help"
