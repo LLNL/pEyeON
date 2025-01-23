@@ -278,7 +278,7 @@ class Observe:
         """
         Parses the certificates to build issuer_sha256 chain
         The match between issuer and subject name is case insensitive,
-         as per RFC 5280 §4.1.2.4 section 7.1
+        as per RFC 5280 4.1.2.4 section 7.1
         """
         subject_sha = {}  # dictionary that maps subject to sha256
         for sig in self.signatures:
