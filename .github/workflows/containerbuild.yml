@@ -6,7 +6,7 @@ on:
   push:
     paths:
       - eyeon.Dockerfile
-      
+
 jobs:
   build:
 
@@ -24,4 +24,4 @@ jobs:
     
       - name: Run Test Command
         run: |
-            docker run --rm peyeon:buildx sh -c "echo 'Built successfully'"
+            docker run --rm peyeon:buildx sh -c "eyeon --help"
