@@ -61,7 +61,7 @@ html_theme_options = {
 # Napoleon settings for NumPy and Google style docstrings
 napoleon_google_docstring = True
 napoleon_numpy_docstring = True
-html_favicon = html_logo = "../../Photo/EyeON_logo.png"
+html_favicon = html_logo = "../../Photo/EyeON_Mascot.png"
 html_sidebars = {"**": ["globaltoc.html", "relations.html", "searchbox.html"]}
 html_static_path = ["_static"]
 
