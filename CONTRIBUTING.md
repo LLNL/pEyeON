@@ -13,6 +13,7 @@ We welcome contributions from the community. To contribute to this project, foll
 
 1. Fork the repository on GitHub.
 2. Clone your forked repository to your local machine.
+3. ( This is an optional dependency: We are uing pre-commit hooks to adhere to coding standards. They will run automatically each time a commit is made. If any hook fails, the issues will need to be fixed before committing again.)
 
 All contributions to EyeON are made under the MIT license (MIT).
 
@@ -29,6 +30,25 @@ source venv/bin/activate
 
 ```bash
 git clone git@github.com:LLNL/pEyeON.git
+```
+
+3. Build the docker image and run the container
+To build the image, run docker-build.sh:
+```bash
+./docker-build.sh
+```
+
+To run the container, run docker-run.sh:
+```bash
+./docker-run.sh
+```
+
+4. Optional Dependencies
+There are a few dev related dependencies and 1 docs dependency that can be optionally installed. 
+```bash
+pip install .[dev, docs] or
+pip install .[dev] or
+pip install .[docs]
 ```
 
 ## Code of Conduct
