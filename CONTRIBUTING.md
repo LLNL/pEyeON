@@ -13,7 +13,7 @@ We welcome contributions from the community. To contribute to this project, foll
 
 1. Fork the repository on GitHub.
 2. Clone your forked repository to your local machine.
-3. ( This is an optional dependency: We are uing pre-commit hooks to adhere to coding standards. They will run automatically each time a commit is made. If any hook fails, the issues will need to be fixed before committing again.)
+3. We are using pre-commit hooks to adhere to coding standards. Pre-commit is a part of the optional dependencies--see below on how to install optional dependencies. The hooks will run automatically each time a commit is made. If any hook fails, the issues will need to be fixed before committing again.
 
 All contributions to EyeON are made under the MIT license (MIT).
 
@@ -43,8 +43,7 @@ To run the container, run docker-run.sh:
 ./docker-run.sh
 ```
 
-4. Optional Dependencies
-There are a few dev related dependencies and 1 docs dependency that can be optionally installed. 
+4. Optional dependencies for running pre-commit and building Sphinx documentation: 
 ```bash
 pip install .[dev, docs] or
 pip install .[dev] or
