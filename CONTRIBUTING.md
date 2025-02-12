@@ -13,6 +13,7 @@ We welcome contributions from the community. To contribute to this project, foll
 
 1. Fork the repository on GitHub.
 2. Clone your forked repository to your local machine.
+3. We are using pre-commit hooks to adhere to coding standards. Pre-commit is a part of the optional dependencies--see below on how to install. The hooks will run automatically each time a commit is made. If any hook fails, the issues will need to be fixed before committing again.
 
 All contributions to EyeON are made under the MIT license (MIT).
 
@@ -29,6 +30,26 @@ source venv/bin/activate
 
 ```bash
 git clone git@github.com:LLNL/pEyeON.git
+cd pEyeON
+```
+
+3. Install in editable mode
+```bash
+pip install -e .
+```
+
+4. Optional dependencies needed for running pre-commit and building Sphinx documentation: 
+```bash
+pip install -e ".[dev,docs]"
+```
+
+To check that pre-commit install worked, run
+```bash
+pre-commit install
+```
+It should return
+```bash
+pre-commit installed at .git/hooks/pre-commit
 ```
 
 ## Code of Conduct
