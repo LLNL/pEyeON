@@ -144,7 +144,7 @@ class Observe:
         Generator for hash functions.
         """
         hashers = {
-            "md5": hashlib.md5,
+            "md5": lambda: hashlib.md5(usedforsecurity=False),
             "sha1": hashlib.sha1,
             "sha256": hashlib.sha256,
         }
@@ -171,7 +171,7 @@ class Observe:
         import pefile
 
         pef = pefile.PE(file)
-        self.imphash = pef.get_imphash()
+        self.imphash = pef.get_imphash(usedforsecurity=False)
 
     def set_detect_it_easy(self, file: str) -> None:
         """

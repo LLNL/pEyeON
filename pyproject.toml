@@ -21,7 +21,7 @@ dependencies=[
     "jsonschema >= 4.17",
     "lief >= 0.13.2",
     "python-magic == 0.4.27",
-    "pefile >= 2024.8.26",
+    "pefile @ git+https://github.com/wangmot/pefile.git@change-imphash-default-param",
     # "unblob == 23.8.11",
     "telfhash >= 0.9.8",
     "surfactant == 0.0.0rc10",
