@@ -5,7 +5,8 @@ on:
       - main  
   push:
     paths:
-      - eyeon.Dockerfile
+      - builds/ubi8.Dockerfile
+      - builds/python3-slim-bookworm.Dockerfile
 
 jobs:
   build:

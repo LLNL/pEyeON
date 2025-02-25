@@ -1,5 +1,3 @@
 #!/bin/bash
 
-podman build -t peyeon -f ubi8.Dockerfile .
-# for docker use this line:
-# docker build --build-arg "OUN=$(whoami)" --build-arg "USER_ID=$(id -u $OUN)" -t peyeon -f ubi8.Dockerfile .
+docker build --build-arg "OUN=$(whoami)" --build-arg "USER_ID=$(id -u $OUN)" -t peyeon -f python3-slim-bookworm.Dockerfile .
