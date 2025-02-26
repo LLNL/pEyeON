@@ -10,7 +10,6 @@ on:
 
 jobs:
   docker-build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -26,3 +25,22 @@ jobs:
       - name: Run Test Command
         run: |
             docker run --rm peyeon:buildx sh -c "eyeon --help"
+            
+  podman-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Podman
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y podman
+
+      - name: Build Podman Image
+        run: |
+            podman build -f builds/ubi8.Dockerfile -t peyeon:podman .
+    
+      - name: Run Test Command
+        run: |
+            podman run --rm peyeon:podman sh -c "eyeon --help"
