@@ -1,14 +1,9 @@
-#!/bin/bash
-
 export eyeon_dir=$(pwd)
 export LANGUAGE=en_US.UTF-8
 
 # dependencies
 yum update -y && yum groupinstall -y 'Development Tools' && yum install -y \
-    python3.12 git make wget unzip python3.12-devel cmake file \
-
-# run dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm \
-#    && yum install -y file-libs
+    python3.12 git make wget unzip python3.12-devel cmake file
 
 cd /opt && git clone https://github.com/trendmicro/tlsh.git \
     && cd /opt/tlsh \
@@ -22,6 +17,12 @@ cd /opt \
 
 yum clean all
 
-cd $eyeon_dir
 # set up virtual environment
-python3.12 -m venv /eye && /eye/bin/pip install peyeon 
+cd $eyeon_dir
+python3.12 -m venv eye \
+    && /eye/bin/pip install --upgrade pip \
+    && /eye/bin/pip install peyeon
+
+#add eyeon to paths
+echo 'export PATH="/eye/bin:$PATH"' >> /root/.bashrc
+echo 'export PATH="/root/.local/bin:$PATH"' >> /root/.bashrc
