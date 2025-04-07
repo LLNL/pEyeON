@@ -28,9 +28,9 @@ However, this does not install several key dependencies, namely `libmagic`, `ssd
 ### Dockerfile
 This dockerfile contains all the pertinent tools specific to data extraction. The main tools needed are `ssdeep`, `libmagic`, `tlsh`, and `detect-it-easy`. We have written some convenient scripts:
 ```bash
-wget https://github.com/LLNL/pEyeON/blob/main/docker-build.sh \
-     https://github.com/LLNL/pEyeON/blob/main/docker-run.sh \
-     https://github.com/LLNL/pEyeON/blob/main/eyeon.Dockerfile
+wget https://raw.githubusercontent.com/LLNL/pEyeON/refs/heads/main/docker-build.sh \
+     https://raw.githubusercontent.com/LLNL/pEyeON/refs/heads/main/docker-run.sh \
+     https://raw.githubusercontent.com/LLNL/pEyeON/refs/heads/main/eyeon.Dockerfile
 chmod +x docker-build.sh && ./docker-build.sh
 chmod +x docker-run.sh && ./docker-run.sh
 ```
