@@ -52,3 +52,5 @@ USER $OUN
 ENV PATH="/eye/bin:$PATH"
 
 ENV PATH=/home/$OUN/.local/bin:$PATH
+
+WORKDIR /workdir
