@@ -11,5 +11,5 @@ if [ "$result" ]; then
     docker exec -it eyeon /bin/bash
 else
     # Doesn't exist, creates a new container called eyeon
-    docker run --name "$container_name" -p8888:8888 -p8501:8501 -it -v $(pwd):/workdir peyeon /bin/bash
+    docker run --name "$container_name" -p8888:8888 -p8501:8501 -it -v $(pwd):/workdir:Z peyeon /bin/bash
 fi

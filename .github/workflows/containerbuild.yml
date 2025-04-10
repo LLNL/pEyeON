@@ -5,11 +5,11 @@ on:
       - main  
   push:
     paths:
-      - eyeon.Dockerfile
+      - builds/ubi8.Dockerfile
+      - builds/python3-slim-bookworm.Dockerfile
 
 jobs:
-  build:
-
+  docker-build:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,7 +20,7 @@ jobs:
 
       - name: Build Docker Image
         run: |
-            docker buildx build --build-arg "OUN=$(whoami)" --build-arg "USER_ID=$(id -u $OUN)" -f eyeon.Dockerfile --platform linux/amd64 --load -t peyeon:buildx .
+            docker buildx build --build-arg "OUN=$(whoami)" --build-arg "USER_ID=$(id -u $OUN)" -f builds/python3-slim-bookworm.Dockerfile --platform linux/amd64 --load -t peyeon:buildx .
     
       - name: Run Test Command
         run: |

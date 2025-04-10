@@ -26,16 +26,26 @@ pip install peyeon
 However, this does not install several key dependencies, namely `libmagic`, `ssdeep`, and `tlsh`. A better way to install is via the container or install scripts on the github page.
 
 ### Dockerfile
-This dockerfile contains all the pertinent tools specific to data extraction. The main tools needed are `ssdeep`, `libmagic`, `tlsh`, and `detect-it-easy`. We have written some convenient scripts:
+This dockerfile contains all the pertinent tools specific to data extraction. The main tools needed are `ssdeep`, `libmagic`, `tlsh`, and `detect-it-easy`. We have written some convenient scripts for both docker and podman installations:
+
+#### Docker
 ```bash
-wget https://github.com/LLNL/pEyeON/blob/main/docker-build.sh \
-     https://github.com/LLNL/pEyeON/blob/main/docker-run.sh \
-     https://github.com/LLNL/pEyeON/blob/main/eyeon.Dockerfile
+wget https://github.com/LLNL/pEyeON/blob/main/builds/docker-build.sh \
+     https://github.com/LLNL/pEyeON/blob/main/builds/docker-run.sh \
+     https://github.com/LLNL/pEyeON/blob/main/builds/python3-slim-bookworm.Dockerfile
 chmod +x docker-build.sh && ./docker-build.sh
 chmod +x docker-run.sh && ./docker-run.sh
 ```
+#### Podman
+```bash
+wget https://github.com/LLNL/pEyeON/blob/main/builds/podman-build.sh \
+     https://github.com/LLNL/pEyeON/blob/main/builds/podman-run.sh \
+     https://github.com/LLNL/pEyeON/blob/main/builds/ubi8.Dockerfile
+chmod +x podman-build.sh && ./podman-build.sh
+chmod +x podman-run.sh && ./podman-run.sh
+```
 
-This attaches the current directory as a working directory in the container. Files that need to be scanned should go in "tests" folder. If running in a docker container, the eyeon root directory is mounted to "/workdir", so place samples in "/workdir/samples" or "/workdir/tests/samples".
+This attaches the current directory as a working directory in the container. Files that need to be scanned should go in "tests" folder. If running in a docker container, the eyeon root directory is mounted to `/workdir`, so place samples in `/workdir/samples` or `/workdir/tests/samples`.
 
 Cd into workdir directory:
 ```bash
@@ -44,10 +54,16 @@ cd workdir
 
 EyeON commands should work now.
 
-Alternatively, to install on a clean Ubuntu VM:
+### VM Install
+Alternatively, to install on a clean Ubuntu or RHEL8/9 VM:
 ```bash
-wget https://github.com/LLNL/pEyeON/blob/main/install-ubuntu.sh
+wget https://github.com/LLNL/pEyeON/blob/main/builds/install-ubuntu.sh
 chmod +x install-ubuntu.sh && ./install-ubuntu.sh
+```
+
+```bash
+wget https://github.com/LLNL/pEyeON/blob/main/builds/install-rhel.sh
+chmod +x install-rhel.sh && ./install-rhel.sh
 ```
 
 To request other options for install, please create an issue on our GitHub page.
