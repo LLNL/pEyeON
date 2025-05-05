@@ -30,17 +30,17 @@ This dockerfile contains all the pertinent tools specific to data extraction. Th
 
 #### Docker
 ```bash
-wget https://github.com/LLNL/pEyeON/blob/main/builds/docker-build.sh \
-     https://github.com/LLNL/pEyeON/blob/main/builds/docker-run.sh \
-     https://github.com/LLNL/pEyeON/blob/main/builds/python3-slim-bookworm.Dockerfile
+wget https://raw.githubusercontent.com/LLNL/pEyeON/refs/heads/main/builds/docker-build.sh \
+     https://raw.githubusercontent.com/LLNL/pEyeON/refs/heads/main/builds/docker-run.sh \
+     https://raw.githubusercontent.com/LLNL/pEyeON/refs/heads/main/builds/python3-slim-bookworm.Dockerfile
 chmod +x docker-build.sh && ./docker-build.sh
 chmod +x docker-run.sh && ./docker-run.sh
 ```
 #### Podman
 ```bash
-wget https://github.com/LLNL/pEyeON/blob/main/builds/podman-build.sh \
-     https://github.com/LLNL/pEyeON/blob/main/builds/podman-run.sh \
-     https://github.com/LLNL/pEyeON/blob/main/builds/ubi8.Dockerfile
+wget https://raw.githubusercontent.com/LLNL/pEyeON/refs/heads/main/builds/podman-build.sh \
+     https://raw.githubusercontent.com/LLNL/pEyeON/refs/heads/main/builds/podman-run.sh \
+     https://raw.githubusercontent.com/LLNL/pEyeON/refs/heads/main/builds/ubi8.Dockerfile
 chmod +x podman-build.sh && ./podman-build.sh
 chmod +x podman-run.sh && ./podman-run.sh
 ```
@@ -57,12 +57,12 @@ EyeON commands should work now.
 ### VM Install
 Alternatively, to install on a clean Ubuntu or RHEL8/9 VM:
 ```bash
-wget https://github.com/LLNL/pEyeON/blob/main/builds/install-ubuntu.sh
+wget https://raw.githubusercontent.com/LLNL/pEyeON/refs/heads/main/builds/install-ubuntu.sh
 chmod +x install-ubuntu.sh && ./install-ubuntu.sh
 ```
 
 ```bash
-wget https://github.com/LLNL/pEyeON/blob/main/builds/install-rhel.sh
+wget https://raw.githubusercontent.com/LLNL/pEyeON/refs/heads/main/builds/install-rhel.sh
 chmod +x install-rhel.sh && ./install-rhel.sh
 ```
 
