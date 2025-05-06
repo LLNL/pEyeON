@@ -20,11 +20,6 @@ cd /opt && git clone https://github.com/trendmicro/tlsh.git
 cd /opt/tlsh
 ./make.sh
 
-mkdir /opt/die && cd /opt/die
-wget https://github.com/horsicq/DIE-engine/releases/download/${DIE}/die_${DIE}_Ubuntu_24.04_amd64.deb
-apt-get install -y die_${DIE}_Ubuntu_24.04_amd64.deb
-apt-get clean
-
 cd $eyeon_dir
 # set up virtual environment
 python3 -m venv eye && source eye/bin/activate
