@@ -1,3 +1,4 @@
+#base_image needed for build tests on github. no need to adjust for end-user
 arg base_image=ubi8
 from ${base_image} as builder
 
