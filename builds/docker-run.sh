@@ -1,15 +1,22 @@
 #!/bin/bash
 
-container_name="peyeon"
+CONTAINER_NAME="peyeon"
+
+if [[ $1 == new ]]; then
+    docker stop "$CONTAINER_NAME" 2>/dev/null 1>/dev/null &
+    wait  # 
+    sleep 1
+    docker rm "$CONTAINER_NAME" 2>/dev/null
+fi
 
 # check to see if container already exists
-result=$(docker ps -a -q -f name=$container_name)
+CONTAINER_HASH=$(docker ps -a -q -f name=$CONTAINER_NAME)
 
-if [ "$result" ]; then
+if [[ "$CONTAINER_HASH" ]]; then
     # Container already exists--launch the stopped container
-    docker start "$container_name"
-    docker exec -it $container_name /bin/bash
+    docker start "$CONTAINER_NAME"
+    docker exec -it $CONTAINER_NAME /bin/bash
 else
     # Doesn't exist, creates a new container called eyeon
-    docker run --name "$container_name" -p8888:8888 -p8501:8501 -it -v $(pwd):/workdir:Z peyeon /bin/bash
+    docker run --name "$CONTAINER_NAME" -p8888:8888 -p8501:8501 -it -v $(pwd):/workdir:Z peyeon /bin/bash
 fi
