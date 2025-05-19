@@ -1,4 +1,6 @@
-from ubi8 as builder
+#base_image needed for build tests on github. no need to adjust for end-user
+arg base_image=ubi8
+from ${base_image} as builder
 
 run yum update -y && yum groupinstall -y 'Development Tools' \
     && yum install -y python3.12 git make wget unzip python3.12-devel cmake file
@@ -15,7 +17,7 @@ run cd /opt \
 
 run python3.12 -m venv /eye && /eye/bin/pip install --upgrade pip && /eye/bin/pip install peyeon  
 
-from ubi8
+from ${base_image}
 copy --from=builder /opt/tlsh/bin /opt/tlsh/bin
 copy --from=builder /eye /eye
 copy --from=builder /usr/local/bin/ssdeep /usr/local/bin/ssdeep
