@@ -3,8 +3,6 @@ FROM python:3.13.1-slim-bookworm AS builder
 ARG USER_ID
 ARG OUN
 
-ENV DIE="3.10"
-
 RUN apt-get update \
     && apt-get install -y \
        git make wget unzip build-essential python3 python3-dev python3-venv \
@@ -24,23 +22,17 @@ RUN cd /opt && git clone https://github.com/trendmicro/tlsh.git \
 
 RUN python3 -m venv /eye && /eye/bin/pip install peyeon
 
-RUN mkdir -p /opt/die && cd /opt/die \
-    && wget https://github.com/horsicq/DIE-engine/releases/download/${DIE}/die_${DIE}_Ubuntu_24.04_amd64.deb
-
 #################################################
 
 FROM python:3.13.1-slim-bookworm
-COPY --from=builder /opt/die/ /opt/die
 COPY --from=builder /opt/tlsh/bin /opt/tlsh/bin
 COPY --from=builder /eye /eye
 ARG USER_ID
 ARG OUN
 
-ENV DIE="3.10"
-
 RUN apt-get update \
     && apt-get install -y \
-      libmagic1 ssdeep jq /opt/die/die_${DIE}_Ubuntu_24.04_amd64.deb \
+      libmagic1 ssdeep jq \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
