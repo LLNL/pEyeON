@@ -106,6 +106,7 @@ class Observe:
         self.filename = os.path.basename(file)  # TODO: split into absolute path maybe?
         self.signatures = []
         self.set_detect_it_easy(file)
+        self.set_archive_type(file)
         if lief.is_pe(file):
             self.set_imphash(file)
             self.certs = {}
@@ -162,6 +163,12 @@ class Observe:
         except ImportError:
             log.warning("libmagic1 or python-magic is not installed.")
         self.magic = magic.from_file(file)
+
+    def set_archive_type(self, file: str) -> None:
+
+        from surfactant.filetypeid.id_magic import identify_file_type
+        # this will return file type for all files, only add this to JSON if archive is present
+        self.archive_type = identify_file_type(file)
 
     def set_imphash(self, file: str) -> None:
         """
