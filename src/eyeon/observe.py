@@ -17,6 +17,8 @@ import duckdb
 from importlib.resources import files
 from pathlib import Path
 from uuid import uuid4
+import tarfile
+import tempfile
 
 import lief
 import logging
@@ -37,8 +39,6 @@ log = logging.getLogger("eyeon.observe")
 #             os.remove(rm)
 #         except FileNotFoundError:
 #             pass
-
-
 class Observe:
     """
     Class to create an Observation of a file.
@@ -165,10 +165,45 @@ class Observe:
         self.magic = magic.from_file(file)
 
     def set_archive_type(self, file: str) -> None:
-
+        """
+        Sets archive type for archive files.
+        """
         from surfactant.filetypeid.id_magic import identify_file_type
-        # this will return file type for all files, only add this to JSON if archive is present
-        self.archive_type = identify_file_type(file)
+        
+        ARCHIVE_FORMATS = {"ZIP", "TAR", "GZIP", "BZIP2", "XZ"}
+        file_type = identify_file_type(file)
+
+        if file_type in ARCHIVE_FORMATS:
+            self.archive_type = file_type
+            self.decompress_archive(file, self.archive_type)
+
+    def decompress_archive(self, file: str, archive_type: str) -> None:
+        """
+        Decompress archive files using Surfactant plugin.
+        """
+        # from surfactant.infoextractors.file_decompression import check_compression_type
+
+        # decompressed = check_compression_type(file, self.archive_type)
+        # decompressed should be a folder with the extracted contents
+
+
+        temp_dir = tempfile.mkdtemp(prefix="eyeon-temp-dir")
+        print(temp_dir)
+
+        try:
+            with tarfile.open(file, "r") as tar:
+                tar.extractall(path=temp_dir)
+        except FileNotFoundError:
+            logger.error(f"File not found: {file}")
+        except tarfile.TarError as e:
+            logger.error(f"Error extracting tar file: {e}")
+
+        # Want to traverse that temp dir and call observe on each file--hmm what if it's multiple
+        # files, then do we need to call parse instead?
+        for dirpath, dirnames, filenames in os.walk(temp_dir):
+            print("Directory:", dirpath)
+            # print("Subdirectories:", dirnames)
+            # print("Files:", filenames)
 
     def set_imphash(self, file: str) -> None:
         """
