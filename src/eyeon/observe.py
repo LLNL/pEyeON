@@ -173,7 +173,6 @@ class Observe:
         
         ARCHIVE_FORMATS = {"ZIP", "TAR", "GZIP", "BZIP2", "XZ"}
         file_type = identify_file_type(file)
-
         if file_type in ARCHIVE_FORMATS:
             self.archive_type = file_type
             self.decompress_archive(file, self.archive_type)
@@ -192,7 +191,7 @@ class Observe:
         temp_dir = tempfile.mkdtemp(prefix="eyeon-temp-dir")
         print(temp_dir)
 
-        # TODO: Need to grab the archive's UUID and somehow get it to its children and 
+        # TODO: Need to grab the archive's UUID and tie it to its extracted files
 
         try:
             with tarfile.open(file, "r") as tar:
@@ -202,18 +201,8 @@ class Observe:
         except tarfile.TarError as e:
             logger.error(f"Error extracting tar file: {e}")
 
-        # Want to traverse that temp dir and call observe on each file--hmm what if it's multiple
-        # files, then do we need to call parse instead?
-        for dirpath, dirnames, filenames in os.walk(temp_dir):
-            print("Directory:", dirpath)
-            
-            # TODO
-            # configure number of threads to use based off how many files in temp_dir
-            parse_temp_dir = Parse(temp_dir)
-            parse_temp_dir(result_path = "./results", threads=4)
-            
-            # print("Subdirectories:", dirnames)
-            # print("Files:", filenames)
+        parse_temp_dir = Parse(temp_dir)
+        parse_temp_dir(result_path="./results", threads=4)
 
     def set_imphash(self, file: str) -> None:
         """
@@ -362,22 +351,6 @@ class Observe:
             return
         self.telfhash = telfhash.telfhash(file)[0]["telfhash"]
 
-    # def set_ssdeep(self, file: str) -> None:
-    #     """
-    #     Computes fuzzy hashing using ssdeep.
-    #     See https://ssdeep-project.github.io/ssdeep/index.html.
-    #     """
-    #     try:
-    #         out = subprocess.run(
-    #             ["ssdeep", "-b", file], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
-    #         ).stdout.decode("utf-8")
-    #     except FileNotFoundError:
-    #         log.warning("ssdeep is not installed.")
-    #         return
-    #     out = out.split("\n")[1]  # header/hash/emptystring
-    #     out = out.split(",")[0]  # hash/filename
-    #     self.ssdeep = out
-
     def set_ssdeep(self, file: str) -> None:
         """
         Computes fuzzy hashing using ssdeep.
@@ -390,14 +363,14 @@ class Observe:
         except FileNotFoundError:
             log.warning("ssdeep is not installed.")
             return
-
         lines = out.split("\n")
-        if len(lines) > 1 and lines[1].strip():  # Check if second line exists and is not empty
-            hash_line = lines[1]
-            self.ssdeep = hash_line.split(",")[0]
+        if len(lines) > 1 and lines[1].strip(): # check second line exists and is not empty - avoids IndexError
+            second_line = lines[1]
+            self.ssdeep = second_line.split(",")[0]
         else:
             log.warning(f"ssdeep output unexpected for file {file}: {out!r}")
             self.ssdeep = None
+
 
     def find_config(self, dir: str = "."):
         """
