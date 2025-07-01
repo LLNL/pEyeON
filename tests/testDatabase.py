@@ -10,15 +10,89 @@ from eyeon import observe
 from eyeon import parse
 import collections
 
+def testEmptyInputFileObserve(self):
+    # Create an empty file named 'empty.json' for testing
+    empty_file = "empty.json"
+    with open(empty_file, "w") as f:
+        pass  # This ensures the file exists but contains no data
+
+    # Initialize the Observe object with the empty file
+    obs = observe.Observe(empty_file)
+    
+    # Attempt to write JSON output from the empty file.
+    # This should raise an exception (ideally a specific one, e.g., ValueError if that's what your code raises).
+    # The test will pass if the expected exception is raised, indicating correct error handling for empty input.
+    with self.assertRaises(Exception):  # Replace Exception with the specific one if you know it
+        obs.write_json()
+    
+    # Clean up: remove the empty file after the test completes
+    os.remove(empty_file)
+
+def testNonexistentInputFileObserve(self):
+    # Try to create an Observe object with a file that does not exist
+    obs = observe.Observe("does_not_exist.json")
+    
+    # Attempting to write JSON output should raise a FileNotFoundError,
+    # since the input file does not exist.
+    # This test ensures the code correctly handles missing files.
+    with self.assertRaises(FileNotFoundError):
+        obs.write_json()
+
+
+class TestObservation(unittest.TestCase):
+    def test_set_issuer_sha256_case_insensitive(self):
+        # Create a new Observation object for testing
+        obs = Observation()
+        
+        # Manually set the 'signatures' attribute to include a list of certificates.
+        # The certificates are arranged to test issuer/subject relationships and case insensitivity.
+        obs.signatures = [
+            {
+                "certs": [
+                    {
+                        "subject_name": "CN=Root CA",
+                        "issuer_name": "CN=Root CA",
+                        "sha256": "rootsha"
+                    },
+                    {
+                        "subject_name": "CN=Intermediate CA",
+                        "issuer_name": "CN=Root CA",
+                        "sha256": "intersha"
+                    },
+                    {
+                        "subject_name": "CN=Leaf",
+                        "issuer_name": "cn=intermediate ca",  # Lowercase to test case-insensitive comparison
+                        "sha256": "leafsha"
+                    }
+                ]
+            }
+        ]
+        
+        # Call the method under test, which should populate the 'issuer_sha256' field for each cert
+        obs.set_issuer_sha256()
+        certs = obs.signatures[0]["certs"]
+        
+        # Check that the issuer_sha256 for the root CA is set to its own sha256 (self-signed)
+        self.assertEqual(certs[0]["issuer_sha256"], "rootsha")
+        
+        # Check that the intermediate CA's issuer_sha256 is set to the root CA's sha256
+        self.assertEqual(certs[1]["issuer_sha256"], "rootsha")
+        
+        # Check that the leaf's issuer_sha256 is set to the intermediate CA's sha256,
+        # confirming that issuer_name matching is case-insensitive
+        self.assertEqual(certs[2]["issuer_sha256"], "intersha")
 
 class GeneralDatabaseTestCase(unittest.TestCase):
+    
     def writeObserve(self):
         self.OBS.write_json()
         self.OBS.write_database(self.database_output)
 
+    # Writes parsed data to database
     def writeParse(self):
         self.PRS.write_database(self.database_output, self.original_output)
 
+    # Asserts the out file exists
     def checkDatabaseCreated(self) -> None:
         self.assertTrue(os.path.isfile(self.database_output))
 
@@ -98,7 +172,6 @@ class GeneralDatabaseTestCase(unittest.TestCase):
         else:
             os.remove(self.original_output)
 
-
 class ExeObserveTestCase(GeneralDatabaseTestCase):
     @classmethod
     def setUpClass(self):
@@ -110,7 +183,6 @@ class ExeObserveTestCase(GeneralDatabaseTestCase):
         self.writeObserve()
         self.checkDatabaseCreated()
         self.validateDatabaseContents()
-
 
 class ElfObserveTestCase(GeneralDatabaseTestCase):
     @classmethod

@@ -6,6 +6,9 @@ import logging
 
 from eyeon import parse
 
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 class X86ParseTestCase(unittest.TestCase):
     def checkOutputs(self) -> None:  # these files + paths should be created by parse
