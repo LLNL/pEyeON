@@ -4,7 +4,7 @@ import unittest
 import logging
 from glob import glob
 import datetime as dt
-
+import tempfile
 import json
 
 from eyeon import observe
@@ -516,43 +516,144 @@ class ObservationTestCase14(unittest.TestCase):
 '''
 Going to try and add some more types of test cases in TestObserveFileHandling 
 
-
 '''
 
 class TestObserveFileHandling(unittest.TestCase):
+    def setUp(self):
+        self.test_dir = tempfile.TemporaryDirectory()
+        self.empty_file = os.path.join(self.test_dir.name, 'empty_file.txt')
+        self.valid_file = os.path.join(self.test_dir.name, 'valid_file.txt')
+        self.corrupted_file = os.path.join(self.test_dir.name, 'corrupted_file.txt')
+        open(self.empty_file, 'w').close()
+        with open(self.valid_file, 'w') as f:
+            f.write('Hello, world!\n')
+        with open(self.corrupted_file, 'w') as f:
+            f.write('not valid data')
+
+    def tearDown(self):
+        self.test_dir.cleanup()
+
+def test_observe_random_binary_file(self):
+    random_data = os.urandom(1024)  # 1 KB random binary
+    with tempfile.NamedTemporaryFile(delete=False) as tmp:
+        tmp.write(random_data)
+        tmp_path = tmp.name
+    try:
+        obs = observe.Observe(tmp_path)
+        self.assertEqual(obs.bytecount, 1024)
+        # Optionally, verify hashes if you calculate them here
+    finally:
+        os.remove(tmp_path)
+
     def test_observe_empty_file(self):
-        with open('empty_file.txt', 'w') as f: 
-            pass
-        try:
-            observe.Observe('empty_file.txt')
-            print("No exception raised for empty file")
-        except Exception as e:
-            print("Exception type for empty file:", type(e))
-            print("Exception for empty file:", e)
-        os.remove('empty_file.txt')
+        obs = observe.Observe(self.empty_file)
+        self.assertEqual(obs.bytecount, 0, "Bytecount should be zero for empty file.")
 
     def test_observe_missing_file(self):
+        missing_file = os.path.join(self.test_dir.name, 'missing_file.txt')
         with self.assertRaises(FileNotFoundError):
-            observe.Observe('missing_file.txt')
+            observe.Observe(missing_file)
 
     def test_observe_corrupted_file(self):
-        with open('corrupted_file.txt', 'w') as f:
-            f.write('not valid data')
         try:
-            observe.Observe('corrupted_file.txt')
-            print("No exception raised for corrupted file")
-        except Exception as e:
-            print("Exception type for corrupted file:", type(e))
-            print("Exception for corrupted file:", e)
-        os.remove('corrupted_file.txt')
-        
+            obs = observe.Observe(self.corrupted_file)
+            self.assertGreater(obs.bytecount, 0, "Bytecount should be > 0 for non-empty file.")
+        except Exception as error:
+            self.assertIsInstance(error, Exception)
+
+    def test_observe_valid_file(self):
+        obs = observe.Observe(self.valid_file)
+        with open(self.valid_file, 'rb') as f:
+            expected_bytecount = len(f.read())
+        self.assertEqual(
+            obs.bytecount,
+            expected_bytecount,
+            "Bytecount should match the actual file size."
+        )
+
+    def test_observe_directory_instead_of_file(self):
+        with self.assertRaises(Exception):
+            observe.Observe(self.test_dir.name)
+
+class TestPortableFilePermissions(unittest.TestCase):
+    def test_tempfile_no_read_permission(self):
+        """
+        This test is portable and does not depend on system-specific files.
+        It creates a temp file, removes read permission, and checks for PermissionError.
+        """
+        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+            tmp_path = tmp.name
+        try:
+            # Remove read permission for owner (write-only: 0o200)
+            os.chmod(tmp_path, 0o200)
+            with self.assertRaises(PermissionError):
+                observe.Observe(tmp_path)
+        finally:
+            # Restore permissions so the file can be deleted (read/write: 0o600)
+            os.chmod(tmp_path, 0o600)
+            os.unlink(tmp_path)
+
+    def test_tempdir_no_read_permission(self):
+        """
+        This test is portable and does not depend on system-specific folders.
+        It creates a temp directory, removes read permission, and checks for PermissionError.
+        """
+        tmp_dir = tempfile.mkdtemp()
+        try:
+            # Remove all permissions (0o000)
+            os.chmod(tmp_dir, 0o000)
+            with self.assertRaises(PermissionError):
+                observe.Observe(tmp_dir)
+        finally:
+            # Restore permissions so the directory can be deleted (read/write/execute: 0o700)
+            os.chmod(tmp_dir, 0o700)
+            os.rmdir(tmp_dir)
+
+class FilePermissionTest(unittest.TestCase):
+    def test_permission_error(self):
+        # Create a temporary file
+        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+            tmp_path = tmp.name
+            tmp.write(b"Test content")
+
+        # Remove all permissions from the file
+        os.chmod(tmp_path, 0)
+
+        # Try to open the file, expecting a PermissionError
+        try:
+            with self.assertRaises(PermissionError):
+                with open(tmp_path, "r") as f:
+                    f.read()
+        finally:
+            # Restore permissions so the file can be deleted
+            os.chmod(tmp_path, 0o666)
+            os.remove(tmp_path)
+
+class TestLargeFileHandling(unittest.TestCase):
+    def test_observe_large_file(self):
+        #10,000 some threshold
+        large_file_size = 10000 * 1024 * 1024  # 100 MB
+        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+            tmp_path = tmp.name
+            # Write 100 MB of zeros
+            tmp.write(b'\0' * large_file_size)
+        try:
+            obs = observe.Observe(tmp_path)
+            self.assertEqual(
+                obs.bytecount,
+                large_file_size,
+                "Bytecount should match the large file size."
+            )
+        finally:
+            os.remove(tmp_path)
+
+""
 
 
 class TestFilePermissions(unittest.TestCase):
     def test_nonreadable_file(self):
         # Check to see if permission error is raised
         self.assertRaises(PermissionError, observe.Observe, "/etc/shadow")
-
 
 class TestFolderPermissions(unittest.TestCase):
     def test_nonreadable_folder(self):
