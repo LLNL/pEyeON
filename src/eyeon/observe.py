@@ -17,6 +17,9 @@ import duckdb
 from importlib.resources import files
 from pathlib import Path
 from uuid import uuid4
+import tarfile
+import tempfile
+
 
 import lief
 import logging
@@ -37,8 +40,6 @@ log = logging.getLogger("eyeon.observe")
 #             os.remove(rm)
 #         except FileNotFoundError:
 #             pass
-
-
 class Observe:
     """
     Class to create an Observation of a file.
@@ -106,6 +107,7 @@ class Observe:
         self.filename = os.path.basename(file)  # TODO: split into absolute path maybe?
         self.signatures = []
         self.set_detect_it_easy(file)
+        self.set_archive_type(file)
         if lief.is_pe(file):
             self.set_imphash(file)
             self.certs = {}
@@ -162,6 +164,45 @@ class Observe:
         except ImportError:
             log.warning("libmagic1 or python-magic is not installed.")
         self.magic = magic.from_file(file)
+
+    def set_archive_type(self, file: str) -> None:
+        """
+        Sets archive type for archive files.
+        """
+        from surfactant.filetypeid.id_magic import identify_file_type
+        
+        ARCHIVE_FORMATS = {"ZIP", "TAR", "GZIP", "BZIP2", "XZ"}
+        file_type = identify_file_type(file)
+        if file_type in ARCHIVE_FORMATS:
+            self.archive_type = file_type
+            self.decompress_archive(file, self.archive_type)
+
+    def decompress_archive(self, file: str, archive_type: str) -> None:
+        """
+        Decompress archive files using Surfactant plugin.
+        """
+        from eyeon.parse import Parse
+        # from surfactant.infoextractors.file_decompression import check_compression_type
+
+        # decompressed = check_compression_type(file, self.archive_type)
+        # decompressed should be a folder with the extracted contents
+
+
+        temp_dir = tempfile.mkdtemp(prefix="eyeon-temp-dir")
+        print(temp_dir)
+
+        # TODO: Need to grab the archive's UUID and tie it to its extracted files
+
+        try:
+            with tarfile.open(file, "r") as tar:
+                tar.extractall(path=temp_dir)
+        except FileNotFoundError:
+            logger.error(f"File not found: {file}")
+        except tarfile.TarError as e:
+            logger.error(f"Error extracting tar file: {e}")
+
+        parse_temp_dir = Parse(temp_dir)
+        parse_temp_dir(result_path="./results", threads=4)
 
     def set_imphash(self, file: str) -> None:
         """
@@ -322,9 +363,14 @@ class Observe:
         except FileNotFoundError:
             log.warning("ssdeep is not installed.")
             return
-        out = out.split("\n")[1]  # header/hash/emptystring
-        out = out.split(",")[0]  # hash/filename
-        self.ssdeep = out
+        lines = out.split("\n")
+        if len(lines) > 1 and lines[1].strip(): # check second line exists and is not empty - avoids IndexError
+            second_line = lines[1]
+            self.ssdeep = second_line.split(",")[0]
+        else:
+            log.warning(f"ssdeep output unexpected for file {file}: {out!r}")
+            self.ssdeep = None
+
 
     def find_config(self, dir: str = "."):
         """
