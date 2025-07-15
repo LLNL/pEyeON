@@ -373,7 +373,7 @@ class ObservationTestCase10(unittest.TestCase):
 
 '''
 Surfactant Binaries
-Now we must write 4 seperate unit tests cases for each different file type 
+4 seperate unit tests cases for each different file type 
 
 Test case 11: cpio
 Test case 12: coff
@@ -513,141 +513,213 @@ class ObservationTestCase14(unittest.TestCase):
         except FileNotFoundError:
             pass
 
-'''
-Going to try and add some more types of test cases in TestObserveFileHandling 
+#Risc V binary 
+class ObservationTestCase15(unittest.TestCase):
+    @classmethod
+    def setUp(self) -> None:
+        self.OBS = observe.Observe("./binaries/ELF_object_riscv/nop.o")
 
-'''
+    def testVars(self) -> None:
+        self.assertEqual(self.OBS.bytecount, 960)
+        self.assertEqual(self.OBS.filename, "nop.o")
+        self.assertEqual(self.OBS.md5, "0da6a6d636c44b249f142b7a298a1bf2")
+        self.assertEqual(self.OBS.sha1, "1a4b87c3c3e48cc18bf961b31678b0fc25983840")
+        self.assertEqual(
+            self.OBS.sha256, "245cd762ebae76573107cd7ff3d0494facd3450f439e70839d8f6e46d8cd0104"
+        )
+        try:
+            dt.datetime.strptime(self.OBS.modtime, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            self.fail()
+        self.assertIsInstance(self.OBS.observation_ts, str)
+        self.assertEqual(self.OBS.permissions, "0o100644")
+
+    def testConfigJson(self) -> None:
+        vs = vars(self.OBS)
+        obs_json = json.loads(self.OBS._safe_serialize(vs))
+        assert "defaults" in obs_json, "defaults not in json"
+
+    @classmethod
+    def tearDownClass(self) -> None:
+        try:
+            for j in glob("*.json"):
+                os.remove(j)
+        except FileNotFoundError:
+            pass
+
 
 class TestObserveFileHandling(unittest.TestCase):
     def setUp(self):
+        # Set up a temporary directory with various test files:
+        # - an empty file
+        # - a valid small text file
+        # - a corrupted file with non-standard content
         self.test_dir = tempfile.TemporaryDirectory()
         self.empty_file = os.path.join(self.test_dir.name, 'empty_file.txt')
-        self.valid_file = os.path.join(self.test_dir.name, 'valid_file.txt')
         self.corrupted_file = os.path.join(self.test_dir.name, 'corrupted_file.txt')
+
         open(self.empty_file, 'w').close()
-        with open(self.valid_file, 'w') as f:
-            f.write('Hello, world!\n')
-        with open(self.corrupted_file, 'w') as f:
-            f.write('not valid data')
+        # Simulate a structurally corrupted ELF file (truncated magic bytes)
+        with open(self.corrupted_file, 'wb') as f:
+            f.write(b'\x7FELF'[:2])  # Incomplete ELF magic
+
 
     def tearDown(self):
+        # Remove the temporary directory and its contents
         self.test_dir.cleanup()
 
-def test_observe_random_binary_file(self):
-    random_data = os.urandom(1024)  # 1 KB random binary
-    with tempfile.NamedTemporaryFile(delete=False) as tmp:
-        tmp.write(random_data)
-        tmp_path = tmp.name
-    try:
-        obs = observe.Observe(tmp_path)
-        self.assertEqual(obs.bytecount, 1024)
-        # Optionally, verify hashes if you calculate them here
-    finally:
-        os.remove(tmp_path)
-
     def test_observe_empty_file(self):
+        # An empty file should return a bytecount of 0
         obs = observe.Observe(self.empty_file)
         self.assertEqual(obs.bytecount, 0, "Bytecount should be zero for empty file.")
 
+    def test_observe_corrupted_file(self):
+        # Corrupted content shouldn't crash Observe; it should still read the file
+        obs = observe.Observe(self.corrupted_file)
+        self.assertGreater(obs.bytecount, 0, "Bytecount should be > 0 for corrupted file.")
+
     def test_observe_missing_file(self):
+        # Observe should raise FileNotFoundError for nonexistent paths
         missing_file = os.path.join(self.test_dir.name, 'missing_file.txt')
         with self.assertRaises(FileNotFoundError):
             observe.Observe(missing_file)
 
-    def test_observe_corrupted_file(self):
-        try:
-            obs = observe.Observe(self.corrupted_file)
-            self.assertGreater(obs.bytecount, 0, "Bytecount should be > 0 for non-empty file.")
-        except Exception as error:
-            self.assertIsInstance(error, Exception)
-
-    def test_observe_valid_file(self):
-        obs = observe.Observe(self.valid_file)
-        with open(self.valid_file, 'rb') as f:
-            expected_bytecount = len(f.read())
-        self.assertEqual(
-            obs.bytecount,
-            expected_bytecount,
-            "Bytecount should match the actual file size."
-        )
-
     def test_observe_directory_instead_of_file(self):
+        # Directories are invalid input and should raise an error
+        # parse should be used!
         with self.assertRaises(Exception):
             observe.Observe(self.test_dir.name)
+
+    def test_observe_random_binary_file(self):
+        # Creates a temporary file with 1KB of random binary data
+        random_data = os.urandom(1024)
+        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+            tmp.write(random_data)
+            tmp_path = tmp.name
+        try:
+            obs = observe.Observe(tmp_path)
+            self.assertEqual(obs.bytecount, 1024)
+        finally:
+            os.remove(tmp_path)
 
 class TestPortableFilePermissions(unittest.TestCase):
     def test_tempfile_no_read_permission(self):
         """
-        This test is portable and does not depend on system-specific files.
-        It creates a temp file, removes read permission, and checks for PermissionError.
+        Ensure Observe raises PermissionError when file has no read permission.
         """
         with tempfile.NamedTemporaryFile(delete=False) as tmp:
             tmp_path = tmp.name
         try:
-            # Remove read permission for owner (write-only: 0o200)
+            # Remove read permission (write-only)
             os.chmod(tmp_path, 0o200)
             with self.assertRaises(PermissionError):
                 observe.Observe(tmp_path)
         finally:
-            # Restore permissions so the file can be deleted (read/write: 0o600)
+            # Restore permissions for deletion
             os.chmod(tmp_path, 0o600)
             os.unlink(tmp_path)
 
     def test_tempdir_no_read_permission(self):
         """
-        This test is portable and does not depend on system-specific folders.
-        It creates a temp directory, removes read permission, and checks for PermissionError.
+        Ensure Observe raises PermissionError when directory has no read permission.
         """
         tmp_dir = tempfile.mkdtemp()
         try:
-            # Remove all permissions (0o000)
+            # Remove all permissions from the directory
             os.chmod(tmp_dir, 0o000)
             with self.assertRaises(PermissionError):
                 observe.Observe(tmp_dir)
         finally:
-            # Restore permissions so the directory can be deleted (read/write/execute: 0o700)
             os.chmod(tmp_dir, 0o700)
             os.rmdir(tmp_dir)
 
+
 class FilePermissionTest(unittest.TestCase):
-    def test_permission_error(self):
-        # Create a temporary file
+    def test_permission_error_on_read(self):
+        """
+        Sanity check: Python itself should raise PermissionError when reading a locked file.
+        Helps verify test environment behaves as expected.
+        """
         with tempfile.NamedTemporaryFile(delete=False) as tmp:
             tmp_path = tmp.name
             tmp.write(b"Test content")
 
-        # Remove all permissions from the file
-        os.chmod(tmp_path, 0)
-
-        # Try to open the file, expecting a PermissionError
+        os.chmod(tmp_path, 0)  # no permissions at all
         try:
             with self.assertRaises(PermissionError):
                 with open(tmp_path, "r") as f:
                     f.read()
         finally:
-            # Restore permissions so the file can be deleted
             os.chmod(tmp_path, 0o666)
             os.remove(tmp_path)
 
+
 class TestLargeFileHandling(unittest.TestCase):
     def test_observe_large_file(self):
-        #10,000 some threshold
-        large_file_size = 10000 * 1024 * 1024  # 100 MB
+        """
+        Test Observe's ability to handle a large 100MB file.
+        Ensures bytecount is correct and no memory issues arise.
+        """
+
+        #seems anything on the order of 100,000 leads to a memory error
+        #converts to bytes so 1000 megabytes
+        #10k is slow
+        large_file_size = 100 * 1024 * 1024  
         with tempfile.NamedTemporaryFile(delete=False) as tmp:
-            tmp_path = tmp.name
-            # Write 100 MB of zeros
             tmp.write(b'\0' * large_file_size)
+            tmp_path = tmp.name
         try:
             obs = observe.Observe(tmp_path)
-            self.assertEqual(
-                obs.bytecount,
-                large_file_size,
-                "Bytecount should match the large file size."
-            )
+            self.assertEqual(obs.bytecount, large_file_size)
         finally:
             os.remove(tmp_path)
 
-""
+
+class TestWriteJson(unittest.TestCase):
+    def test_write_json_creates_output(self):
+        """
+        Verify that write_json() produces a properly named and structured JSON file.
+        """
+        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+            tmp.write(b"Hello World")
+            path = tmp.name
+
+        obs = observe.Observe(path)
+        tmp_dir = tempfile.mkdtemp()
+        obs.write_json(tmp_dir)
+
+        json_path = os.path.join(tmp_dir, f"{obs.filename}.{obs.md5}.json")
+        self.assertTrue(os.path.exists(json_path), "JSON output file not created.")
+
+        # Load the JSON file and confirm basic fields match expected values
+        with open(json_path) as f:
+            data = json.load(f)
+        self.assertEqual(data["filename"], os.path.basename(path))
+        self.assertEqual(data["bytecount"], 11)
+
+        os.remove(path)
+        os.remove(json_path)
+
+class TestUnknownFileType(unittest.TestCase):
+    def test_imphash_set_to_na_for_junk_file(self):
+        """
+        Files that are not recognized as PE, ELF, or Mach-O should default to imphash='N/A'.
+        """
+        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+            tmp.write(b"This is not a real binary format.")
+            path = tmp.name
+
+        obs = observe.Observe(path)
+
+        self.assertEqual(
+            obs.imphash,
+            "N/A",
+            "imphash should be 'N/A' for unrecognized file types"
+        )
+
+        os.remove(path)
+"END"
+
 
 
 class TestFilePermissions(unittest.TestCase):
