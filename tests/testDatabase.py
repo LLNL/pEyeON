@@ -42,7 +42,7 @@ def testNonexistentInputFileObserve(self):
 class TestObservation(unittest.TestCase):
     def test_set_issuer_sha256_case_insensitive(self):
         # Create a new Observation object for testing
-        obs = Observation()
+        obs = observe.Observe()
         
         # Manually set the 'signatures' attribute to include a list of certificates.
         # The certificates are arranged to test issuer/subject relationships and case insensitivity.
