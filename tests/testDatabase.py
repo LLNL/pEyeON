@@ -41,8 +41,12 @@ def testNonexistentInputFileObserve(self):
 
 class TestObservation(unittest.TestCase):
     def test_set_issuer_sha256_case_insensitive(self):
-        # Create a new Observation object for testing
-        obs = observe.Observe()
+        # Create a dummy file that Observe requires during initialization
+        with open("dummy.json", "w") as f:
+            f.write("{}")  # Write an empty JSON object
+
+        # Initialize Observe with the dummy file
+        obs = observe.Observe("dummy.json")
         
         # Manually set the 'signatures' attribute to include a list of certificates.
         # The certificates are arranged to test issuer/subject relationships and case insensitivity.
