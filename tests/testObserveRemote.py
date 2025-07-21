@@ -513,7 +513,7 @@ class ObservationTestCase14(unittest.TestCase):
         except FileNotFoundError:
             pass
 
-#Risc V binary 
+#Risc V  
 class ObservationTestCase15(unittest.TestCase):
     @classmethod
     def setUp(self) -> None:
@@ -547,6 +547,73 @@ class ObservationTestCase15(unittest.TestCase):
         except FileNotFoundError:
             pass
 
+#8051
+class ObservationTestCase16(unittest.TestCase):
+    @classmethod
+    def setUp(self) -> None:
+        self.OBS = observe.Observe("./binaries/8051_test/minimal_8051.hex")
+
+    def testVars(self) -> None:
+        self.assertEqual(self.OBS.bytecount, 352)
+        self.assertEqual(self.OBS.filename, "minimal_8051.hex")
+        self.assertEqual(self.OBS.md5, "cc791e7512904801d4020e580f02a19d")
+        self.assertEqual(self.OBS.sha1, "2b559b7893cfdd8257c1f0412ca706fadc219689")
+        self.assertEqual(
+            self.OBS.sha256, "8348f1808c98bb3d62e4d9ff57c02c4486d1d8c6fba726c8aa6335aad1b5ca6b"
+        )
+        try:
+            dt.datetime.strptime(self.OBS.modtime, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            self.fail()
+        self.assertIsInstance(self.OBS.observation_ts, str)
+        self.assertEqual(self.OBS.permissions, "0o100644")
+
+    def testConfigJson(self) -> None:
+        vs = vars(self.OBS)
+        obs_json = json.loads(self.OBS._safe_serialize(vs))
+        assert "defaults" in obs_json, "defaults not in json"
+
+    @classmethod
+    def tearDownClass(self) -> None:
+        try:
+            for j in glob("*.json"):
+                os.remove(j)
+        except FileNotFoundError:
+            pass
+
+#Super H
+class ObservationTestCase17(unittest.TestCase):
+    @classmethod
+    def setUp(self) -> None:
+        self.OBS = observe.Observe("./binaries/superH/sh_test.o")
+
+    def testVars(self) -> None:
+        self.assertEqual(self.OBS.bytecount, 688)
+        self.assertEqual(self.OBS.filename, "sh_test.o")
+        self.assertEqual(self.OBS.md5, "947286ec060b768292c8255cfc8de287")
+        self.assertEqual(self.OBS.sha1, "3d7779af1da2eff5536530c46b2622805cdb3a50")
+        self.assertEqual(
+            self.OBS.sha256, "f1271a58a4f09a263027eed76e64fba5d1f3f790cd79adc79ad9d215c537a84f"
+        )
+        try:
+            dt.datetime.strptime(self.OBS.modtime, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            self.fail()
+        self.assertIsInstance(self.OBS.observation_ts, str)
+        self.assertEqual(self.OBS.permissions, "0o100644")
+
+    def testConfigJson(self) -> None:
+        vs = vars(self.OBS)
+        obs_json = json.loads(self.OBS._safe_serialize(vs))
+        assert "defaults" in obs_json, "defaults not in json"
+
+    @classmethod
+    def tearDownClass(self) -> None:
+        try:
+            for j in glob("*.json"):
+                os.remove(j)
+        except FileNotFoundError:
+            pass
 
 class TestObserveFileHandling(unittest.TestCase):
     def setUp(self):
@@ -633,7 +700,6 @@ class TestPortableFilePermissions(unittest.TestCase):
             os.chmod(tmp_dir, 0o700)
             os.rmdir(tmp_dir)
 
-
 class FilePermissionTest(unittest.TestCase):
     def test_permission_error_on_read(self):
         """
@@ -652,7 +718,6 @@ class FilePermissionTest(unittest.TestCase):
         finally:
             os.chmod(tmp_path, 0o666)
             os.remove(tmp_path)
-
 
 class TestLargeFileHandling(unittest.TestCase):
     def test_observe_large_file(self):
@@ -673,7 +738,6 @@ class TestLargeFileHandling(unittest.TestCase):
             self.assertEqual(obs.bytecount, large_file_size)
         finally:
             os.remove(tmp_path)
-
 
 class TestWriteJson(unittest.TestCase):
     def test_write_json_creates_output(self):
@@ -718,7 +782,7 @@ class TestUnknownFileType(unittest.TestCase):
         )
 
         os.remove(path)
-"END"
+
 
 
 
