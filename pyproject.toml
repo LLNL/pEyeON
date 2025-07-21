@@ -31,6 +31,9 @@ dependencies=[
     "dynaconf>=3.2.6",
     "streamlit>=1.37.0",
     "jupyter>=1.1.1",
+    "oidc-client>=0.2.6",
+    "requests>=2.32.4",
+    "toml>=0.10.2",
 ]
 readme = "README.md"
 license = {text = "MIT License"}
@@ -54,3 +57,11 @@ database = ["*"]
 
 [tool.coverage.run]
 omit =["/usr/*"] # omit code coverage scans for /usr/*
+
+[tool.oidc]
+issuer = "https://eyeon-dev.llnl.gov/dex" 
+client_id = "eyeon-cli"  
+redirect_uri = "http://127.0.0.1:39303/cli-oauth2/callback"
+
+[tool.cli]
+api_url="https://eyeon-dev.llnl.gov/eyeon-api/api/upload"
