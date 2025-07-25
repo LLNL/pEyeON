@@ -2,7 +2,7 @@ import unittest
 import logging
 
 from eyeon.cli import CommandLine
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 
 class CliTestCase(unittest.TestCase):
@@ -57,52 +57,58 @@ class CliTestCase(unittest.TestCase):
 class CliTestObserve(unittest.TestCase):
     def setUp(self):
         #patch observe and checksum functions
-        self.observe_patch=patch('eyeon.observe.Observe').start()
-        self.checksum_patch=patch('eyeon.checksum.Checksum').start()
+        self.observe_patch=patch('eyeon.observe.Observe')
+        self.checksum_patch=patch('eyeon.checksum.Checksum')
 
-        self.addCleanup(self.observe_patch.stop())
-        self.addCleanup(self.checksum_patch.stop())
+        self.observe_mock = self.observe_patch.start()
+        self.checksum_mock = self.checksum_patch.start()
+
+    def tearDown(self):
+        self.addCleanup(self.observe_patch.stop)
+        self.addCleanup(self.checksum_patch.stop)    
     
     def testObserve_no_checksum(self):
         args=["observe", "Wintap.exe"]
         cli=CommandLine(args)
 
+        print(cli.args)
+
         cli.observe(cli.args)
-        self.observe_patch.assert_called_once_with("Wintap.exe", 40, None)
-        self.checksum_patch.assert_not_called()
+        self.observe_mock.assert_called_once_with("Wintap.exe", 40, None)
+        self.checksum_mock.assert_not_called()
 
     def testObserve_checksum(self):
         args=["observe", "Wintap.exe", "-c", "abc123"]
         cli=CommandLine(args)
 
         cli.observe(cli.args)
-        self.observe_patch.assert_called_once_with("Wintap.exe", 40, None)
-        self.checksum_patch.assert_called_once_with("Wintap.exe", "md5", "abc123")
+        self.observe_mock.assert_called_once_with("Wintap.exe", 40, None)
+        self.checksum_mock.assert_called_once_with("Wintap.exe", "md5", "abc123")
 
     def testObserve_checksum_alg(self):
         args=["observe", "Wintap.exe", "-c", "abc123", "-a", "sha1"]
         cli=CommandLine(args)
 
         cli.observe(cli.args)
-        self.observe_patch.assert_called_once_with("Wintap.exe", 40, None)
-        self.checksum_patch.assert_called_once_with("Wintap.exe", "sha1", "abc123")
+        self.observe_mock.assert_called_once_with("Wintap.exe", 40, None)
+        self.checksum_mock.assert_called_once_with("Wintap.exe", "sha1", "abc123")
 
     def testObserve_checksum_fail(self):
-        self.checksum_patch.return_value = None
+        self.checksum_mock.return_value = None
         args=["observe", "Wintap.exe", "-c", "abc123"]
         cli=CommandLine(args)
 
         cli.observe(cli.args)
-        self.checksum_patch.assert_called_once_with("Wintap.exe", "md5", "abc123")
-        self.observe_patch.assert_not_called()
+        self.checksum_mock.assert_called_once_with("Wintap.exe", "md5", "abc123")
+        self.observe_mock.assert_not_called()
 
     def testObserve_optional_args(self):
         args=["observe", "Wintap.exe", "-o", "./output", "-g", "mylog.log", "-v", f"{logging.DEBUG}"]
         cli=CommandLine(args)
 
         cli.observe(cli.args)
-        self.observe_patch.assert_called_once_with("Wintap.exe", 10, "mylog.log")
-        self.checksum_patch.assert_not_called()
+        self.observe_mock.assert_called_once_with("Wintap.exe", 10, "mylog.log")
+        self.checksum_mock.assert_not_called()
 
 
 if __name__ == "__main__":
