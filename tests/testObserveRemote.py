@@ -4,13 +4,26 @@ import unittest
 import logging
 from glob import glob
 import datetime as dt
-
+import tempfile
 import json
 
 from eyeon import observe
 
 import jsonschema
 
+# Unit tests for observe.Observe should cover:
+# - bytecount: File size in bytes (int)
+# - filename: Name of the file (str)
+# - md5: MD5 hash of the file (str)
+# - sha1: SHA1 hash of the file (str)
+# - sha256: SHA256 hash of the file (str)
+# - modtime: File modification time, formatted as "%Y-%m-%d %H:%M:%S" (str)
+# - observation_ts: Timestamp when observation was made (str)
+# - permissions: File permissions (e.g., "0o100644") (str)
+# - signatures: List of digital signatures (should be empty for unsigned files)
+# - JSON serialization: ._safe_serialize() output should include "defaults" key
+# - JSON schema validation: Output should validate against observation.schema.json
+# - Meta schema validation: Schema itself should validate against meta.schema.json
 
 class ObservationTestCase(unittest.TestCase):
     @classmethod
@@ -136,7 +149,6 @@ class ObservationTestCase3(unittest.TestCase):
         # self.OBS.write_json()
         # unittest.mock?
 
-
 class ObservationTestCase4(unittest.TestCase):
     @classmethod
     def setUp(self) -> None:
@@ -163,7 +175,6 @@ class ObservationTestCase4(unittest.TestCase):
     #         "    Format: Java Class File (.CLASS)(Java SE 11)\n\n"
     #     )
     #     self.assertEqual(self.OBS.detect_it_easy, expected_output)
-
 
 class ObservationTestCase5(unittest.TestCase):
     @classmethod
@@ -210,7 +221,6 @@ class ObservationTestCase5(unittest.TestCase):
     def tearDownClass(self):
         os.remove("./observe.log")
 
-
 class ObservationTestCase6(unittest.TestCase):
     @classmethod
     def setUp(self) -> None:
@@ -241,6 +251,7 @@ class ObservationTestCase6(unittest.TestCase):
     def testValidateJson(self) -> None:
         with open("../schema/observation.schema.json") as schem:
             schema = json.loads(schem.read())
+        # print self.OBS, 
         obs_json = json.loads(json.dumps(vars(self.OBS)))
         print(jsonschema.validate(instance=obs_json, schema=schema))
 
@@ -261,7 +272,6 @@ class ObservationTestCase6(unittest.TestCase):
         except FileNotFoundError:
             pass
 
-
 class ObservationTestCase7(unittest.TestCase):
     @classmethod
     def setUp(self) -> None:
@@ -281,7 +291,6 @@ class ObservationTestCase7(unittest.TestCase):
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100644")
-
 
 class ObservationTestCase8(unittest.TestCase):
     @classmethod
@@ -311,7 +320,6 @@ class ObservationTestCase8(unittest.TestCase):
     #     )
     #     self.assertEqual(self.OBS.detect_it_easy, expected_output)
 
-
 class ObservationTestCase9(unittest.TestCase):
     @classmethod
     def setUp(self) -> None:
@@ -331,7 +339,6 @@ class ObservationTestCase9(unittest.TestCase):
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100644")
-
 
 class ObservationTestCase10(unittest.TestCase):
     @classmethod
@@ -364,12 +371,425 @@ class ObservationTestCase10(unittest.TestCase):
             "552f7bdcf1a7af9e6ce672017f4f12abf77240c78e761ac203d1d9d20ac89988",
         )
 
+'''
+Surfactant Binaries
+4 seperate unit tests cases for each different file type 
+
+Test case 11: cpio
+Test case 12: coff
+Test case 13: uimages
+Test case 14: zstandard
+'''
+
+class ObservationTestCase11(unittest.TestCase):
+    @classmethod
+    def setUp(self) -> None:
+        self.OBS = observe.Observe("./binaries/cpio_files/cpio_char_new.cpio")
+
+    def testVars(self) -> None:
+        self.assertEqual(self.OBS.bytecount, 7)
+        self.assertEqual(self.OBS.filename, "cpio_char_new.cpio")
+        self.assertEqual(self.OBS.md5, "629f893f8cfdd02b5f1ec6a33f11a9de")
+        self.assertEqual(self.OBS.sha1, "bc0a78891f719420815310fdeb8dd9b1ee8b4997")
+        self.assertEqual(
+            self.OBS.sha256, "ce5d552a1efd21d3c6ba3dd68e61e4407a74840fd9969a9202a467b3e5e93f6a"
+        )
+        try:
+            dt.datetime.strptime(self.OBS.modtime, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            self.fail()
+        self.assertIsInstance(self.OBS.observation_ts, str)
+        self.assertEqual(self.OBS.permissions, "0o100644")
+
+    def testConfigJson(self) -> None:
+        vs = vars(self.OBS)
+        obs_json = json.loads(self.OBS._safe_serialize(vs))
+        assert "defaults" in obs_json, "defaults not in json"
+
+    @classmethod
+    def tearDownClass(self) -> None:
+        try:
+            for j in glob("*.json"):
+                os.remove(j)
+        except FileNotFoundError:
+            pass
+
+class ObservationTestCase12(unittest.TestCase):
+    @classmethod
+    def setUp(self) -> None:
+        self.OBS = observe.Observe("./binaries/coff_files/intel_80386_coff")
+
+    def testVars(self) -> None:
+        self.assertEqual(self.OBS.bytecount, 2)
+        self.assertEqual(self.OBS.filename, "intel_80386_coff")
+        self.assertEqual(self.OBS.md5, "3e44d3b6dd839ce18f1b298bac5ce63f")
+        self.assertEqual(self.OBS.sha1, "aad24871701ab7c50fec7f4f2afb7096e5292854")
+        self.assertEqual(
+            self.OBS.sha256, "ed22c79e7ff516da5fb6310f6137bfe3b9724e9902c14ca624bfe0873f8f2d0c"
+        )
+        try:
+            dt.datetime.strptime(self.OBS.modtime, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            self.fail()
+        self.assertIsInstance(self.OBS.observation_ts, str)
+        self.assertEqual(self.OBS.permissions, "0o100644")
+
+    def testConfigJson(self) -> None:
+        vs = vars(self.OBS)
+        obs_json = json.loads(self.OBS._safe_serialize(vs))
+        assert "defaults" in obs_json, "defaults not in json"
+
+    @classmethod
+    def tearDownClass(self) -> None:
+        try:
+            for j in glob("*.json"):
+                os.remove(j)
+        except FileNotFoundError:
+            pass
+
+class ObservationTestCase13(unittest.TestCase):
+    @classmethod
+    def setUp(self) -> None:
+        self.OBS = observe.Observe("./binaries/uimage_files/hello_world.img")
+
+    def testVars(self) -> None:
+        self.assertEqual(self.OBS.bytecount, 125)
+        self.assertEqual(self.OBS.filename, "hello_world.img")
+        self.assertEqual(self.OBS.md5, "8129c53c4101a29f8faffb5a16f2be53")
+        self.assertEqual(self.OBS.sha1, "9bb65a7b0bb913b9914e9aac72152504830a71f5")
+        self.assertEqual(
+            self.OBS.sha256, "cff9c2c676d3c2d4402fe90ca65c02f00ca2a2e8d671d05b0b7e1a9f1ee5cc8a"
+        )
+        try:
+            dt.datetime.strptime(self.OBS.modtime, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            self.fail()
+        self.assertIsInstance(self.OBS.observation_ts, str)
+        self.assertEqual(self.OBS.permissions, "0o100644")
+
+    def testConfigJson(self) -> None:
+        vs = vars(self.OBS)
+        obs_json = json.loads(self.OBS._safe_serialize(vs))
+        assert "defaults" in obs_json, "defaults not in json"
+
+    @classmethod
+    def tearDownClass(self) -> None:
+        try:
+            for j in glob("*.json"):
+                os.remove(j)
+        except FileNotFoundError:
+            pass
+
+class ObservationTestCase14(unittest.TestCase):
+    @classmethod
+    def setUp(self) -> None:
+        self.OBS = observe.Observe("./binaries/zstandard/hi.txt.zst")
+
+    def testVars(self) -> None:
+        self.assertEqual(self.OBS.bytecount, 13)
+        self.assertEqual(self.OBS.filename, "hi.txt.zst")
+        self.assertEqual(self.OBS.md5, "5d80401e01d33084c65e94f93351e94c")
+        self.assertEqual(self.OBS.sha1, "fb2e51cbd24e286dd066bd419d77cd772967e384")
+        self.assertEqual(
+            self.OBS.sha256, "f96deff1816083fdff8bc3e46c3fe6ca46a6bb49f4d5a00627616c13237a512c"
+        )
+        try:
+            dt.datetime.strptime(self.OBS.modtime, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            self.fail()
+        self.assertIsInstance(self.OBS.observation_ts, str)
+        self.assertEqual(self.OBS.permissions, "0o100644")
+
+    def testConfigJson(self) -> None:
+        vs = vars(self.OBS)
+        obs_json = json.loads(self.OBS._safe_serialize(vs))
+        assert "defaults" in obs_json, "defaults not in json"
+
+    @classmethod
+    def tearDownClass(self) -> None:
+        try:
+            for j in glob("*.json"):
+                os.remove(j)
+        except FileNotFoundError:
+            pass
+
+#Risc V  
+class ObservationTestCase15(unittest.TestCase):
+    @classmethod
+    def setUp(self) -> None:
+        self.OBS = observe.Observe("./binaries/ELF_object_riscv/nop.o")
+
+    def testVars(self) -> None:
+        self.assertEqual(self.OBS.bytecount, 960)
+        self.assertEqual(self.OBS.filename, "nop.o")
+        self.assertEqual(self.OBS.md5, "0da6a6d636c44b249f142b7a298a1bf2")
+        self.assertEqual(self.OBS.sha1, "1a4b87c3c3e48cc18bf961b31678b0fc25983840")
+        self.assertEqual(
+            self.OBS.sha256, "245cd762ebae76573107cd7ff3d0494facd3450f439e70839d8f6e46d8cd0104"
+        )
+        try:
+            dt.datetime.strptime(self.OBS.modtime, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            self.fail()
+        self.assertIsInstance(self.OBS.observation_ts, str)
+        self.assertEqual(self.OBS.permissions, "0o100644")
+
+    def testConfigJson(self) -> None:
+        vs = vars(self.OBS)
+        obs_json = json.loads(self.OBS._safe_serialize(vs))
+        assert "defaults" in obs_json, "defaults not in json"
+
+    @classmethod
+    def tearDownClass(self) -> None:
+        try:
+            for j in glob("*.json"):
+                os.remove(j)
+        except FileNotFoundError:
+            pass
+
+#8051
+class ObservationTestCase16(unittest.TestCase):
+    @classmethod
+    def setUp(self) -> None:
+        self.OBS = observe.Observe("./binaries/8051_test/minimal_8051.hex")
+
+    def testVars(self) -> None:
+        self.assertEqual(self.OBS.bytecount, 352)
+        self.assertEqual(self.OBS.filename, "minimal_8051.hex")
+        self.assertEqual(self.OBS.md5, "cc791e7512904801d4020e580f02a19d")
+        self.assertEqual(self.OBS.sha1, "2b559b7893cfdd8257c1f0412ca706fadc219689")
+        self.assertEqual(
+            self.OBS.sha256, "8348f1808c98bb3d62e4d9ff57c02c4486d1d8c6fba726c8aa6335aad1b5ca6b"
+        )
+        try:
+            dt.datetime.strptime(self.OBS.modtime, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            self.fail()
+        self.assertIsInstance(self.OBS.observation_ts, str)
+        self.assertEqual(self.OBS.permissions, "0o100644")
+
+    def testConfigJson(self) -> None:
+        vs = vars(self.OBS)
+        obs_json = json.loads(self.OBS._safe_serialize(vs))
+        assert "defaults" in obs_json, "defaults not in json"
+
+    @classmethod
+    def tearDownClass(self) -> None:
+        try:
+            for j in glob("*.json"):
+                os.remove(j)
+        except FileNotFoundError:
+            pass
+
+#Super H
+class ObservationTestCase17(unittest.TestCase):
+    @classmethod
+    def setUp(self) -> None:
+        self.OBS = observe.Observe("./binaries/superH/sh_test.o")
+
+    def testVars(self) -> None:
+        self.assertEqual(self.OBS.bytecount, 688)
+        self.assertEqual(self.OBS.filename, "sh_test.o")
+        self.assertEqual(self.OBS.md5, "947286ec060b768292c8255cfc8de287")
+        self.assertEqual(self.OBS.sha1, "3d7779af1da2eff5536530c46b2622805cdb3a50")
+        self.assertEqual(
+            self.OBS.sha256, "f1271a58a4f09a263027eed76e64fba5d1f3f790cd79adc79ad9d215c537a84f"
+        )
+        try:
+            dt.datetime.strptime(self.OBS.modtime, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            self.fail()
+        self.assertIsInstance(self.OBS.observation_ts, str)
+        self.assertEqual(self.OBS.permissions, "0o100644")
+
+    def testConfigJson(self) -> None:
+        vs = vars(self.OBS)
+        obs_json = json.loads(self.OBS._safe_serialize(vs))
+        assert "defaults" in obs_json, "defaults not in json"
+
+    @classmethod
+    def tearDownClass(self) -> None:
+        try:
+            for j in glob("*.json"):
+                os.remove(j)
+        except FileNotFoundError:
+            pass
+
+class TestObserveFileHandling(unittest.TestCase):
+    def setUp(self):
+        # Set up a temporary directory with various test files:
+        # - an empty file
+        # - a valid small text file
+        # - a corrupted file with non-standard content
+        self.test_dir = tempfile.TemporaryDirectory()
+        self.empty_file = os.path.join(self.test_dir.name, 'empty_file.txt')
+        self.corrupted_file = os.path.join(self.test_dir.name, 'corrupted_file.txt')
+
+        open(self.empty_file, 'w').close()
+        # Simulate a structurally corrupted ELF file (truncated magic bytes)
+        with open(self.corrupted_file, 'wb') as f:
+            f.write(b'\x7FELF'[:2])  # Incomplete ELF magic
+
+
+    def tearDown(self):
+        # Remove the temporary directory and its contents
+        self.test_dir.cleanup()
+
+    def test_observe_empty_file(self):
+        # An empty file should return a bytecount of 0
+        obs = observe.Observe(self.empty_file)
+        self.assertEqual(obs.bytecount, 0, "Bytecount should be zero for empty file.")
+
+    def test_observe_corrupted_file(self):
+        # Corrupted content shouldn't crash Observe; it should still read the file
+        obs = observe.Observe(self.corrupted_file)
+        self.assertGreater(obs.bytecount, 0, "Bytecount should be > 0 for corrupted file.")
+
+    def test_observe_missing_file(self):
+        # Observe should raise FileNotFoundError for nonexistent paths
+        missing_file = os.path.join(self.test_dir.name, 'missing_file.txt')
+        with self.assertRaises(FileNotFoundError):
+            observe.Observe(missing_file)
+
+    def test_observe_directory_instead_of_file(self):
+        # Directories are invalid input and should raise an error
+        # parse should be used!
+        with self.assertRaises(Exception):
+            observe.Observe(self.test_dir.name)
+
+    def test_observe_random_binary_file(self):
+        # Creates a temporary file with 1KB of random binary data
+        random_data = os.urandom(1024)
+        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+            tmp.write(random_data)
+            tmp_path = tmp.name
+        try:
+            obs = observe.Observe(tmp_path)
+            self.assertEqual(obs.bytecount, 1024)
+        finally:
+            os.remove(tmp_path)
+
+class TestPortableFilePermissions(unittest.TestCase):
+    def test_tempfile_no_read_permission(self):
+        """
+        Ensure Observe raises PermissionError when file has no read permission.
+        """
+        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+            tmp_path = tmp.name
+        try:
+            # Remove read permission (write-only)
+            os.chmod(tmp_path, 0o200)
+            with self.assertRaises(PermissionError):
+                observe.Observe(tmp_path)
+        finally:
+            # Restore permissions for deletion
+            os.chmod(tmp_path, 0o600)
+            os.unlink(tmp_path)
+
+    def test_tempdir_no_read_permission(self):
+        """
+        Ensure Observe raises PermissionError when directory has no read permission.
+        """
+        tmp_dir = tempfile.mkdtemp()
+        try:
+            # Remove all permissions from the directory
+            os.chmod(tmp_dir, 0o000)
+            with self.assertRaises(PermissionError):
+                observe.Observe(tmp_dir)
+        finally:
+            os.chmod(tmp_dir, 0o700)
+            os.rmdir(tmp_dir)
+
+class FilePermissionTest(unittest.TestCase):
+    def test_permission_error_on_read(self):
+        """
+        Sanity check: Python itself should raise PermissionError when reading a locked file.
+        Helps verify test environment behaves as expected.
+        """
+        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+            tmp_path = tmp.name
+            tmp.write(b"Test content")
+
+        os.chmod(tmp_path, 0)  # no permissions at all
+        try:
+            with self.assertRaises(PermissionError):
+                with open(tmp_path, "r") as f:
+                    f.read()
+        finally:
+            os.chmod(tmp_path, 0o666)
+            os.remove(tmp_path)
+
+class TestLargeFileHandling(unittest.TestCase):
+    def test_observe_large_file(self):
+        """
+        Test Observe's ability to handle a large 100MB file.
+        Ensures bytecount is correct and no memory issues arise.
+        """
+
+        #seems anything on the order of 100,000 leads to a memory error
+        #converts to bytes so 1000 megabytes
+        #10k is slow
+        large_file_size = 100 * 1024 * 1024  
+        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+            tmp.write(b'\0' * large_file_size)
+            tmp_path = tmp.name
+        try:
+            obs = observe.Observe(tmp_path)
+            self.assertEqual(obs.bytecount, large_file_size)
+        finally:
+            os.remove(tmp_path)
+
+class TestWriteJson(unittest.TestCase):
+    def test_write_json_creates_output(self):
+        """
+        Verify that write_json() produces a properly named and structured JSON file.
+        """
+        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+            tmp.write(b"Hello World")
+            path = tmp.name
+
+        obs = observe.Observe(path)
+        tmp_dir = tempfile.mkdtemp()
+        obs.write_json(tmp_dir)
+
+        json_path = os.path.join(tmp_dir, f"{obs.filename}.{obs.md5}.json")
+        self.assertTrue(os.path.exists(json_path), "JSON output file not created.")
+
+        # Load the JSON file and confirm basic fields match expected values
+        with open(json_path) as f:
+            data = json.load(f)
+        self.assertEqual(data["filename"], os.path.basename(path))
+        self.assertEqual(data["bytecount"], 11)
+
+        os.remove(path)
+        os.remove(json_path)
+
+class TestUnknownFileType(unittest.TestCase):
+    def test_imphash_set_to_na_for_junk_file(self):
+        """
+        Files that are not recognized as PE, ELF, or Mach-O should default to imphash='N/A'.
+        """
+        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+            tmp.write(b"This is not a real binary format.")
+            path = tmp.name
+
+        obs = observe.Observe(path)
+
+        self.assertEqual(
+            obs.imphash,
+            "N/A",
+            "imphash should be 'N/A' for unrecognized file types"
+        )
+
+        os.remove(path)
+
+
+
 
 class TestFilePermissions(unittest.TestCase):
     def test_nonreadable_file(self):
         # Check to see if permission error is raised
         self.assertRaises(PermissionError, observe.Observe, "/etc/shadow")
-
 
 class TestFolderPermissions(unittest.TestCase):
     def test_nonreadable_folder(self):
