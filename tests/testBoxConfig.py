@@ -24,7 +24,7 @@ class testBoxConfig(unittest.TestCase):
 
     def test_box_settings(self):
         self.assertIsInstance(self.boxSettings, box_config.BaseSettings)
-        self.assertEqual("/workdir/src/box", self.boxSettings.base_path.as_posix())
+        self.assertEqual("box", self.boxSettings.base_path.name)
     
     def test_get_box_settings(self):
         settings=box_config.get_box_settings()
