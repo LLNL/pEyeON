@@ -58,6 +58,19 @@ class CommandLine:
             "--location",
             help="Site location where scan/install happens. Can set on $SITE to auto-read.",
         )
+        observe_parser.add_argument(
+            "-c",
+            "--checksum",
+            help="expected checksum (md5, sha1, sha256) of file (default: md5)"
+        )
+        observe_parser.add_argument(
+            "-a",
+            "--algorithm",
+            choices=["md5", "sha1", "sha256"],
+            default="md5",
+            help="Specify the hash algorithm (default: md5)",
+        )
+
         observe_parser.set_defaults(func=self.observe)
 
         # Create parser for parse command
@@ -77,7 +90,7 @@ class CommandLine:
         # Create parser for checksum command
         checksum_parser = subparsers.add_parser("checksum", help="checksum help")
         checksum_parser.add_argument("file", help="file you want to checksum")
-        checksum_parser.add_argument("cksum", help="expected checksum (md5, sha1, sha256) of file")
+        checksum_parser.add_argument("cksum", help="expected checksum (md5, sha1, sha256) of file (default: md5)")
         checksum_parser.add_argument(
             "-a",
             "--algorithm",
@@ -100,8 +113,15 @@ class CommandLine:
         """
         Parser function.
         """
-
-        obs = eyeon.observe.Observe(args.filename, args.log_level, args.log_file)
+        if args.checksum:
+            if (cksum := eyeon.checksum.Checksum(args.filename, args.algorithm, args.checksum) is not None):
+                print("Checksum match...\n", "proceding with observe") 
+                obs = eyeon.observe.Observe(args.filename, args.log_level, args.log_file)
+            else:
+                print("Checksum check failed, stopping...")
+                return
+        else:
+            obs = eyeon.observe.Observe(args.filename, args.log_level, args.log_file)
 
         if (outdir := args.output_dir) is None:
             outdir = "."

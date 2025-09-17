@@ -10,10 +10,10 @@ def Checksum(file: str, algorithm: str, expected_checksum: str):
     # compare it to the expected checksum, returns true if match
     if fileHash == expected_checksum:
         print("Checksum verification pass")
+        return fileHash
     else:
         print(
             "Checksum verification fail, double check the expected checksum provided. ",
             "Otherwise file may have been modified",
         )
-
-    return fileHash
+        return None
