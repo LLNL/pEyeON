@@ -140,7 +140,7 @@ If you want to run jupyter, the `./docker-run.sh` script exposes port 8888. Laun
 #### Streamlit app
 In the `src` directory, there exist the bones of a data exploration applet. To generate data for this, add the database flag like `eyeon parse -d tests/data/20240925-eyeon/dbhelpers/20240925-eyeon.db`. Then, if necessary, update the database path variable in the `src/streamlit/eyeon_settings.toml`. Note that the path needs to point to the grandparent directory of the `dbhelpers` directory. This is a specific path for the streamlit app; the streamlit directory has more information in its own README.
 
-### Uploading Results
+## Uploading Results
 The Eyeon tool leverages the Box platform for data uploads and storage. All data handled by Eyeon is voluntarily submitted by users and securely stored in your Box account. If you wish to share the results of the eyeon tool with us please contact ... to get setup.
 
 #### Authenticating with Box
@@ -157,7 +157,7 @@ source .venv/bin/activate
 ```bash
 pip install boxsdk==3.14.0
 ```
-3. Change into the src/ directory:
+3. Change into the `src/` directory:
 ```bash
 cd src/
 ```
@@ -170,7 +170,7 @@ This will guide you through authenticating with Box in your browser.
 Once authentication is complete and your `box_tokens.json` file is generated, you can start the Eyeon Docker container and use the commands listed below.
 
 #### List Items in Your Box Folder
-```
+```bash
 eyeon box-list
 ```
 
@@ -178,8 +178,8 @@ Displays all items in your connected Box folder.
 
 #### Upload Results to Box
 
-```
-eyeon box-upload <archive>
+```bash
+eyeon box-upload <archive\>
 ```
 
 Uploads the specified archive (zip, tar, tar.gz) to your Box folder.
