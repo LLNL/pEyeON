@@ -179,7 +179,7 @@ Displays all items in your connected Box folder.
 #### Upload Results to Box
 
 ```bash
-eyeon box-upload <archive\>
+eyeon box-upload <archive>
 ```
 
 Uploads the specified archive (zip, tar, tar.gz) to your Box folder.
