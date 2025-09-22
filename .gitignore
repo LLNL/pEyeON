@@ -13,3 +13,4 @@ _version.py
 *.env
 .venv
 .coverage
+box_tokens.json
