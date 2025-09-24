@@ -2,6 +2,9 @@ import unittest
 import eyeon.upload
 import pandas as pd
 import os
+import shutil
+import zipfile
+import tarfile
 
 from unittest.mock import patch, MagicMock
 from box.box_config import BoxSettings
@@ -220,3 +223,82 @@ class TestUpload(unittest.TestCase):
         with patch("os.path.splitext", return_value=("foo", ".txt")):
             # Should just print a message and return
             eyeon.upload.upload("foo.txt")
+
+    @patch("eyeon.upload.get_box_client")
+    @patch("eyeon.upload.box_config.get_box_settings")
+    @patch("eyeon.upload.compress_file")
+    def test_upload_with_compression(self, mock_compress, mock_settings, mock_get_box_client):
+        mock_compress.return_value="foo.tar"
+
+        settings = MagicMock()
+        settings.FOLDER = 12345
+        mock_settings.return_value = settings
+
+        mock_client = MagicMock()
+        mock_folder = MagicMock()
+        mock_uploaded_file = MagicMock()
+        mock_uploaded_file.id = "202"
+        mock_folder.upload.return_value = mock_uploaded_file
+        mock_client.folder.return_value = mock_folder
+        mock_get_box_client.return_value = mock_client
+
+        with patch("os.path.splitext", return_value=("foo", ".txt")):
+            eyeon.upload.upload("foo.txt", compression="tar")
+            mock_compress.assert_called_once_with("foo.txt", "tar")
+
+class TestCompression(unittest.TestCase):
+    def setUp(self):
+        self.file="test.txt"
+        self.dir="/some/test/" #trailing slash is how cli will pass path
+    
+    def test_unsupported_compression_type(self):
+        with patch('builtins.print') as mock_print:
+            file=eyeon.upload.compress_file(self.file, compression="7z")
+            mock_print.assert_called_with("Unsupported compression format. Use zip, tar, or tar.gz")
+            self.assertIsNone(file)
+
+    def test_zip_compression_type(self):
+        with patch("zipfile.ZipFile"):
+            file=eyeon.upload.compress_file(self.file, compression="zip")
+            self.assertEqual(file, "test.zip")
+
+    def test_tar_compression_type(self):
+        with patch("tarfile.open"):
+            file=eyeon.upload.compress_file(self.file, compression="tar")
+            self.assertEqual(file, "test.tar")
+
+    def test_gz_compression_type(self):
+        with patch("tarfile.open"):
+            file=eyeon.upload.compress_file(self.file, compression="tar.gz")
+            self.assertEqual(file, "test.tar.gz")
+
+    def test_compression_with_path(self):
+        file_path=self.dir+self.file
+        with patch("zipfile.ZipFile"):
+            file=eyeon.upload.compress_file(file_path, compression="zip")
+            self.assertEqual(file, "test.zip")
+    
+    def test_compression_directory(self):
+        with patch("tarfile.open"):
+            file=eyeon.upload.compress_file(self.dir, compression="tar.gz")
+            self.assertEqual(file, "test.tar.gz")
+
+    def test_zip_compression_dir(self):
+        with patch("zipfile.ZipFile") as mock_zip_file, \
+            patch("os.path.isdir", return_value=True), \
+            patch("os.walk", return_value=[(self.dir, [], ["file1.json", "file2.json"])]):
+
+            file=eyeon.upload.compress_file(self.dir, compression="zip")
+            self.assertEqual(file, "test.zip")
+
+            instance = mock_zip_file.return_value.__enter__.return_value
+
+            # Get the list of calls to the write method
+            calls = instance.write.call_args_list
+
+            #check number of calls and full file paths called
+            self.assertEqual(len(calls), 2)
+            written_files = [call.args[0] for call in calls]
+            self.assertIn("/some/test/file1.json", written_files)
+            self.assertIn("/some/test/file2.json", written_files)
+

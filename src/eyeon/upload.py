@@ -3,6 +3,8 @@ from boxsdk import Client
 
 import pandas as pd
 import os
+import zipfile
+import tarfile
 
 def get_box_client() -> Client:
     '''
@@ -89,7 +91,38 @@ def delete_file(file:str):
         print("Invalid input type. Must be file name or ID")
         return
 
-def upload(file: str):
+def compress_file(file:str, compression:str):
+    #normalize path to remove trailing slashes
+    file=os.path.normpath(file)
+    #get just the directory or file name (not the full path)
+    base = os.path.basename(file).split(".")[0]
+    if compression == 'zip':
+        output_path = base + '.zip'
+        with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            if os.path.isdir(file):
+                # Walk the directory and add files
+                for root, dirs, files in os.walk(file):
+                    for file in files:
+                        abs_path = os.path.join(root, file)
+                        rel_path = os.path.relpath(abs_path, start=file)
+                        zipf.write(abs_path, arcname=rel_path)
+
+    elif compression == 'tar':
+        output_path = base + '.tar'
+        with tarfile.open(output_path, 'w') as tarf:
+            tarf.add(file, arcname=os.path.basename(file))
+
+    elif compression == 'tar.gz':
+        output_path = base + '.tar.gz'
+        with tarfile.open(output_path, 'w:gz') as targzf:
+            targzf.add(file, arcname=os.path.basename(file))
+    else:
+        print('Unsupported compression format. Use zip, tar, or tar.gz')
+        return None
+    
+    return output_path
+
+def upload(file: str, compression:str=None):
     '''
     upload target file
     '''
@@ -97,15 +130,17 @@ def upload(file: str):
 
     _, ext = os.path.splitext(file)
 
-    if ext.lower() in allowed_ext:
-        settings=box_config.get_box_settings()
-        client = get_box_client()
+    # If file is not compressed and compression is specified, compress it.
+    if ext.lower() not in allowed_ext:
+        if compression:
+            file = compress_file(file, compression)
+            _, new_ext = os.path.splitext(file)
+        else:
+            print(f"Please compress into one of the following formats: {allowed_ext} or specify -z {allowed_ext} option.")
+            return        
 
-        new_file = client.folder(settings.FOLDER).upload(file)
-        print(f"Uploaded {file!r} as file ID {new_file.id}")
-    
-    else:
-        print(f"please compress into one of the following formats: \n{allowed_ext}")
-        return
+    settings = box_config.get_box_settings()
+    client = get_box_client()
 
-#add zip / tar feature
+    new_file = client.folder(settings.FOLDER).upload(file)
+    print(f"Uploaded {file!r} as file ID {new_file.id}")

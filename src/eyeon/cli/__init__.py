@@ -91,7 +91,12 @@ class CommandLine:
         # parser for the upload command
         upload_parser=subparsers.add_parser("box-upload", help="upload help")
         upload_parser.add_argument("file", help="target file to upload")
-
+        upload_parser.add_argument(
+            "-z",
+            "--compression",
+            choices=["zip", "tar", "tar.gz"],
+            help="Specify the compression method (default: zip)",
+        )
         upload_parser.set_defaults(func=self.upload)
 
         # parser for the delete command
@@ -104,6 +109,18 @@ class CommandLine:
         list_parser=subparsers.add_parser("box-list", help="list items in box")
 
         list_parser.set_defaults(func=self.listbox)
+
+        # parser for the compression command
+        compression_parser=subparsers.add_parser("compress", help="compression help")
+        compression_parser.add_argument("file", help="target file to compress")
+        compression_parser.add_argument(
+            "-m",
+            "--method",
+            choices=["zip", "tar", "tar.gz"],
+            default="zip",
+            help="Specify the compression method (default: zip)",
+        )
+        compression_parser.set_defaults(func=self.compress_file)
 
         # new
         if testargs:
@@ -152,7 +169,7 @@ class CommandLine:
         '''
         upload target file to box
         '''
-        eyeon.upload.upload(args.file)
+        eyeon.upload.upload(args.file, args.compression)
 
     def delete(self, args) -> None:
         '''
@@ -161,7 +178,16 @@ class CommandLine:
         eyeon.upload.delete_file(args.file)
 
     def listbox(self, args) -> None:
+        '''
+        list contents of user's box folder
+        '''
         eyeon.upload.list_box_items()
+
+    def compress_file(self, args) -> None:
+        '''
+        compression function
+        '''
+        eyeon.upload.compress_file(args.file, args.method)
 
 
 def main():
