@@ -7,6 +7,7 @@ import argparse
 import eyeon.observe
 import eyeon.parse
 import eyeon.checksum
+import eyeon.upload
 import logging
 
 
@@ -87,6 +88,40 @@ class CommandLine:
         )
         checksum_parser.set_defaults(func=self.checksum)
 
+        # parser for the upload command
+        upload_parser=subparsers.add_parser("box-upload", help="upload help")
+        upload_parser.add_argument("file", help="target file to upload")
+        upload_parser.add_argument(
+            "-z",
+            "--compression",
+            choices=["zip", "tar", "tar.gz"],
+            help="Specify the compression method",
+        )
+        upload_parser.set_defaults(func=self.upload)
+
+        # parser for the delete command
+        delete_parser=subparsers.add_parser("box-delete", help="delete help")
+        delete_parser.add_argument("file", help="target box file to delete")
+
+        delete_parser.set_defaults(func=self.delete)
+
+        # parser for the list command
+        list_parser=subparsers.add_parser("box-list", help="list items in box")
+
+        list_parser.set_defaults(func=self.listbox)
+
+        # parser for the compression command
+        compression_parser=subparsers.add_parser("compress", help="compression help")
+        compression_parser.add_argument("file", help="target file to compress")
+        compression_parser.add_argument(
+            "-m",
+            "--method",
+            choices=["zip", "tar", "tar.gz"],
+            default="zip",
+            help="Specify the compression method (default: zip)",
+        )
+        compression_parser.set_defaults(func=self.compress_file)
+
         # new
         if testargs:
             self.args = parser.parse_args(testargs)
@@ -129,6 +164,30 @@ class CommandLine:
         "verify checksum against provided value"
 
         eyeon.checksum.Checksum(args.file, args.algorithm, args.cksum)
+
+    def upload(self, args) -> None:
+        '''
+        upload target file to box
+        '''
+        eyeon.upload.upload(args.file, args.compression)
+
+    def delete(self, args) -> None:
+        '''
+        upload target file to box
+        '''
+        eyeon.upload.delete_file(args.file)
+
+    def listbox(self, args) -> None:
+        '''
+        list contents of user's box folder
+        '''
+        eyeon.upload.list_box_items()
+
+    def compress_file(self, args) -> None:
+        '''
+        compression function
+        '''
+        eyeon.upload.compress_file(args.file, args.method)
 
 
 def main():
