@@ -95,7 +95,7 @@ class CommandLine:
             "-z",
             "--compression",
             choices=["zip", "tar", "tar.gz"],
-            help="Specify the compression method (default: zip)",
+            help="Specify the compression method",
         )
         upload_parser.set_defaults(func=self.upload)
 
