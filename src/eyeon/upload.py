@@ -5,6 +5,7 @@ import pandas as pd
 import os
 import zipfile
 import tarfile
+import shutil
 
 def get_box_client() -> Client:
     '''
@@ -95,25 +96,23 @@ def compress_file(file:str, compression:str):
     #normalize path to remove trailing slashes
     file=os.path.normpath(file)
     #get just the directory or file name (not the full path)
-    base = os.path.basename(file).split(".")[0]
+    base_name = os.path.basename(file).split(".")[0]
+    
     if compression == 'zip':
-        output_path = base + '.zip'
-        with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            if os.path.isdir(file):
-                # Walk the directory and add files
-                for root, dirs, files in os.walk(file):
-                    for file in files:
-                        abs_path = os.path.join(root, file)
-                        rel_path = os.path.relpath(abs_path, start=file)
-                        zipf.write(abs_path, arcname=rel_path)
+        output_path = base_name + '.zip'
+        if os.path.isdir(file):
+            shutil.make_archive(base_name, 'zip', file)
+        else:
+            with zipfile.ZipFile(base_name+".zip", 'w', zipfile.ZIP_DEFLATED) as zipf:
+                zipf.write(file, arcname=os.path.basename(file))
 
     elif compression == 'tar':
-        output_path = base + '.tar'
+        output_path = base_name + '.tar'
         with tarfile.open(output_path, 'w') as tarf:
             tarf.add(file, arcname=os.path.basename(file))
 
     elif compression == 'tar.gz':
-        output_path = base + '.tar.gz'
+        output_path = base_name + '.tar.gz'
         with tarfile.open(output_path, 'w:gz') as targzf:
             targzf.add(file, arcname=os.path.basename(file))
     else:

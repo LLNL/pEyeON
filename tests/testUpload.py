@@ -284,21 +284,16 @@ class TestCompression(unittest.TestCase):
             self.assertEqual(file, "test.tar.gz")
 
     def test_zip_compression_dir(self):
-        with patch("zipfile.ZipFile") as mock_zip_file, \
-            patch("os.path.isdir", return_value=True), \
-            patch("os.walk", return_value=[(self.dir, [], ["file1.json", "file2.json"])]):
+        with patch("shutil.make_archive") as mock_zip_file, \
+            patch("os.path.isdir", return_value=True):
+            
+            mock_zip_file.return_value="test.zip"
 
             file=eyeon.upload.compress_file(self.dir, compression="zip")
             self.assertEqual(file, "test.zip")
 
-            instance = mock_zip_file.return_value.__enter__.return_value
-
-            # Get the list of calls to the write method
-            calls = instance.write.call_args_list
-
-            #check number of calls and full file paths called
-            self.assertEqual(len(calls), 2)
-            written_files = [call.args[0] for call in calls]
-            self.assertIn("/some/test/file1.json", written_files)
-            self.assertIn("/some/test/file2.json", written_files)
+            # Assert make_archive was called once with correct arguments as the function handles them
+            norm_file=os.path.normpath(self.dir)
+            base_name = os.path.basename(norm_file).split(".")[0]
+            mock_zip_file.assert_called_once_with(base_name, 'zip', norm_file)
 
