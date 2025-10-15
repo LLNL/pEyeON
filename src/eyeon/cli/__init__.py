@@ -114,12 +114,11 @@ class CommandLine:
         Parser function.
         """
         if args.checksum:
-            if (cksum := eyeon.checksum.Checksum(args.filename, args.algorithm, args.checksum) is not None):
-                print("Checksum match...\n", "proceding with observe") 
-                obs = eyeon.observe.Observe(args.filename, args.log_level, args.log_file)
-            else:
-                print("Checksum check failed, stopping...")
-                return
+            checksum_data =eyeon.checksum.Checksum(args.filename, args.algorithm, args.checksum)
+
+            obs = eyeon.observe.Observe(args.filename, args.log_level, args.log_file)
+            obs.set_checksum_verification(checksum_data)
+
         else:
             obs = eyeon.observe.Observe(args.filename, args.log_level, args.log_file)
 
