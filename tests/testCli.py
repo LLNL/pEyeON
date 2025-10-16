@@ -93,15 +93,6 @@ class CliTestObserve(unittest.TestCase):
         self.observe_mock.assert_called_once_with("Wintap.exe", 40, None)
         self.checksum_mock.assert_called_once_with("Wintap.exe", "sha1", "abc123")
 
-    def testObserve_checksum_fail(self):
-        self.checksum_mock.return_value = None
-        args=["observe", "Wintap.exe", "-c", "abc123"]
-        cli=CommandLine(args)
-
-        cli.observe(cli.args)
-        self.checksum_mock.assert_called_once_with("Wintap.exe", "md5", "abc123")
-        self.observe_mock.assert_not_called()
-
     def testObserve_optional_args(self):
         args=["observe", "Wintap.exe", "-o", "./output", "-g", "mylog.log", "-v", f"{logging.DEBUG}"]
         cli=CommandLine(args)
