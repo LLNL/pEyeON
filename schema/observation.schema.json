@@ -19,7 +19,7 @@
     },
     "filetype": {
       "type": "string",
-      "oneOf": ["elf", "pe", "macho", "other"]
+      "enum": [ "elf", "pe", "macho", "other" ]
     },
     "imphash": {
       "type": "string",
@@ -82,12 +82,12 @@
       "description": "Checks if signatures are OK and if digest matches hashed authenticode"
     },
     "metadata": {
+      "type": "object", 
       "oneOf": [
-        { "$ref": "#/definitions/PEMetadata" },
-        { "$ref": "#/definitions/ELFMetadata" },
-        { "$ref": "#/definitions/MachOMetadata" },
-        { "$ref": "#/definitions/OtherMetadata" },
-        { "type": "null" }
+        { "$ref": "#/$defs/PEMetadata" },
+        { "$ref": "#/$defs/ELFMetadata" },
+        { "$ref": "#/$defs/MachOMetadata" },
+        { "$ref": "#/$defs/OtherMetadata" }
       ]
     },
     "defaults": {
@@ -202,7 +202,7 @@
           "items": {
             "type": "object",
             "properties": {
-              "format": "string",
+              "format": { "type": "string" },
               "header": {
                 "type": "object",
                 "properties": {
@@ -222,10 +222,10 @@
         "build": {
           "type": "object",
           "properties": {
-            "platform": "string",
-            "platformValue": "integer",
-            "minOSVersion": "string",
-            "sdkVersion": "string",
+            "platform": { "type": "string" },
+            "platformValue": { "type": "integer" },
+            "minOSVersion": { "type": "string" },
+            "sdkVersion": { "type": "string" },
             "tools": {
               "type": "array",
               "items": {
