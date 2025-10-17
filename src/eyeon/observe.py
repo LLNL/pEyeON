@@ -112,13 +112,17 @@ class Observe:
             self.set_signatures(file)
             self.set_issuer_sha256()
             self.set_windows_metadata(file)
+            self.filetype = "pe"
         elif lief.is_elf(file):
             self.set_telfhash(file)
             self.set_elf_metadata(file)
+            self.filetype = "elf"
         elif lief.is_macho(file):
             self.set_macho_metadata(file)
+            self.filetype = "macho"
         else:
             self.imphash = "N/A"
+            self.filetype = "other"
         self.set_magic(file)
         self.modtime = datetime.datetime.fromtimestamp(
             stat.st_mtime, tz=datetime.timezone.utc
