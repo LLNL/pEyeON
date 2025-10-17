@@ -206,14 +206,14 @@
               "header": {
                 "type": "object",
                 "properties": {
-                  "cpuType": "string",
-                  "cpuTypeValue": "integer",
-                  "cpuSubtype": "string",
-                  "cpuSubtypeValue": "integer",
-                  "fileType": "string",
-                  "fileTypeValue": "integer",
+                  "cpuType": { "type": "string" },
+                  "cpuTypeValue": { "type": "integer" },
+                  "cpuSubtype": { "type": "string" },
+                  "cpuSubtypeValue": { "type": "integer" },
+                  "fileType": { "type": "string" },
+                  "fileTypeValue": { "type": "integer" },
                   "flags": { "type": "array" },
-                  "numCommands": "integer"
+                  "numCommands": { "type": "integer" }
                 }
               }
             }
