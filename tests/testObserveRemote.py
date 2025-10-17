@@ -238,7 +238,7 @@ class ObservationTestCase6(unittest.TestCase):
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100755")
         self.assertEqual(len(self.OBS.signatures), 0)  # unsigned, should have no signatures
-        self.assertEqual(self.OBS.filetype, "pe")
+        self.assertEqual(self.OBS.filetype, "macho")
 
 
     # def test_detect_it_easy(self) -> None:
@@ -312,7 +312,7 @@ class ObservationTestCase8(unittest.TestCase):
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100755")
-        self.assertEqual(self.OBS.filetype, "other")
+        self.assertEqual(self.OBS.filetype, "elf")
 
 
     # def test_detect_it_easy(self) -> None:
@@ -343,7 +343,7 @@ class ObservationTestCase9(unittest.TestCase):
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100644")
-        self.assertEqual(self.OBS.filetype, "pe")
+        self.assertEqual(self.OBS.filetype, "other")
 
 
 class ObservationTestCase10(unittest.TestCase):

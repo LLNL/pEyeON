@@ -38,6 +38,13 @@ log = logging.getLogger("eyeon.observe")
 #         except FileNotFoundError:
 #             pass
 
+class MisreadBytesException(Exception):
+    '''
+    Create exeption for when lief reads jar files as macho.
+    TODO: link Wangmos issue
+    '''
+    pass
+
 
 class Observe:
     """
@@ -118,11 +125,17 @@ class Observe:
             self.set_elf_metadata(file)
             self.filetype = "elf"
         elif lief.is_macho(file):
-            self.set_macho_metadata(file)
-            self.filetype = "macho"
+            try:
+                self.set_macho_metadata(file)
+                self.filetype = "macho"
+            except MisreadBytesException:
+                self.imphash = "N/A"
+                self.filetype = "other"
+                self.set_other_metadata(file)
         else:
             self.imphash = "N/A"
             self.filetype = "other"
+            self.set_other_metadata(file)
         self.set_magic(file)
         self.modtime = datetime.datetime.fromtimestamp(
             stat.st_mtime, tz=datetime.timezone.utc
@@ -391,12 +404,17 @@ class Observe:
         """Finds the metadata from surfactant"""
         from surfactant.infoextractors.mach_o_file import extract_mach_o_info
 
+        if lief.parse(file) is None:
+            raise MisreadBytesException
         try:
             self.metadata = extract_mach_o_info(file)
         except Exception as e:
             print(file, e)
             self.metadata = {}
 
+    def set_other_metadata(self, file: str) -> None:
+        self.metadata = {"description": "some other file not in {elf, pe, macho}"}
+    
     def _safe_serialize(self, obj) -> str:
         """
         Certs are byte objects, not json.

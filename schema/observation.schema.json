@@ -140,6 +140,7 @@
     },
     "PEMetadata": {
       "type": "object",
+      "required": ["peMachine"],
       "properties": {
         "OS": { "type": "string" },
         "peMachine": { "type": "string" },
@@ -160,8 +161,9 @@
     },
     "ELFMetadata": {
       "type": "object",
+      "required": ["elfIdent", "elfDependencies"],
       "properties": {
-         "OS": { "type": "string" },
+        "OS": { "type": "string" },
         "elfIdent": {
           "type": "object",
           "properties": {
@@ -195,8 +197,10 @@
     },
     "MachOMetadata": {
       "type": "object",
+      "required": ["numBinaries", "binaries"],
       "properties": {
         "OS": { "type": "string" },
+        "numBinaries": { "type": "integer" },
         "binaries": {
           "type": "array",
           "items": {
@@ -215,61 +219,64 @@
                   "flags": { "type": "array" },
                   "numCommands": { "type": "integer" }
                 }
-              }
-            }
-          }
-        },
-        "build": {
-          "type": "object",
-          "properties": {
-            "platform": { "type": "string" },
-            "platformValue": { "type": "integer" },
-            "minOSVersion": { "type": "string" },
-            "sdkVersion": { "type": "string" },
-            "tools": {
-              "type": "array",
-              "items": {
+              },
+              "build": {
                 "type": "object",
                 "properties": {
-                  "tool": { "type": "string" },
-                  "version": { "type": "string" }
+                  "platform": { "type": "string" },
+                  "platformValue": { "type": "integer" },
+                  "minOSVersion": { "type": "string" },
+                  "sdkVersion": { "type": "string" },
+                  "tools": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "tool": { "type": "string" },
+                        "version": { "type": "string" }
+                      }
+                    }
+                  }
                 }
-              }
+              },
+              "signature": {
+                "type": "object",
+                "properties": {
+                  "offset": { "type":"integer" },
+                  "size": { "type":"integer" },
+                  "type": { "type":"string" }
+                }
+              },
+              "dependencies": {
+                "type": "array",
+                "items": {
+                  "name": { "type": "string" },
+                  "currentVersion": { "type": "string" },
+                  "compatibilityVersion": { "type": "string" }
+                }
+              },
+              "rpaths": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "dyld": {
+                "type": "object",
+                "properties": {
+                  "linker": { "type": "string" }
+                }
+              },
+              "encryption": { "type": "object" }
             }
           }
-        },
-        "signature": {
-          "type": "object",
-          "properties": {
-            "offset": { "type":"integer" },
-            "size": { "type":"integer" },
-            "type": { "type":"string" }
-          }
-        },
-        "dependencies": {
-          "type": "array",
-          "items": {
-            "name": { "type": "string" },
-            "currentVersion": { "type": "string" },
-            "compatibilityVersion": { "type": "string" }
-          }
-        },
-        "rpaths": {
-          "type": "array",
-          "items": { "type": "string" }
-        },
-        "dyld": {
-          "type": "object",
-          "properties": {
-            "linker": { "type": "string" }
-          }
-        },
-        "encryption": { "type": "object" }
+        }
       }
     },
     "OtherMetadata": {
       "type": "object",
-      "properties": {}
+      "required": ["description"],
+      "properties": {
+        "description": { "type": "string" }
+      }
     },
     "defaults": {
       "type": "object",
