@@ -1,0 +1,60 @@
+{
+    "uuid": "643a2b73-3e93-4193-98a0-34e12ae58dab",
+    "bytecount": 575488,
+    "filename": "7z.exe",
+    "signatures": [],
+    "detect_it_easy": "PE64\n    Linker: Microsoft Linker(8.00.40310)\n    Compiler: Microsoft Visual C/C++(19.36.35211)[C]\n    Tool: Visual Studio(2005)\n\n",
+    "imphash": "cb2b0bcc7b0b4ecddfdd5567e32c4ac4",
+    "metadata": {
+        "OS": "Windows",
+        "peMachine": "AMD",
+        "peOperatingSystemVersion": "4.0",
+        "peSubsystemVersion": "5.2",
+        "peSubsystem": "WINDOWS_CUI",
+        "peLinkerVersion": "8.0",
+        "peImport": [
+            "OLEAUT32.dll",
+            "USER32.dll",
+            "ADVAPI32.dll",
+            "msvcrt.dll",
+            "KERNEL32.dll"
+        ],
+        "peIsExe": true,
+        "peIsDll": false,
+        "peIsClr": false,
+        "FileInfo": {
+            "CompanyName": "Igor Pavlov",
+            "FileDescription": "7-Zip Console",
+            "FileVersion": "25.01",
+            "InternalName": "7z",
+            "LegalCopyright": "Copyright (c) 1999-2025 Igor Pavlov",
+            "OriginalFilename": "7z.exe",
+            "ProductName": "7-Zip",
+            "ProductVersion": "25.01"
+        },
+        "dllRedirectionLocal": false
+    },
+    "magic": "PE32+ executable (console) x86-64, for MS Windows",
+    "modtime": "2025-08-03 18:00:00",
+    "observation_ts": "2025-10-02 19:18:44",
+    "permissions": "0o100644",
+    "md5": "cdcd6dd1e369e47103fa3e37027a5b48",
+    "sha1": "63949b0a3490db904bcb7875fcca725a1159edc4",
+    "sha256": "4cd7d776c686427226a151789d2d61f0b2ed2c392148cc4e69c0238362fafecf",
+    "ssdeep": "6144:5acm/dssUvELldbZSSOIueI0CdmqDE4d6I/S5xOa5GXPkF8RoGaAYTXhk+lDFyW6:5aRssUvEbZNFZCDII/jIGtEuqucpvb8",
+    "defaults": {
+        "default_filename": "test_config.toml",
+        "manufacturer": {
+            "org": "\"test_manf\""
+        },
+        "location": {
+            "location": "\"test_loc\"",
+            "filelocation": "\"/this/is/a/test\""
+        },
+        "machines": {
+            "machines": "\"test_machine\"",
+            "os": "\"TestOS\"",
+            "version": "3.01"
+        }
+    }
+}

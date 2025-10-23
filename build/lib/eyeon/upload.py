@@ -11,8 +11,7 @@ def get_box_client() -> Client:
     '''
     authenticate with the box service
     '''
-    settings=box_config.get_box_settings(
-    print(settings)
+    settings=box_config.get_box_settings()
     client = box_auth.authenticate_oauth(settings)
     return client
 

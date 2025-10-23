@@ -1,0 +1,112 @@
+{
+    "uuid": "462bd249-2c77-4a6b-95e1-5dd1e2bb0a22",
+    "bytecount": 116536,
+    "filename": "Code42Service.exe",
+    "signatures": [
+        {
+            "certs": [
+                {
+                    "cert._version": "3",
+                    "sha256": "46011ede1c147eb2bc731a539b7c047b7ee93e48b9d3c3ba710ce132bbdfac6b",
+                    "serial_number": "08:AD:40:B2:60:D2:9C:4C:9F:5E:CD:A9:BD:93:AE:D9",
+                    "issuer_name": "C=US, O=DigiCert Inc, OU=www.digicert.com, CN=DigiCert Trusted Root G4",
+                    "subject_name": "C=US, O=DigiCert\\, Inc., CN=DigiCert Trusted G4 Code Signing RSA4096 SHA384 2021 CA1",
+                    "issued_on": "2021-04-29 00:00:00",
+                    "expires_on": "2036-04-28 23:59:59",
+                    "signed_using": "RSA with SHA-384",
+                    "RSA_key_size": "4096 bits",
+                    "basic_constraints": "CA=true, max_pathlen=0",
+                    "key_usage": "Digital Signature, Key Cert Sign, CRL Sign",
+                    "ext_key_usage": "Code Signing",
+                    "certificate_policies": "???, ???"
+                },
+                {
+                    "cert._version": "3",
+                    "sha256": "f7edff02a169b452b76756b0960a053a8aeeb107d404963a3ba305a00bf03501",
+                    "serial_number": "0B:BD:5F:A6:C3:9E:7B:2F:9D:97:6B:72:2B:7E:28:89",
+                    "issuer_name": "C=US, O=DigiCert\\, Inc., CN=DigiCert Trusted G4 Code Signing RSA4096 SHA384 2021 CA1",
+                    "subject_name": "C=US, ST=Minnesota, L=Minneapolis, O=Code42 Software Inc, OU=Code42 Software\\, Inc., CN=Code42 Software Inc",
+                    "issued_on": "2023-03-07 00:00:00",
+                    "expires_on": "2026-03-05 23:59:59",
+                    "signed_using": "RSA with SHA-256",
+                    "RSA_key_size": "4096 bits",
+                    "basic_constraints": "CA=false",
+                    "key_usage": "Digital Signature",
+                    "ext_key_usage": "Code Signing",
+                    "certificate_policies": "???",
+                    "issuer_sha256": "46011ede1c147eb2bc731a539b7c047b7ee93e48b9d3c3ba710ce132bbdfac6b"
+                }
+            ],
+            "signers": "SHA_256/RSA - C=US, O=DigiCert\\, Inc., CN=DigiCert Trusted G4 Code Signing RSA4096 SHA384 2021 CA1 - 4 auth attr - 1 unauth attr",
+            "digest_algorithm": "lief._lief.PE.ALGORITHMS.SHA_256",
+            "verification": "OK",
+            "sha1": "852bdf48746083cb31e1ffb37824699fbd19ef63e5dd0e9921af547882a9b6a2"
+        }
+    ],
+    "detect_it_easy": "PE64\n    Linker: Microsoft Linker(14.29.30156)\n    Compiler: Microsoft Visual C/C++(19.29.30156)[LTCG/C++]\n    Tool: Visual Studio(2019 version 16.11)\n    \u001b[1;35mSign tool: Windows Authenticode(2.0)[PKCS #7]\u001b[0m\n\n",
+    "imphash": "5ef19954a0b97644d1614d5a4a17271a",
+    "authentihash": "852bdf48746083cb31e1ffb37824699fbd19ef63e5dd0e9921af547882a9b6a2",
+    "authenticode_integrity": "OK",
+    "metadata": {
+        "OS": "Windows",
+        "peMachine": "AMD",
+        "peOperatingSystemVersion": "6.0",
+        "peSubsystemVersion": "6.0",
+        "peSubsystem": "WINDOWS_CUI",
+        "peLinkerVersion": "14.29",
+        "peImport": [
+            "KERNEL32.dll",
+            "SHELL32.dll",
+            "ADVAPI32.dll",
+            "MSVCP140.dll",
+            "VCRUNTIME140_1.dll",
+            "VCRUNTIME140.dll",
+            "api-ms-win-crt-runtime-l1-1-0.dll",
+            "api-ms-win-crt-stdio-l1-1-0.dll",
+            "api-ms-win-crt-filesystem-l1-1-0.dll",
+            "api-ms-win-crt-environment-l1-1-0.dll",
+            "api-ms-win-crt-heap-l1-1-0.dll",
+            "api-ms-win-crt-string-l1-1-0.dll",
+            "api-ms-win-crt-math-l1-1-0.dll",
+            "api-ms-win-crt-locale-l1-1-0.dll"
+        ],
+        "peIsExe": true,
+        "peIsDll": false,
+        "peIsClr": false,
+        "FileInfo": {
+            "Comments": "Code42Service v12.6",
+            "CompanyName": "Code42 Software, Inc.",
+            "FileDescription": "Code42",
+            "FileVersion": "12.6.0.33",
+            "InternalName": "Code42Service",
+            "LegalCopyright": "\u00a9 2025, Code42 Software, Inc. All Rights Reserved.",
+            "OriginalFilename": "Code42Service.exe",
+            "ProductName": "Code42Service",
+            "ProductVersion": "12.6.0.33"
+        },
+        "dllRedirectionLocal": false
+    },
+    "magic": "PE32+ executable (console) x86-64, for MS Windows",
+    "modtime": "2025-01-16 01:42:20",
+    "observation_ts": "2025-10-02 19:18:41",
+    "permissions": "0o100644",
+    "md5": "a4432c85aad56f1cabc096e2cdc66631",
+    "sha1": "29aed9750230fe5811b93cf92468ab6164eb8e07",
+    "sha256": "2767ae0272cb1fe70a70c0522a48ea4dc56e3ecb0a2f1d623fb7cbb0aafc44b5",
+    "ssdeep": "1536:F3lnrkbMx4IJp9/Eq+s7qOSR+v9ZfrGT8aM2vbjiTgxjwp/sf/U7K:FebMxppxEaa+v9oT8XgbjzjOUXU",
+    "defaults": {
+        "default_filename": "test_config.toml",
+        "manufacturer": {
+            "org": "\"test_manf\""
+        },
+        "location": {
+            "location": "\"test_loc\"",
+            "filelocation": "\"/this/is/a/test\""
+        },
+        "machines": {
+            "machines": "\"test_machine\"",
+            "os": "\"TestOS\"",
+            "version": "3.01"
+        }
+    }
+}
