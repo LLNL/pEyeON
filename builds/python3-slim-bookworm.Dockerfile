@@ -1,4 +1,4 @@
-FROM python:3.13.1-slim-bookworm AS builder
+FROM python:3.13.7-slim-bookworm AS builder
 
 ARG USER_ID
 ARG OUN
@@ -27,22 +27,18 @@ RUN python3 -m venv /eye && /eye/bin/pip install peyeon
 FROM python:3.13.1-slim-bookworm
 COPY --from=builder /opt/tlsh/bin /opt/tlsh/bin
 COPY --from=builder /eye /eye
-ARG USER_ID
-ARG OUN
 
 RUN apt-get update \
     && apt-get install -y \
-      libmagic1 ssdeep jq \
+      libmagic1 ssdeep jq gosu \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-RUN groupadd -g $USER_ID $OUN \
-    && useradd -ms /bin/bash $OUN -u $USER_ID -g $USER_ID
-
-RUN chown -R $OUN /eye
-USER $OUN
+COPY builds/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 ENV PATH="/eye/bin:$PATH"
 
-ENV PATH=/home/$OUN/.local/bin:$PATH
 
 WORKDIR /workdir
+ENTRYPOINT ["/entrypoint.sh"]
+
