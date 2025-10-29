@@ -12,7 +12,6 @@ USER=eyeon
 if [ "$VOLUME_UID" = "0" ]; then
     VOLUME_UID=1000
     VOLUME_GID=1000
-    USER=defaultuser
 fi
 
 # Create group if it doesn't exist
