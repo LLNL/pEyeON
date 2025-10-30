@@ -34,7 +34,9 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-COPY builds/entrypoint.sh /entrypoint.sh
+# look for entrypoint in basedir when pulling files
+# or entrypoint from builds folder when cloning
+COPY *entrypoint.sh *builds/*entrypoint.sh /
 RUN chmod +x /entrypoint.sh
 ENV PATH="/eye/bin:$PATH"
 
