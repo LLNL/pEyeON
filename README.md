@@ -30,10 +30,10 @@ This dockerfile contains all the pertinent tools specific to data extraction. Th
 
 #### Docker
 ```bash
-wget https://raw.githubusercontent.com/LLNL/pEyeON/refs/heads/main/builds/docker-build.sh \
-     https://raw.githubusercontent.com/LLNL/pEyeON/refs/heads/main/builds/docker-run.sh \
+wget https://raw.githubusercontent.com/LLNL/pEyeON/refs/heads/main/builds/docker-run.sh \
+     https://raw.githubusercontent.com/LLNL/pEyeON/refs/heads/main/builds/entrypoint.sh \
      https://raw.githubusercontent.com/LLNL/pEyeON/refs/heads/main/builds/python3-slim-bookworm.Dockerfile
-chmod +x docker-build.sh && ./docker-build.sh
+docker build -t peyeon -f python3-slim-bookworm.Dockerfile .
 chmod +x docker-run.sh && ./docker-run.sh
 ```
 #### Podman
