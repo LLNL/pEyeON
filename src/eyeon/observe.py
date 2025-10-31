@@ -16,9 +16,11 @@ import re
 import duckdb
 from importlib.resources import files
 from pathlib import Path
+from surfactant.plugin.manager import get_plugin_manager
+from surfactant.sbomtypes._software import Software
+from queue import Queue
 from uuid import uuid4
 
-import lief
 import logging
 from .setup_log import logger  # noqa: F401
 
@@ -112,30 +114,36 @@ class Observe:
         self.bytecount = stat.st_size
         self.filename = os.path.basename(file)  # TODO: split into absolute path maybe?
         self.signatures = []
-        self.set_detect_it_easy(file)
-        if lief.is_pe(file):
+        # self.set_detect_it_easy(file)
+        mgr = get_plugin_manager()
+        self.filetype = mgr.hook.identify_file_type(file)
+        if len(self.filetype) > 1:
+            print(self.filetype)
+            raise Exception("Multiple filetypes")
+        
+        if self.filetype is None:
+            self.metadata = {
+                "description": 
+                "some other file not in"
+                "{a.out, coff, docker image, elf, java, js, mach-o, native lib, ole, pe, rpm, uboot image}"
+            }
+
+        else:
+            self.set_metadata(file)
+
+        if self.filetype[0] == "PE":
             self.set_imphash(file)
             self.certs = {}
             self.set_signatures(file)
             self.set_issuer_sha256()
-            self.set_windows_metadata(file)
-            self.filetype = "pe"
-        elif lief.is_elf(file):
+
+        elif self.filetype[0] == "ELF":
             self.set_telfhash(file)
-            self.set_elf_metadata(file)
-            self.filetype = "elf"
-        elif lief.is_macho(file):
-            try:
-                self.set_macho_metadata(file)
-                self.filetype = "macho"
-            except MisreadBytesException:
-                self.imphash = "N/A"
-                self.filetype = "other"
-                self.set_other_metadata(file)
+
         else:
             self.imphash = "N/A"
             self.filetype = "other"
-            self.set_other_metadata(file)
+
         self.set_magic(file)
         self.modtime = datetime.datetime.fromtimestamp(
             stat.st_mtime, tz=datetime.timezone.utc
@@ -206,31 +214,11 @@ class Observe:
         except Exception as E:
             log.error(E)
 
-    # @staticmethod
-    def _cert_parser(self, cert: lief.PE.x509) -> dict:
-        """lief certs are messy. convert to json data"""
-        crt = str(cert).split("\n")
-        cert_d = {}
-        for line in crt:
-            if line:  # catch empty string
-                try:
-                    k, v = re.split("\s+: ", line)  # noqa: W605
-                except ValueError:  # not enough values to unpack
-                    k = re.split("\s+: ", line)[0]  # noqa: W605
-                    v = ""
-                except Exception as e:
-                    print(line)
-                    raise (e)
-                k = "_".join(k.split())  # replace space with underscore
-                cert_d[k] = v
-            cert_d["sha256"] = self.hashit(cert)
-        return cert_d
-
     def set_signatures(self, file: str) -> None:
         """
         Runs LIEF signature validation and collects certificate chain.
         """
-
+        import lief
         def verif_flags(flag: lief.PE.Signature.VERIFICATION_FLAGS) -> str:
             """
             Map flags to strings
@@ -262,6 +250,31 @@ class Observe:
 
             return vf
 
+        def hashit(c: lief.PE.x509):
+            hc = hashlib.sha256()
+            hc.update(c.raw)
+            return hc.hexdigest()
+
+        def cert_parser(self, cert: lief.PE.x509) -> dict:
+            """lief certs are messy. convert to json data"""
+            crt = str(cert).split("\n")
+            cert_d = {}
+            for line in crt:
+                if line:  # catch empty string
+                    try:
+                        k, v = re.split("\s+: ", line)  # noqa: W605
+                    except ValueError:  # not enough values to unpack
+                        k = re.split("\s+: ", line)[0]  # noqa: W605
+                        v = ""
+                    except Exception as e:
+                        print(line)
+                        raise (e)
+                    k = "_".join(k.split())  # replace space with underscore
+                    cert_d[k] = v
+                cert_d["sha256"] = hashit(cert)
+                self.certs[cert_d["sha256"]] = cert.raw
+            return cert_d
+
         pe = lief.parse(file)
         if len(pe.signatures) > 1:
             log.info("file has multiple signatures")
@@ -280,7 +293,7 @@ class Observe:
         # this thing is documented but has no constructor defined
         self.signatures = [
             {
-                "certs": [self._cert_parser(c) for c in sig.certificates],
+                "certs": [cert_parser(c) for c in sig.certificates],
                 "signers": str(sig.signers[0]),
                 "digest_algorithm": str(sig.digest_algorithm),
                 "verification": verif_flags(sig.check()),  # gives us more info than a bool on fail
@@ -306,14 +319,6 @@ class Observe:
             for cert in sig["certs"]:  # parse mappings, set issuer sha based on issuer name
                 if cert["issuer_name"].casefold() in subject_sha:
                     cert["issuer_sha256"] = subject_sha[cert["issuer_name"].casefold()]
-
-    # @staticmethod
-    def hashit(self, c: lief.PE.x509):
-        hc = hashlib.sha256()
-        hc.update(c.raw)
-        hc = hc.hexdigest()
-        self.certs[hc] = c.raw
-        return hc
 
     def set_telfhash(self, file: str) -> None:
         """
@@ -353,68 +358,25 @@ class Observe:
                     return os.path.join(dirpath, file)
         return None
 
-
-    def set_windows_metadata(self, file: str) -> None:
-        """Finds the metadata from surfactant"""
-        from surfactant.infoextractors.pe_file import extract_pe_info
+    def set_metadata(self, file: str):
+        sw = Software()
+        q = Queue()
+        mgr = get_plugin_manager()
 
         try:
-            self.metadata = extract_pe_info(file)
+            self.metadata = mgr.hook.extract_file_info(
+                sbom=None, software=sw, filename=file,
+                filetype=self.filetype,
+                context_queue=q,
+                current_context=None,
+                children=None,
+                software_field_hints=[],
+                omit_unrecognized_types=None
+            )
         except Exception as e:
             print(file, e)
             self.metadata = {}
-
-    def set_elf_metadata(self, file: str) -> None:
-        """Finds the metadata from surfactant"""
-        from surfactant.infoextractors.elf_file import extract_elf_info
-
-        try:
-            test_metadata = extract_elf_info(file)
-            counter = 0
-            # fix elfnote section
-            og_elfnote = test_metadata["elfNote"]
-            new_elfnote_dict = dict()
-
-            # iterate through each elfnote dictionary
-            for elfnote_dict in og_elfnote:
-                # get type
-                type_key_value = elfnote_dict["type"]
-                # want to create this only if type_key_value has not been seen before
-                if type_key_value in new_elfnote_dict:
-                    type_key_list = new_elfnote_dict[type_key_value]
-                else:
-                    type_key_list = []
-                new_dict = dict()
-                for key in elfnote_dict:
-                    if not key == "type":
-                        # add to dict
-                        new_dict[key] = elfnote_dict[key]
-                type_key_list.append(new_dict)
-                # add the type_key into the elfNote dict
-                new_elfnote_dict[type_key_value] = type_key_list
-            new_elfnote = [new_elfnote_dict]
-            test_metadata["elfNote"] = new_elfnote
-            self.metadata = test_metadata
-
-        except Exception as e:
-            print(file, e)
-            self.metadata = {}
-
-    def set_macho_metadata(self, file: str) -> None:
-        """Finds the metadata from surfactant"""
-        from surfactant.infoextractors.mach_o_file import extract_mach_o_info
-
-        if lief.parse(file) is None:
-            raise MisreadBytesException
-        try:
-            self.metadata = extract_mach_o_info(file)
-        except Exception as e:
-            print(file, e)
-            self.metadata = {}
-
-    def set_other_metadata(self, file: str) -> None:
-        self.metadata = {"description": "some other file not in {elf, pe, macho}"}
-    
+   
     def _safe_serialize(self, obj) -> str:
         """
         Certs are byte objects, not json.
