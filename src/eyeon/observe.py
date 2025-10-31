@@ -40,13 +40,6 @@ log = logging.getLogger("eyeon.observe")
 #         except FileNotFoundError:
 #             pass
 
-class MisreadBytesException(Exception):
-    '''
-    Create exeption for when lief reads jar files as macho.
-    TODO: link Wangmos issue
-    '''
-    pass
-
 
 class Observe:
     """
@@ -116,7 +109,7 @@ class Observe:
         self.signatures = []
         # self.set_detect_it_easy(file)
         mgr = get_plugin_manager()
-        self.filetype = mgr.hook.identify_file_type(file)
+        self.filetype = mgr.hook.identify_file_type(filepath=file, context=None)
         if len(self.filetype) > 1:
             print(self.filetype)
             raise Exception("Multiple filetypes")
