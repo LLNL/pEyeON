@@ -1,16 +1,16 @@
 import unittest
-import logging
+#import logging
 from eyeon.cli import CommandLine
 
 
 class CliTestCase(unittest.TestCase):
     def setUp(self) -> None:
         self.cli1 = CommandLine(
-            f"observe -o ./outputs  -g file.log -v {logging.DEBUG} -l LLNL demo.ipynb ".split()
+            f"observe -o ./outputs  -g file.log -v DEBUG -l LLNL demo.ipynb ".split()
         )
 
         self.cli2 = CommandLine(
-            f"parse --output-dir ./outputs --log-file file.log --log-level {logging.DEBUG} tests -t 2 ".split()  # noqa: E501
+            f"parse --output-dir ./outputs --log-file file.log --log-level DEBUG tests -t 2 ".split()  # noqa: E501
         )
 
         self.cli3 = CommandLine(
@@ -20,7 +20,7 @@ class CliTestCase(unittest.TestCase):
     def testObserveArgs(self) -> None:
         self.assertEqual(self.cli1.args.filename, "demo.ipynb")
         self.assertEqual(self.cli1.args.output_dir, "./outputs")
-        self.assertEqual(self.cli1.args.log_level, logging.DEBUG)
+        self.assertEqual(self.cli1.args.log_level, "DEBUG")
         self.assertEqual(self.cli1.args.log_file, "file.log")
         self.assertEqual(self.cli1.args.location, "LLNL")
         self.assertEqual(self.cli1.args.func, self.cli1.observe)
@@ -29,7 +29,7 @@ class CliTestCase(unittest.TestCase):
         self.assertEqual(self.cli2.args.dir, "tests")
         self.assertEqual(self.cli2.args.output_dir, "./outputs")
         self.assertEqual(self.cli2.args.log_file, "file.log")
-        self.assertEqual(self.cli2.args.log_level, logging.DEBUG)
+        self.assertEqual(self.cli2.args.log_level, "DEBUG")
         self.assertEqual(self.cli2.args.threads, 2)
         self.assertEqual(self.cli2.args.func, self.cli2.parse)
 

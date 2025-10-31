@@ -20,26 +20,13 @@ from surfactant.plugin.manager import get_plugin_manager
 from surfactant.sbomtypes._software import Software
 from queue import Queue
 from uuid import uuid4
+from sys import stderr
+#import logging
 
-import logging
-from .setup_log import logger  # noqa: F401
+#from .setup_log import logger  # noqa: F401
 
-log = logging.getLogger("eyeon.observe")
-# from glob import glob
-
-# import tempfile
-# from unblob import models
-
-# def decore() -> None:
-#     """for some reason detect-it-easy generates these big core dumps
-#     they will fill up the disk if we don't clean them up
-#     """
-#     for rm in glob("core.*"):
-#         try:
-#             os.remove(rm)
-#         except FileNotFoundError:
-#             pass
-
+#log = logging.getLogger("eyeon.observe")
+from loguru import logger
 
 class Observe:
     """
@@ -93,15 +80,12 @@ class Observe:
             Windows File Properties -- OS, Architecture, File Info, etc.
     """
 
-    def __init__(self, file: str, log_level: int = logging.ERROR, log_file: str = None) -> None:
+    def __init__(self, file: str, log_level: str = "ERROR", log_file: str = None) -> None:
+        logger.remove()
+        fmt = "{time:%Y-%m-%d %H:%M:%S,%f} - {name} - {level} - {message}"
         if log_file:
-            fh = logging.FileHandler(log_file)
-            fh.setFormatter(
-                logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-            )
-            logging.getLogger().handlers.clear()  # remove console log
-            log.addHandler(fh)
-        logging.getLogger().setLevel(log_level)
+            logger.add(log_file, level=log_level, format=fmt)
+        logger.add(stderr, level=log_level, format=fmt)
         self.uuid = str(uuid4())
         stat = os.stat(file)
         self.bytecount = stat.st_size
@@ -113,7 +97,7 @@ class Observe:
         if len(self.filetype) > 1:
             print(self.filetype)
             raise Exception("Multiple filetypes")
-        
+        self.filetype = self.filetype[0]
         if self.filetype is None:
             self.metadata = {
                 "description": 
@@ -124,18 +108,18 @@ class Observe:
         else:
             self.set_metadata(file)
 
-        if self.filetype[0] == "PE":
+        if self.filetype == "PE":
             self.set_imphash(file)
             self.certs = {}
             self.set_signatures(file)
             self.set_issuer_sha256()
 
-        elif self.filetype[0] == "ELF":
+        elif self.filetype == "ELF":
             self.set_telfhash(file)
 
         else:
             self.imphash = "N/A"
-            self.filetype = "other"
+            # self.filetype = "other"
 
         self.set_magic(file)
         self.modtime = datetime.datetime.fromtimestamp(
@@ -152,9 +136,9 @@ class Observe:
         if configfile:
             self.defaults = eyeon.config.ConfigRead(configfile)
         else:
-            log.info("toml config not found")
+            logger.info("toml config not found")
             self.defaults = {}
-        log.debug("end of init")
+        logger.debug("end of init")
 
     @staticmethod
     def create_hash(file, hash):
@@ -178,7 +162,7 @@ class Observe:
         try:
             import magic
         except ImportError:
-            log.warning("libmagic1 or python-magic is not installed.")
+            logger.warning("libmagic1 or python-magic is not installed.")
         self.magic = magic.from_file(file)
 
     def set_imphash(self, file: str) -> None:
@@ -201,11 +185,11 @@ class Observe:
                 [os.path.join(dp, "diec"), file], capture_output=True, timeout=30
             ).stdout.decode("utf-8")
         except KeyError:
-            log.warning("No $DIEPATH set. See README.md for more information.")
+            logger.warning("No $DIEPATH set. See README.md for more information.")
         except FileNotFoundError:
-            log.warning("Please install Detect-It-Easy.")
+            logger.warning("Please install Detect-It-Easy.")
         except Exception as E:
-            log.error(E)
+            logger.error(E)
 
     def set_signatures(self, file: str) -> None:
         """
@@ -248,7 +232,7 @@ class Observe:
             hc.update(c.raw)
             return hc.hexdigest()
 
-        def cert_parser(self, cert: lief.PE.x509) -> dict:
+        def cert_parser(cert: lief.PE.x509) -> dict:
             """lief certs are messy. convert to json data"""
             crt = str(cert).split("\n")
             cert_d = {}
@@ -265,15 +249,14 @@ class Observe:
                     k = "_".join(k.split())  # replace space with underscore
                     cert_d[k] = v
                 cert_d["sha256"] = hashit(cert)
-                self.certs[cert_d["sha256"]] = cert.raw
             return cert_d
 
         pe = lief.parse(file)
         if len(pe.signatures) > 1:
-            log.info("file has multiple signatures")
+            logger.info("file has multiple signatures")
         self.signatures = []
         if not pe.signatures:
-            log.info(f"file {file} has no signatures.")
+            logger.info(f"file {file} has no signatures.")
             return
 
         # perform authentihash computation
@@ -282,20 +265,22 @@ class Observe:
         # verifies signature digest vs the hashed code to validate code integrity
         self.authenticode_integrity = verif_flags(pe.verify_signature())
 
-        # signinfo = sig.SignerInfo
-        # this thing is documented but has no constructor defined
-        self.signatures = [
-            {
-                "certs": [cert_parser(c) for c in sig.certificates],
+        self.signatures = []
+        for sig in pe.signatures:
+            certs = []
+            for c in sig.certificates:
+                cert_dict = cert_parser(c)
+                certs.append(cert_dict)
+                self.certs[cert_dict["sha256"]] = c.raw
+            self.signatures.append({
+                "certs": certs,
                 "signers": str(sig.signers[0]),
                 "digest_algorithm": str(sig.digest_algorithm),
                 "verification": verif_flags(sig.check()),  # gives us more info than a bool on fail
                 "sha1": sig.content_info.digest.hex(),
                 # "sections": [s.__str__() for s in pe.sections]
                 # **signinfo,
-            }
-            for sig in pe.signatures
-        ]
+            })
 
     def set_issuer_sha256(self) -> None:
         """
@@ -321,7 +306,7 @@ class Observe:
         try:
             import telfhash
         except ModuleNotFoundError:
-            log.warning("tlsh and telfhash are not installed.")
+            logger.warning("tlsh and telfhash are not installed.")
             return
         self.telfhash = telfhash.telfhash(file)[0]["telfhash"]
 
@@ -335,7 +320,7 @@ class Observe:
                 ["ssdeep", "-b", file], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
             ).stdout.decode("utf-8")
         except FileNotFoundError:
-            log.warning("ssdeep is not installed.")
+            logger.warning("ssdeep is not installed.")
             return
         out = out.split("\n")[1]  # header/hash/emptystring
         out = out.split(",")[0]  # hash/filename
@@ -359,13 +344,16 @@ class Observe:
         try:
             self.metadata = mgr.hook.extract_file_info(
                 sbom=None, software=sw, filename=file,
-                filetype=self.filetype,
+                filetype=[self.filetype],
                 context_queue=q,
                 current_context=None,
                 children=None,
                 software_field_hints=[],
                 omit_unrecognized_types=None
             )
+            if len(self.metadata) > 1:
+                raise Exception("multiple metadata returned")
+            self.metadata = self.metadata[0]
         except Exception as e:
             print(file, e)
             self.metadata = {}

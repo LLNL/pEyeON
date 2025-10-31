@@ -7,7 +7,6 @@ import argparse
 import eyeon.observe
 import eyeon.parse
 import eyeon.checksum
-import logging
 
 
 class CommandLine:
@@ -34,8 +33,7 @@ class CommandLine:
         shared_args.add_argument(
             "-v",
             "--log-level",
-            default=logging.ERROR,
-            type=int,
+            default="ERROR",
             help="Set the log level. Defaults to ERROR.",
         )
 
