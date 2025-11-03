@@ -1,16 +1,16 @@
 import unittest
-#import logging
+
 from eyeon.cli import CommandLine
 
 
 class CliTestCase(unittest.TestCase):
     def setUp(self) -> None:
         self.cli1 = CommandLine(
-            f"observe -o ./outputs  -g file.log -v DEBUG -l LLNL demo.ipynb ".split()
+            "observe -o ./outputs  -g file.log -v DEBUG -l LLNL demo.ipynb ".split()
         )
 
         self.cli2 = CommandLine(
-            f"parse --output-dir ./outputs --log-file file.log --log-level DEBUG tests -t 2 ".split()  # noqa: E501
+            "parse --output-dir ./outputs --log-file file.log --log-level DEBUG tests -t 2 ".split()  # noqa: E501
         )
 
         self.cli3 = CommandLine(

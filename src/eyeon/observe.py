@@ -21,12 +21,9 @@ from surfactant.sbomtypes._software import Software
 from queue import Queue
 from uuid import uuid4
 from sys import stderr
-#import logging
 
-#from .setup_log import logger  # noqa: F401
-
-#log = logging.getLogger("eyeon.observe")
 from loguru import logger
+
 
 class Observe:
     """
@@ -86,12 +83,7 @@ class Observe:
         if log_file:
             logger.add(log_file, level=log_level, format=fmt)
         logger.add(stderr, level=log_level, format=fmt)
-        # config = {
-        #     "handlers": [
-        #         {"sink": stderr, "format": fmt},
-        #     ],
-        # }
-        # logger.configure(**config)
+
         self.uuid = str(uuid4())
         stat = os.stat(file)
         self.bytecount = stat.st_size
@@ -106,9 +98,9 @@ class Observe:
         self.filetype = self.filetype[0]
         if self.filetype is None:
             self.metadata = {
-                "description": 
-                "some other file not in"
-                "{a.out, coff, docker image, elf, java, js, mach-o, native lib, ole, pe, rpm, uboot image}"
+                "description": "some other file not in"
+                "{a.out, coff, docker image, elf, java, "
+                "js, mach-o, native lib, ole, pe, rpm, uboot image}"
             }
 
         else:
@@ -202,6 +194,7 @@ class Observe:
         Runs LIEF signature validation and collects certificate chain.
         """
         import lief
+
         def verif_flags(flag: lief.PE.Signature.VERIFICATION_FLAGS) -> str:
             """
             Map flags to strings
@@ -278,15 +271,19 @@ class Observe:
                 cert_dict = cert_parser(c)
                 certs.append(cert_dict)
                 self.certs[cert_dict["sha256"]] = c.raw
-            self.signatures.append({
-                "certs": certs,
-                "signers": str(sig.signers[0]),
-                "digest_algorithm": str(sig.digest_algorithm),
-                "verification": verif_flags(sig.check()),  # gives us more info than a bool on fail
-                "sha1": sig.content_info.digest.hex(),
-                # "sections": [s.__str__() for s in pe.sections]
-                # **signinfo,
-            })
+            self.signatures.append(
+                {
+                    "certs": certs,
+                    "signers": str(sig.signers[0]),
+                    "digest_algorithm": str(sig.digest_algorithm),
+                    "verification": verif_flags(
+                        sig.check()
+                    ),  # gives us more info than a bool on fail
+                    "sha1": sig.content_info.digest.hex(),
+                    # "sections": [s.__str__() for s in pe.sections]
+                    # **signinfo,
+                }
+            )
 
     def set_issuer_sha256(self) -> None:
         """
@@ -349,13 +346,15 @@ class Observe:
 
         try:
             self.metadata = mgr.hook.extract_file_info(
-                sbom=None, software=sw, filename=file,
+                sbom=None,
+                software=sw,
+                filename=file,
                 filetype=[self.filetype],
                 context_queue=q,
                 current_context=None,
                 children=None,
                 software_field_hints=[],
-                omit_unrecognized_types=None
+                omit_unrecognized_types=None,
             )
             if len(self.metadata) > 1:
                 raise Exception("multiple metadata returned")
@@ -363,7 +362,7 @@ class Observe:
         except Exception as e:
             print(file, e)
             self.metadata = {}
-   
+
     def _safe_serialize(self, obj) -> str:
         """
         Certs are byte objects, not json.
