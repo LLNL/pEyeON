@@ -16,6 +16,7 @@ import re
 import duckdb
 from importlib.resources import files
 from pathlib import Path
+import pluggy
 from surfactant.plugin.manager import get_plugin_manager
 from surfactant.sbomtypes._software import Software
 from queue import Queue
@@ -90,9 +91,10 @@ class Observe:
         self.filename = os.path.basename(file)  # TODO: split into absolute path maybe?
         self.signatures = []
         # self.set_detect_it_easy(file)
+        # surfactant stuff
         mgr = get_plugin_manager()
         self.filetype = mgr.hook.identify_file_type(filepath=file, context=None)
-        if len(self.filetype) > 1:
+        if len(self.filetype) > 1:  # TODO: test this
             print(self.filetype)
             raise Exception("Multiple filetypes")
         self.filetype = self.filetype[0]
@@ -104,7 +106,7 @@ class Observe:
             }
 
         else:
-            self.set_metadata(file)
+            self.set_metadata(file, mgr)
 
         if self.filetype == "PE":
             self.set_imphash(file)
@@ -339,10 +341,10 @@ class Observe:
                     return os.path.join(dirpath, file)
         return None
 
-    def set_metadata(self, file: str):
-        sw = Software()
-        q = Queue()
-        mgr = get_plugin_manager()
+    def set_metadata(self, file: str, mgr: pluggy.PluginManager):
+        sw = Software()  # dummy
+        q = Queue()  # dummy
+        # mgr = get_plugin_manager()
 
         try:
             self.metadata = mgr.hook.extract_file_info(
@@ -357,6 +359,7 @@ class Observe:
                 omit_unrecognized_types=None,
             )
             if len(self.metadata) > 1:
+                # TODO: test this
                 raise Exception("multiple metadata returned")
             self.metadata = self.metadata[0]
         except Exception as e:

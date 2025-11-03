@@ -19,7 +19,7 @@
     },
     "filetype": {
       "type": "string",
-      "enum": [ "elf", "pe", "macho", "other" ]
+      "enum": ["ELF", "Malformed PE", "DOS", "Linux Kernel Image", "PE", "OLE", "MSCAB", "ISCAB", "DOCKER_GZIP", "GZIP", "BZIP2", "XZ", "DOCKER_TAR", "TAR", "RAR", "ZIP", "JAR", "WAR", "EAR", "APK", "IPA", "MSIX", "MACHOFAT", "JAVACLASS", "MACHOFAT", "MACHOFAT64", "EFIFAT", "MACHO32", "MACHO64", "LLVM_BITCODE", "LLVM_IR", "A.OUT big", "A.OUT little", "COFF", "XCOFF32", "XCOFF64", "ECOFF", "AR_LIB", "OMF_LIB", "UIMAGE", "ZLIB", "CPIO_BIN big", "CPIO_BIN little", "CPIO_ASCII_OLD", "CPIO_ASCII_NEW", "CPIO_ASCII_NEW_CRC", "ZSTANDARD", "ZSTANDARD_DICTIONARY", "ISO_9660_CD", "MACOS_DMG", "RPM Package"]
     },
     "imphash": {
       "type": "string",
@@ -87,6 +87,7 @@
         { "$ref": "#/$defs/PEMetadata" },
         { "$ref": "#/$defs/ELFMetadata" },
         { "$ref": "#/$defs/MachOMetadata" },
+        { "$ref": "#/$defs/CoffMetadata" },
         { "$ref": "#/$defs/OtherMetadata" }
       ]
     },
@@ -137,6 +138,13 @@
           "certificate_policies": { "type": "string" }
        }
      }
+    },
+    "CoffMetadata": {
+      "type": "object",
+      "required": ["coffMachineType"],
+      "properties": {
+        "coffMachineType": {"type": "string"}
+      }
     },
     "PEMetadata": {
       "type": "object",
