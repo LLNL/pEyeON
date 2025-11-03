@@ -86,6 +86,12 @@ class Observe:
         if log_file:
             logger.add(log_file, level=log_level, format=fmt)
         logger.add(stderr, level=log_level, format=fmt)
+        # config = {
+        #     "handlers": [
+        #         {"sink": stderr, "format": fmt},
+        #     ],
+        # }
+        # logger.configure(**config)
         self.uuid = str(uuid4())
         stat = os.stat(file)
         self.bytecount = stat.st_size

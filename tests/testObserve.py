@@ -216,9 +216,9 @@ class ObservationTestCase5(unittest.TestCase):
         except Exception as e:
             self.fail(f"Observe.__str__ raised exception {e} unexpectedly!")
 
-    # @classmethod
-    # def tearDownClass(self):
-    #     os.remove("./observe.log")
+    @classmethod
+    def tearDownClass(self):
+        os.remove("./observe.log")
 
 
 class ObservationTestCase6(unittest.TestCase):
