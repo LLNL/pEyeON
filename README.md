@@ -133,6 +133,13 @@ Example json file:
 obs = eyeon.parse.Parse(args.dir)
 ```
 
+For convenience you can parse, compress, and upload your results to box in a single command:
+
+```bash
+eyeon parse <dir> --upload
+```
+To set up box and upload results, see **Uploading Results** section below
+
 #### Jupyter Notebook
 If you want to run jupyter, the `./docker-run.sh` script exposes port 8888. Launch it from the `/workdir` or eyeon root directory via `jupyter notebook --ip=0.0.0.0 --no-browser` and open the `demo.ipynb` notebook for a quick demonstration.
 

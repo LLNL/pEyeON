@@ -73,6 +73,12 @@ class CommandLine:
             default=1,
             type=int,
         )
+        parse_parser.add_argument(
+            "--upload",
+            "-u",
+            help="automatically compress and upload results to box",
+            action="store_true"
+        )
         parse_parser.set_defaults(func=self.parse)
 
         # Create parser for checksum command
@@ -159,6 +165,13 @@ class CommandLine:
 
         if args.database:
             p.write_database(args.database, outdir)
+
+        if args.upload:
+            print(outdir)
+            archive_path=eyeon.upload.compress_file(outdir, compression="tar.gz")
+            print(archive_path)
+            eyeon.upload.upload(archive_path)
+            
 
     def checksum(self, args) -> None:
         "verify checksum against provided value"
