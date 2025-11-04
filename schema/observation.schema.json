@@ -88,6 +88,10 @@
         { "$ref": "#/$defs/ELFMetadata" },
         { "$ref": "#/$defs/MachOMetadata" },
         { "$ref": "#/$defs/CoffMetadata" },
+        { "$ref": "#/$defs/JavaMetadata" },
+        { "$ref": "#/$defs/AOUTMetadata" },
+        { "$ref": "#/$defs/blahMetadata" },
+        { "$ref": "#/$defs/somethingelseMetadata" },
         { "$ref": "#/$defs/OtherMetadata" }
       ]
     },

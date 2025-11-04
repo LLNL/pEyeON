@@ -94,18 +94,17 @@ class Observe:
         # surfactant stuff
         mgr = get_plugin_manager()
         self.filetype = mgr.hook.identify_file_type(filepath=file, context=None)
-        if len(self.filetype) > 1:  # TODO: test this
-            print(self.filetype)
-            raise Exception("Multiple filetypes")
-        self.filetype = self.filetype[0]
-        if self.filetype is None:
+        if (self.filetype is None) or (self.filetype == []):
             self.metadata = {
                 "description": "some other file not in"
                 "{a.out, coff, docker image, elf, java, "
                 "js, mach-o, native lib, ole, pe, rpm, uboot image}"
             }
-
         else:
+            if len(self.filetype) > 1:  # TODO: test this
+                print(self.filetype)
+                raise Exception("Multiple filetypes")
+            self.filetype = self.filetype[0]
             self.set_metadata(file, mgr)
 
         if self.filetype == "PE":
@@ -175,21 +174,21 @@ class Observe:
         pef = pefile.PE(file)
         self.imphash = pef.get_imphash()
 
-    def set_detect_it_easy(self, file: str) -> None:
-        """
-        Sets Detect-It-Easy info.
-        """
-        try:
-            dp = "/usr/bin"
-            self.detect_it_easy = subprocess.run(
-                [os.path.join(dp, "diec"), file], capture_output=True, timeout=30
-            ).stdout.decode("utf-8")
-        except KeyError:
-            logger.warning("No $DIEPATH set. See README.md for more information.")
-        except FileNotFoundError:
-            logger.warning("Please install Detect-It-Easy.")
-        except Exception as E:
-            logger.error(E)
+    # def set_detect_it_easy(self, file: str) -> None:
+    #     """
+    #     Sets Detect-It-Easy info.
+    #     """
+    #     try:
+    #         dp = "/usr/bin"
+    #         self.detect_it_easy = subprocess.run(
+    #             [os.path.join(dp, "diec"), file], capture_output=True, timeout=30
+    #         ).stdout.decode("utf-8")
+    #     except KeyError:
+    #         logger.warning("No $DIEPATH set. See README.md for more information.")
+    #     except FileNotFoundError:
+    #         logger.warning("Please install Detect-It-Easy.")
+    #     except Exception as E:
+    #         logger.error(E)
 
     def set_signatures(self, file: str) -> None:
         """
@@ -358,13 +357,23 @@ class Observe:
                 software_field_hints=[],
                 omit_unrecognized_types=None,
             )
-            if len(self.metadata) > 1:
-                # TODO: test this
-                raise Exception("multiple metadata returned")
-            self.metadata = self.metadata[0]
         except Exception as e:
-            print(file, e)
-            self.metadata = {}
+            logger.error(file, e)
+            self.metadata = []
+
+        if (self.metadata is None) or (self.metadata == []):
+            self.metadata = {
+                "description": "some other file not in"
+                "{a.out, coff, docker image, elf, java, "
+                "js, mach-o, native lib, ole, pe, rpm, uboot image}"
+            }
+            return
+
+        elif len(self.metadata) > 1:
+            # TODO: test this
+            raise Exception("multiple metadata returned")
+        else:
+            self.metadata = self.metadata[0]
 
     def _safe_serialize(self, obj) -> str:
         """

@@ -1,4 +1,5 @@
-FROM python:3.13.7-slim-bookworm AS builder
+ARG LATEST_PYTHON_3_13=python:3.13.7-slim-bookworm
+FROM $LATEST_PYTHON_3_13 AS builder
 
 ARG USER_ID
 ARG OUN
@@ -24,7 +25,7 @@ RUN python3 -m venv /eye && /eye/bin/pip install peyeon
 
 #################################################
 
-FROM python:3.13.1-slim-bookworm
+FROM $LATEST_PYTHON_3_13
 COPY --from=builder /opt/tlsh/bin /opt/tlsh/bin
 COPY --from=builder /eye /eye
 
