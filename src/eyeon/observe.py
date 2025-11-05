@@ -116,9 +116,11 @@ class Observe:
         elif self.filetype == "ELF":
             self.set_telfhash(file)
 
+        elif self.filetype == "JAVACLASS":
+            self.prep_javaclass_metadata()
+
         else:
             self.imphash = "N/A"
-            # self.filetype = "other"
 
         self.set_magic(file)
         self.modtime = datetime.datetime.fromtimestamp(
@@ -465,3 +467,16 @@ class Observe:
     #     # TODO: add the system heirarchy stuff here
     #     with tempfile.TemporaryDirectory() as td:
     #         extr = models.Extractor().extract(self.filename, td)
+
+    def prep_javaclass_metadata(self) -> None:
+        nmd = {"javaClasses": []}
+
+        if len(self.metadata.keys()) > 1:
+            print(self.metadata)
+        i = 0
+        for k, v in self.metadata["javaClasses"].items():
+            nmd["javaClasses"].append(v)
+            nmd["javaClasses"][i]["javaClassName"] = k
+            i += 1
+
+        self.metadata = nmd

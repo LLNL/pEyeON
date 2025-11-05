@@ -84,14 +84,18 @@
     "metadata": {
       "type": "object", 
       "oneOf": [
-        { "$ref": "#/$defs/PEMetadata" },
-        { "$ref": "#/$defs/ELFMetadata" },
-        { "$ref": "#/$defs/MachOMetadata" },
-        { "$ref": "#/$defs/CoffMetadata" },
-        { "$ref": "#/$defs/JavaMetadata" },
         { "$ref": "#/$defs/AOUTMetadata" },
-        { "$ref": "#/$defs/blahMetadata" },
-        { "$ref": "#/$defs/somethingelseMetadata" },
+        { "$ref": "#/$defs/CoffMetadata" },
+        { "$ref": "#/$defs/DockerImageMetadata" },
+        { "$ref": "#/$defs/ELFMetadata" },
+        { "$ref": "#/$defs/JavaMetadata" },
+        { "$ref": "#/$defs/JavascriptMetadata" },
+        { "$ref": "#/$defs/MachOMetadata" },
+        { "$ref": "#/$defs/NativeMetadata" },
+        { "$ref": "#/$defs/OleMetadata" },
+        { "$ref": "#/$defs/PEMetadata" },
+        { "$ref": "#/$defs/RPMMetadata" },
+        { "$ref": "#/$defs/UbootImageMetadata" },
         { "$ref": "#/$defs/OtherMetadata" }
       ]
     },
@@ -143,33 +147,26 @@
        }
      }
     },
+    "AOUTMetadata": {
+      "type": "object",
+      "required": [ "aoutMachineType" ],
+      "properties": {
+        "aoutMachineType": { "type": "string" }
+      }
+    },
     "CoffMetadata": {
       "type": "object",
-      "required": ["coffMachineType"],
+      "required":  ["coffMachineType" ],
       "properties": {
         "coffMachineType": {"type": "string"}
       }
     },
-    "PEMetadata": {
+    "DockerImageMetadata": {
       "type": "object",
-      "required": ["peMachine"],
+      "required": ["whateverdockerthing"],
       "properties": {
-        "OS": { "type": "string" },
-        "peMachine": { "type": "string" },
-        "peOperatingSystemVersion": { "type": "string" },
-        "peSubsystemVersion": { "type": "string" },
-        "peSubsystem": { "type": "string" },
-        "peLinkerVersion": { "type": "string" },
-        "peImport": { "type": "array",
-            "items": { "type": "string" }
-        },
-        "peIsExe": { "type": "boolean" }, 
-        "peIsDll": { "type": "boolean" }, 
-        "peIsClr": { "type": "boolean" }, 
-        "FileInfo": { "type": "object" }, 
-        "dllRedirectionLocal": { "type": "boolean" }
+        "whateverdockerthing": { "type": "string" }
       }
-
     },
     "ELFMetadata": {
       "type": "object",
@@ -205,6 +202,37 @@
         "elfIsLib": { "type": "boolean" },
         "elfIsRel": { "type": "boolean" },
         "elfIsCore": { "type": "boolean" }
+      }
+    },
+    "JavaMetadata": {
+      "type": "object",
+      "required": ["javaClasses"],
+      "javaClasses": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "className": { "type": "string" },
+          "javaMinSEVersion": { "type": "string" },
+          "javaExports": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "javaImports": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "JavascriptMetadata": {
+      "type": "object",
+      "required": ["whateverjsthing"],
+      "properties": {
+        "whateverjsthing": { "type": "string" }
       }
     },
     "MachOMetadata": {
@@ -281,6 +309,56 @@
             }
           }
         }
+      }
+    },
+    "NativeMetadata": {
+      "type": "object",
+      "required": ["whatevernativething"],
+      "properties": {
+        "whatevernativething": { "type": "string" }
+      }
+    },
+    "OleMetadata": {
+      "type": "object",
+      "required": ["whateverolething"],
+      "properties": {
+        "whateverolething": { "type": "string" }
+      }
+    },
+    
+    "PEMetadata": {
+      "type": "object",
+      "required": ["peMachine"],
+      "properties": {
+        "OS": { "type": "string" },
+        "peMachine": { "type": "string" },
+        "peOperatingSystemVersion": { "type": "string" },
+        "peSubsystemVersion": { "type": "string" },
+        "peSubsystem": { "type": "string" },
+        "peLinkerVersion": { "type": "string" },
+        "peImport": { "type": "array",
+            "items": { "type": "string" }
+        },
+        "peIsExe": { "type": "boolean" }, 
+        "peIsDll": { "type": "boolean" }, 
+        "peIsClr": { "type": "boolean" }, 
+        "FileInfo": { "type": "object" }, 
+        "dllRedirectionLocal": { "type": "boolean" }
+      }
+
+    },
+    "RPMMetadata": {
+      "type": "object",
+      "required": ["whateverrpmthing"],
+      "properties": {
+        "whateverrpmthing": { "type": "string" }
+      }
+    },
+    "UbootImageMetadata": {
+      "type": "object",
+      "required": ["whateveruimagething"],
+      "properties": {
+        "whateveruimagething": { "type": "string" }
       }
     },
     "OtherMetadata": {
