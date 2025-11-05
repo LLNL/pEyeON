@@ -106,7 +106,7 @@ class X86TwoThreadTestCase(X86ParseTestCase):
 class X86ThreeThreadTestCase(X86ParseTestCase):
     @classmethod
     def setUpClass(self) -> None:
-        self.PRS = parse.Parse("./binaries/Wintap")
+        self.PRS = parse.Parse("./binaries/")
         self.PRS(result_path="testresults", threads=3)
 
     def testCommon(self):
