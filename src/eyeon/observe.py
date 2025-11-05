@@ -117,7 +117,8 @@ class Observe:
             self.set_telfhash(file)
 
         elif self.filetype == "JAVACLASS":
-            self.prep_javaclass_metadata()
+            if "description" not in self.metadata:  # if the environment is not missing javatools
+                self.prep_javaclass_metadata()
 
         else:
             self.imphash = "N/A"
