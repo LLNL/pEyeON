@@ -1,9 +1,6 @@
 ARG LATEST_PYTHON_3_13=python:3.13.7-slim-bookworm
 FROM $LATEST_PYTHON_3_13 AS builder
 
-ARG USER_ID
-ARG OUN
-
 RUN apt-get update \
     && apt-get install -y \
        git make wget unzip build-essential python3 python3-dev python3-venv \
