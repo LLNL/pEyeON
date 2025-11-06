@@ -11,7 +11,7 @@ import json
 import os
 import pprint
 import subprocess
-import eyeon.config
+
 import re
 import duckdb
 from importlib.resources import files
@@ -134,12 +134,7 @@ class Observe:
         self.sha1 = Observe.create_hash(file, "sha1")
         self.sha256 = Observe.create_hash(file, "sha256")
         self.set_ssdeep(file)
-        configfile = self.find_config()
-        if configfile:
-            self.defaults = eyeon.config.ConfigRead(configfile)
-        else:
-            logger.info("toml config not found")
-            self.defaults = {}
+
         logger.debug("end of init")
 
     @staticmethod
@@ -176,22 +171,6 @@ class Observe:
 
         pef = pefile.PE(file)
         self.imphash = pef.get_imphash()
-
-    # def set_detect_it_easy(self, file: str) -> None:
-    #     """
-    #     Sets Detect-It-Easy info.
-    #     """
-    #     try:
-    #         dp = "/usr/bin"
-    #         self.detect_it_easy = subprocess.run(
-    #             [os.path.join(dp, "diec"), file], capture_output=True, timeout=30
-    #         ).stdout.decode("utf-8")
-    #     except KeyError:
-    #         logger.warning("No $DIEPATH set. See README.md for more information.")
-    #     except FileNotFoundError:
-    #         logger.warning("Please install Detect-It-Easy.")
-    #     except Exception as E:
-    #         logger.error(E)
 
     def set_signatures(self, file: str) -> None:
         """
@@ -463,11 +442,6 @@ class Observe:
 
     def __str__(self) -> str:
         return pprint.pformat(vars(self), indent=2)
-
-    # def extract(self) -> None:
-    #     # TODO: add the system heirarchy stuff here
-    #     with tempfile.TemporaryDirectory() as td:
-    #         extr = models.Extractor().extract(self.filename, td)
 
     def prep_javaclass_metadata(self) -> None:
         nmd = {"javaClasses": []}

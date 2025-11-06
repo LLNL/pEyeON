@@ -99,9 +99,6 @@
         { "$ref": "#/$defs/OtherMetadata" }
       ]
     },
-    "defaults": {
-      "$ref": "#/$defs/defaults"
-    },
     "signatures": {
       "type": "array",
       "items": {
@@ -366,29 +363,6 @@
       "required": ["description"],
       "properties": {
         "description": { "type": "string" }
-      }
-    },
-    "defaults": {
-      "type": "object",
-      "properties": {
-        "default_filename": { "type": "string" },
-        "manufacturer_org": { "type": "string" },
-        "location": {
-          "type": "object",
-          "properties": {
-            "location": { "type": "string" },
-            "filelocation": { "type": "string" }
-          }
-        },
-        "machines": {
-          "type": "object",
-          "properties": {
-            "machines": { "type": "string" },
-            "os": { "type": "string" },
-            "version": { "type": "string" },
-            "x-version": { "type": "string" }
-          }
-        }
       }
     }
   }
