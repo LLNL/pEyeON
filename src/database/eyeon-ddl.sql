@@ -6,6 +6,7 @@ CREATE TABLE observations (
     uuid UUID,
     bytecount UBIGINT,
     filename VARCHAR,
+	filetype VARCHAR,
     compiler VARCHAR,
     hosts VARCHAR[],
     parent VARCHAR,

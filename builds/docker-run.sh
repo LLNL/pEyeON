@@ -15,7 +15,7 @@ CONTAINER_HASH=$(docker ps -a -q -f name=$CONTAINER_NAME)
 if [[ "$CONTAINER_HASH" ]]; then
     # Container already exists--launch the stopped container
     docker start "$CONTAINER_NAME"
-    docker exec -it $CONTAINER_NAME /bin/bash
+    docker exec -it -u eyeon $CONTAINER_NAME /bin/bash
 else
     # Doesn't exist, creates a new container called eyeon
     docker run --name "$CONTAINER_NAME" -p8888:8888 -p8501:8501 -it -v $(pwd):/workdir:Z peyeon /bin/bash
