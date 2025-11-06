@@ -3,8 +3,6 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "EyeON Observation",
   "type": "object",
-  "x-duckdb-table": "observations",
-  "x-duckdb-pk": "uuid",
   "required": ["bytecount", "filename", "filetype", "magic", "md5", "observation_ts", "sha1", "sha256", "uuid"],
   "properties": {
     "bytecount": {
@@ -21,7 +19,7 @@
     },
     "filetype": {
       "type": "string",
-      "enum": ["ELF", "Malformed PE", "DOS", "Linux Kernel Image", "PE", "OLE", "MSCAB", "ISCAB", "DOCKER_GZIP", "GZIP", "BZIP2", "XZ", "DOCKER_TAR", "TAR", "RAR", "ZIP", "JAR", "WAR", "EAR", "APK", "IPA", "MSIX", "MACHOFAT", "JAVACLASS", "MACHOFAT", "MACHOFAT64", "EFIFAT", "MACHO32", "MACHO64", "LLVM_BITCODE", "LLVM_IR", "A.OUT big", "A.OUT little", "COFF", "XCOFF32", "XCOFF64", "ECOFF", "AR_LIB", "OMF_LIB", "UIMAGE", "ZLIB", "CPIO_BIN big", "CPIO_BIN little", "CPIO_ASCII_OLD", "CPIO_ASCII_NEW", "CPIO_ASCII_NEW_CRC", "ZSTANDARD", "ZSTANDARD_DICTIONARY", "ISO_9660_CD", "MACOS_DMG", "RPM Package"]
+      "enum": [ "elf", "pe", "macho", "other" ]
     },
     "imphash": {
       "type": "string",
@@ -84,85 +82,24 @@
       "description": "Checks if signatures are OK and if digest matches hashed authenticode"
     },
     "metadata": {
-      "type": "object",
-      "x-duckdb-discriminator": "filetype",
-      "x-duckdb-polymorphic-strategy": "single-table",
+      "type": "object", 
       "oneOf": [
-        { 
-          "$ref": "#/$defs/PEMetadata",
-          "x-duckdb-table": "pe_metadata",
-          "x-duckdb-pk": "observation_uuid",
-          "x-duckdb-when": ["PE", "Malformed PE"]
-        },
-        { 
-          "$ref": "#/$defs/ELFMetadata",
-          "x-duckdb-table": "elf_metadata",
-          "x-duckdb-pk": "observation_uuid",
-          "x-duckdb-when": ["ELF"]
-        },
-        { 
-          "$ref": "#/$defs/MachOMetadata",
-          "x-duckdb-table": "macho_metadata",
-          "x-duckdb-pk": "observation_uuid",
-          "x-duckdb-when": ["MACHOFAT", "MACHOFAT64", "EFIFAT", "MACHO32", "MACHO64"]
-        },
-        { 
-          "$ref": "#/$defs/CoffMetadata",
-          "x-duckdb-table": "coff_metadata",
-          "x-duckdb-pk": "observation_uuid",
-          "x-duckdb-when": ["COFF"]
-        },
-        { 
-          "$ref": "#/$defs/JavaMetadata",
-          "x-duckdb-table": "java_metadata",
-          "x-duckdb-pk": "observation_uuid",
-          "x-duckdb-when": ["JAVACLASS", "JAR", "WAR", "EAR"]
-        },
-        { 
-          "$ref": "#/$defs/AOUTMetadata",
-          "x-duckdb-table": "aout_metadata",
-          "x-duckdb-pk": "observation_uuid",
-          "x-duckdb-when": ["A.OUT big", "A.OUT little"]
-        },
-        { 
-          "$ref": "#/$defs/blahMetadata",
-          "x-duckdb-table": "blah_metadata",
-          "x-duckdb-pk": "observation_uuid",
-          "x-duckdb-when": ["BLAH"]
-        },
-        { 
-          "$ref": "#/$defs/somethingelseMetadata",
-          "x-duckdb-table": "somethingelse_metadata",
-          "x-duckdb-pk": "observation_uuid",
-          "x-duckdb-when": ["SOMETHINGELSE"]
-        },
-        { 
-          "$ref": "#/$defs/OtherMetadata",
-          "x-duckdb-table": "other_metadata",
-          "x-duckdb-pk": "observation_uuid",
-          "x-duckdb-when": []
-        }
+        { "$ref": "#/$defs/PEMetadata" },
+        { "$ref": "#/$defs/ELFMetadata" },
+        { "$ref": "#/$defs/MachOMetadata" },
+        { "$ref": "#/$defs/OtherMetadata" }
       ]
     },
     "defaults": {
-      "$ref": "#/$defs/defaults",
-      "x-duckdb-flatten": true
+      "$ref": "#/$defs/defaults"
     },
     "signatures": {
       "type": "array",
-      "x-duckdb-table": "signatures",
-      "x-duckdb-fk": "observation_uuid",
-      "x-duckdb-pk": "signature_id",
-      "x-duckdb-pk-type": "VARCHAR",
       "items": {
         "type": "object",
         "properties": {
           "certs": {
-            "$ref": "#/$defs/certs",
-            "x-duckdb-table": "certificates",
-            "x-duckdb-fk": "signature_id",
-            "x-duckdb-pk": "sha256",
-            "x-duckdb-pk-type": "VARCHAR"
+            "$ref": "#/$defs/certs"
           },
           "signers": { "type": "string" },
           "digest_algorithm": { "type": "string" },
@@ -186,7 +123,7 @@
         "properties": {
           "sha256": { "type": "string" }, 
           "issuer_sha256": { "type": "string" }, 
-          "cert_version": { "type": "string" },
+          "cert._version": { "type": "string" },
           "serial_number": { "type": "string" },
           "issuer_name": { "type": "string" },
           "subject_name": { "type": "string" },
@@ -201,13 +138,6 @@
        }
      }
     },
-    "CoffMetadata": {
-      "type": "object",
-      "required": ["coffMachineType"],
-      "properties": {
-        "coffMachineType": {"type": "string"}
-      }
-    },
     "PEMetadata": {
       "type": "object",
       "required": ["peMachine"],
@@ -218,28 +148,16 @@
         "peSubsystemVersion": { "type": "string" },
         "peSubsystem": { "type": "string" },
         "peLinkerVersion": { "type": "string" },
-        "peImport": { 
-          "type": "array",
-          "x-duckdb-array": true,
-          "items": { "type": "string" }
+        "peImport": { "type": "array",
+            "items": { "type": "string" }
         },
         "peIsExe": { "type": "boolean" }, 
         "peIsDll": { "type": "boolean" }, 
         "peIsClr": { "type": "boolean" }, 
-        "FileInfo": { 
-          "type": "object",
-          "x-duckdb-flatten": true,
-          "properties": {
-            "CompanyName": { "type": "string" },
-            "FileDescription": { "type": "string" },
-            "FileVersion": { "type": "string" },
-            "LegalCopyright": { "type": "string" },
-            "ProductName": { "type": "string" },
-            "ProductVersion": { "type": "string" }
-          }
-        }, 
+        "FileInfo": { "type": "object" }, 
         "dllRedirectionLocal": { "type": "boolean" }
       }
+
     },
     "ELFMetadata": {
       "type": "object",
@@ -248,7 +166,6 @@
         "OS": { "type": "string" },
         "elfIdent": {
           "type": "object",
-          "x-duckdb-flatten": true,
           "properties": {
             "EI_CLASS": { "type": "integer" },
             "EI_DATA": { "type": "integer" },
@@ -258,43 +175,16 @@
             "E_MACHINE": { "type": "integer" }
           }
         },
-        "elfDependencies": { 
-          "type": "array",
-          "x-duckdb-array": true
-        },
-        "elfRpath": { 
-          "type": "array",
-          "x-duckdb-array": true
-        },
-        "elfRunpath": { 
-          "type": "array",
-          "x-duckdb-array": true
-        },
-        "elfSoname": { 
-          "type": "array",
-          "x-duckdb-array": true
-        },
-        "elfInterpreter": { 
-          "type": "array",
-          "x-duckdb-array": true
-        },
-        "elfDynamicFlags": { 
-          "type": "array",
-          "x-duckdb-array": true
-        },
-        "elfDynamicFlags1": { 
-          "type": "array",
-          "x-duckdb-array": true
-        },
+        "elfDependencies": { "type": "array" },
+        "elfRpath": { "type": "array" },
+        "elfRunpath": { "type": "array" },
+        "elfSoname": { "type": "array" },
+        "elfInterpreter": { "type": "array" },
+        "elfDynamicFlags": { "type": "array" },
+        "elfDynamicFlags1": { "type": "array" },
         "elfGnuRelro": { "type": "boolean" },
-        "elfComment": { 
-          "type": "array",
-          "x-duckdb-array": true
-        },
-        "elfNote": { 
-          "type": "array",
-          "x-duckdb-array": true
-        },
+        "elfComment": { "type": "array" },
+        "elfNote": { "type": "array" },
         "elfOsAbi": { "type": "string" },
         "elfHumanArch": { "type": "string" },
         "elfArchNumber": { "type": "integer" },
@@ -313,7 +203,6 @@
         "numBinaries": { "type": "integer" },
         "binaries": {
           "type": "array",
-          "x-duckdb-json": true,
           "items": {
             "type": "object",
             "properties": {
@@ -382,30 +271,6 @@
         }
       }
     },
-    "JavaMetadata": {
-      "type": "object",
-      "properties": {
-        "javaVersion": { "type": "string" }
-      }
-    },
-    "AOUTMetadata": {
-      "type": "object",
-      "properties": {
-        "aoutMagic": { "type": "string" }
-      }
-    },
-    "blahMetadata": {
-      "type": "object",
-      "properties": {
-        "blahField": { "type": "string" }
-      }
-    },
-    "somethingelseMetadata": {
-      "type": "object",
-      "properties": {
-        "someField": { "type": "string" }
-      }
-    },
     "OtherMetadata": {
       "type": "object",
       "required": ["description"],
@@ -420,7 +285,6 @@
         "manufacturer_org": { "type": "string" },
         "location": {
           "type": "object",
-          "x-duckdb-flatten": true,
           "properties": {
             "location": { "type": "string" },
             "filelocation": { "type": "string" }
@@ -428,7 +292,6 @@
         },
         "machines": {
           "type": "object",
-          "x-duckdb-flatten": true,
           "properties": {
             "machines": { "type": "string" },
             "os": { "type": "string" },
