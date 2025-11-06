@@ -1,0 +1,50 @@
+.read eyeon_ddl.sql
+create or replace view raw_json as from '../testfiles/*.json'
+;
+insert into observations by name 
+  select * exclude (signatures, metadata, defaults) from raw_json
+;
+insert into observations_metadata by name 
+-- Dynamic list to account for any new Struct types in metadata.
+-- Push this list down to the next inner query?
+select * exclude (elfIdent, FileInfo, dotnetFlags, dotnetAssembly, dotnetAssemblyRef, dotnetImplMap, ole, aoutMachineType, EI_CLASS, binaries)
+from 
+  (select *,
+    -- Return all fields
+    unnest(elfIdent),
+    -- Return just the subset that are known
+    FileInfo.CompanyName,
+    FileInfo.FileDescription,
+    FileInfo.FileVersion,
+    FileInfo.LegalCopyright,
+    FileInfo.ProductName,
+    FileInfo.ProductVersion
+    from 
+      (select * exclude (description, peMachine) from (select uuid observation_uuid, filetype, unnest(metadata) from raw_json)))
+;
+
+insert into signatures by name
+select signature_id:concat_ws(':',observation_uuid,sha1), * exclude (certs) 
+from 
+  (select observation_uuid:uuid, unnest(signatures, max_depth := 2) 
+   from raw_json
+  where len(signatures)>0
+  )
+;
+
+insert into certificates by name
+select signature_id:concat_ws(':',observation_uuid,sha1), "cert._version" cert_version, * 
+  exclude ("observation_uuid", "signers", "digest_algorithm", "verification", "sha1", "cert._version")
+from 
+  (select 
+    unnest(certs, recursive := true),
+    * exclude (certs)
+  from
+    (select
+  --   location_pk, batch_id, uuid,
+        observation_uuid:uuid, unnest(signatures, recursive := true)
+      from raw_json
+      where len(signatures)>0
+  )
+)
+;
