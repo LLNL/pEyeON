@@ -5,7 +5,7 @@ Generate DuckDB DDL from JSON Schema with x-duckdb-* hints.
 import json
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Set, Optional
+from typing import Any, Dict, List, Set, Optional, Tuple
 
 
 class DuckDBDDLGenerator:
@@ -14,6 +14,7 @@ class DuckDBDDLGenerator:
         self.tables: Dict[str, Dict[str, str]] = {}  # table_name -> {col_name: col_def}
         self.foreign_keys: Dict[str, List[str]] = {}  # table_name -> list of FK constraints
         self.table_pks: Dict[str, str] = {}  # table_name -> pk column name
+        self.views: Dict[str, str] = {}  # view_name -> view definition
         
     def generate(self) -> str:
         """Generate complete DDL for the schema."""
@@ -45,6 +46,10 @@ class DuckDBDDLGenerator:
             
             ddl += "\n);"
             ddl_statements.append(ddl)
+        
+        # Add views
+        for view_name, view_def in self.views.items():
+            ddl_statements.append(view_def)
         
         return "\n\n".join(ddl_statements)
     
@@ -82,23 +87,38 @@ class DuckDBDDLGenerator:
         if pk:
             self.table_pks[table_name] = pk
             pk_type = obj_schema.get('x-duckdb-pk-type', 'VARCHAR')
+            
+            # Check if this is also a FK (for metadata tables)
+            is_fk = parent_table and obj_schema.get('x-duckdb-fk')
+            flags = "PK_FK" if is_fk else "PK"
+            
             self._add_column(table_name, pk, f"{pk} {pk_type} PRIMARY KEY")
         
         # Add parent FK if this is a child table
         parent_fk = obj_schema.get('x-duckdb-fk')
         if parent_fk and parent_table and parent_pk:
-            self._add_column(table_name, parent_fk, f"{parent_fk} VARCHAR")
+            # Don't add FK column if it's the same as PK (already added above)
+            if parent_fk != pk:
+                self._add_column(table_name, parent_fk, f"{parent_fk} VARCHAR")
+            
             self._add_fk(table_name, f"FOREIGN KEY ({parent_fk}) REFERENCES {parent_table}({parent_pk})")
         
         # Handle oneOf with discriminator (polymorphic metadata)
         if 'oneOf' in obj_schema:
             for variant in obj_schema['oneOf']:
                 variant_table = variant.get('x-duckdb-table')
+                variant_pk = variant.get('x-duckdb-pk')
                 
                 if variant_table and '$ref' in variant:
                     ref_schema = self._resolve_ref(variant['$ref'])
                     
-                    # Process variant as separate table with FK back to parent
+                    # Merge variant annotations
+                    ref_schema = {**ref_schema}
+                    if variant_pk:
+                        ref_schema['x-duckdb-pk'] = variant_pk
+                    
+                    ref_schema['x-duckdb-fk'] = f"{table_name[:-1]}_uuid" if table_name.endswith('s') else f"{table_name}_uuid"
+                    
                     self._process_object(
                         ref_schema,
                         table_name=variant_table,
@@ -150,30 +170,89 @@ class DuckDBDDLGenerator:
         
         # Check for oneOf with discriminator (polymorphic relationship)
         if 'oneOf' in prop_schema and 'x-duckdb-discriminator' in prop_schema:
-            # Process each variant as a separate table
-            for variant in prop_schema['oneOf']:
-                variant_table = variant.get('x-duckdb-table')
-                variant_pk = variant.get('x-duckdb-pk')
+            strategy = prop_schema.get('x-duckdb-polymorphic-strategy', 'separate-tables')
+            discriminator = prop_schema.get('x-duckdb-discriminator')
+            
+            if strategy == 'single-table':
+                # Create one wide table with all possible columns from all variants
+                base_table = prop_schema.get('x-duckdb-table', f"{table_name}_{prop_name}")
+                self._ensure_table(base_table)
                 
-                if variant_table and '$ref' in variant:
-                    ref_schema = self._resolve_ref(variant['$ref'])
+                # Add FK to parent as PK
+                fk_col = f"{table_name[:-1]}_uuid" if table_name.endswith('s') else f"{table_name}_uuid"
+                self._add_column(base_table, fk_col, f"{fk_col} VARCHAR PRIMARY KEY")
+                self.table_pks[base_table] = fk_col
+                
+                if table_pk:
+                    self._add_fk(base_table, f"FOREIGN KEY ({fk_col}) REFERENCES {table_name}({table_pk})")
+                
+                # Add discriminator column
+                self._add_column(base_table, f"{discriminator}_type", f"{discriminator}_type VARCHAR")
+                
+                # Collect all columns from all variants
+                variant_info: Dict[str, Tuple[List[str], List[str]]] = {}  # variant_table -> (column_names, when_values)
+                
+                for variant in prop_schema['oneOf']:
+                    variant_table = variant.get('x-duckdb-table')
+                    variant_when = variant.get('x-duckdb-when', [])
                     
-                    # Merge variant annotations into ref_schema
-                    ref_schema = {**ref_schema}
-                    if variant_pk:
-                        ref_schema['x-duckdb-pk'] = variant_pk
+                    if variant_table and '$ref' in variant:
+                        ref_schema = self._resolve_ref(variant['$ref'])
+                        variant_cols = [fk_col]
+                        
+                        # Process all properties from this variant
+                        properties = ref_schema.get('properties', {})
+                        for vprop_name, vprop_schema in properties.items():
+                            if '$ref' in vprop_schema:
+                                vprop_schema = {**self._resolve_ref(vprop_schema['$ref']), **vprop_schema}
+                            
+                            # Get columns that would be created
+                            cols = self._collect_columns_for_property(vprop_name, vprop_schema)
+                            for col_name, col_type in cols:
+                                variant_cols.append(col_name)
+                                # Add to base table with NULL default
+                                self._add_column(base_table, col_name, f"{col_name} {col_type} DEFAULT NULL")
+                        
+                        variant_info[variant_table] = (variant_cols, variant_when)
+                
+                # Create views for each variant
+                for variant_table, (cols, when_values) in variant_info.items():
+                    cols_str = ", ".join(cols)
                     
-                    # Process variant as separate table with FK back to parent
-                    ref_schema['x-duckdb-fk'] = f"{table_name[:-1]}_uuid" if table_name.endswith('s') else f"{table_name}_uuid"
+                    if when_values:
+                        when_clause = " OR ".join([f"{discriminator}_type = '{w}'" for w in when_values])
+                        view_def = f"CREATE VIEW {variant_table} AS\nSELECT {cols_str}\nFROM {base_table}\nWHERE {when_clause};"
+                    else:
+                        view_def = f"CREATE VIEW {variant_table} AS\nSELECT {cols_str}\nFROM {base_table};"
                     
-                    self._process_object(
-                        ref_schema,
-                        table_name=variant_table,
-                        parent_table=table_name,
-                        parent_pk=table_pk,
-                        path=f"{path}.{prop_name}.{variant_table}"
-                    )
-            return  # Don't add column for polymorphic property
+                    self.views[variant_table] = view_def
+                
+                return
+            
+            else:  # strategy == 'separate-tables' (default)
+                # Process each variant as a separate table
+                for variant in prop_schema['oneOf']:
+                    variant_table = variant.get('x-duckdb-table')
+                    variant_pk = variant.get('x-duckdb-pk')
+                    
+                    if variant_table and '$ref' in variant:
+                        ref_schema = self._resolve_ref(variant['$ref'])
+                        
+                        # Merge variant annotations
+                        ref_schema = {**ref_schema}
+                        if variant_pk:
+                            ref_schema['x-duckdb-pk'] = variant_pk
+                        
+                        ref_schema['x-duckdb-fk'] = f"{table_name[:-1]}_uuid" if table_name.endswith('s') else f"{table_name}_uuid"
+                        
+                        self._process_object(
+                            ref_schema,
+                            table_name=variant_table,
+                            parent_table=table_name,
+                            parent_pk=table_pk,
+                            path=f"{path}.{prop_name}.{variant_table}"
+                        )
+                return  # Don't add column for polymorphic property
         
         # Check for separate table hint
         if 'x-duckdb-table' in prop_schema:
@@ -193,6 +272,8 @@ class DuckDBDDLGenerator:
                     # Add auto-increment PK if specified
                     if child_pk:
                         items_schema = {**items_schema, 'x-duckdb-pk': child_pk}
+                        pk_type = prop_schema.get('x-duckdb-pk-type', 'INTEGER')
+                        items_schema['x-duckdb-pk-type'] = pk_type
                     
                     items_schema['x-duckdb-fk'] = child_fk
                     
@@ -280,6 +361,47 @@ class DuckDBDDLGenerator:
             if not is_required:
                 column_def += " DEFAULT NULL"
             self._add_column(table_name, prop_name, column_def)
+    
+    def _collect_columns_for_property(
+        self,
+        prop_name: str,
+        prop_schema: Dict[str, Any]
+    ) -> List[Tuple[str, str]]:
+        """Collect (column_name, column_type) tuples for a property without adding to table."""
+        columns = []
+        prop_type = prop_schema.get('type')
+        
+        # Handle flatten
+        if prop_schema.get('x-duckdb-flatten') and prop_type == 'object':
+            nested_props = prop_schema.get('properties', {})
+            for nested_name, nested_schema in nested_props.items():
+#                flat_name = f"{prop_name}_{nested_name}"
+                flat_name = nested_name
+                columns.extend(self._collect_columns_for_property(flat_name, nested_schema))
+            return columns
+        
+        # Handle arrays
+        if prop_schema.get('x-duckdb-array') and prop_type == 'array':
+            items_schema = prop_schema.get('items', {})
+            item_type = self._map_type(items_schema.get('type', 'string'))
+            columns.append((prop_name, f"{item_type}[]"))
+            return columns
+        
+        # Handle JSON
+        if prop_schema.get('x-duckdb-json'):
+            columns.append((prop_name, "JSON"))
+            return columns
+        
+        # Handle regular types
+        if prop_type in ['string', 'integer', 'number', 'boolean']:
+            sql_type = self._map_type(prop_type)
+            if 'enum' in prop_schema:
+                sql_type = 'VARCHAR'
+            columns.append((prop_name, sql_type))
+        elif prop_type in ['object', 'array']:
+            columns.append((prop_name, "JSON"))
+        
+        return columns
     
     def _resolve_ref(self, ref_path: str) -> Dict[str, Any]:
         """Resolve a $ref pointer."""

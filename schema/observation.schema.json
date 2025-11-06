@@ -86,6 +86,7 @@
     "metadata": {
       "type": "object",
       "x-duckdb-discriminator": "filetype",
+      "x-duckdb-polymorphic-strategy": "single-table",
       "oneOf": [
         { 
           "$ref": "#/$defs/PEMetadata",
@@ -152,7 +153,7 @@
       "x-duckdb-table": "signatures",
       "x-duckdb-fk": "observation_uuid",
       "x-duckdb-pk": "signature_id",
-      "x-duckdb-pk-type": "INTEGER",
+      "x-duckdb-pk-type": "VARCHAR",
       "items": {
         "type": "object",
         "properties": {
@@ -160,7 +161,8 @@
             "$ref": "#/$defs/certs",
             "x-duckdb-table": "certificates",
             "x-duckdb-fk": "signature_id",
-            "x-duckdb-pk": "sha256"
+            "x-duckdb-pk": "sha256",
+            "x-duckdb-pk-type": "VARCHAR"
           },
           "signers": { "type": "string" },
           "digest_algorithm": { "type": "string" },
