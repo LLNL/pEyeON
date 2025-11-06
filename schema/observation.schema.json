@@ -356,9 +356,9 @@
     },
     "UbootImageMetadata": {
       "type": "object",
-      "required": ["whateveruimagething"],
+      "required": ["uimage_header"],
       "properties": {
-        "whateveruimagething": { "type": "string" }
+        "uimage_header": { "type": "object" }
       }
     },
     "OtherMetadata": {
