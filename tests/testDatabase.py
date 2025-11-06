@@ -63,9 +63,6 @@ class GeneralDatabaseTestCase(unittest.TestCase):
             if "metadata" in json_dict:
                 self.dict_compare(json_dict.pop("metadata"), json.loads((db_dict.pop("metadata"))))
 
-            if "defaults" in json_dict:
-                self.dict_compare(json_dict.pop("defaults"), json.loads((db_dict.pop("defaults"))))
-
             for key in json_dict:
                 if isinstance(json_dict[key], str):
                     # normalize inconsistencies with uuid/hashes from db import

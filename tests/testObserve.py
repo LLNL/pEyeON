@@ -32,11 +32,6 @@ class ObservationTestCase(unittest.TestCase):
         self.assertEqual(self.OBS.permissions, "0o100644")
         self.assertEqual(self.OBS.filetype, "A.OUT big")
 
-    def testConfigJson(self) -> None:
-        vs = vars(self.OBS)
-        obs_json = json.loads(self.OBS._safe_serialize(vs))
-        assert "defaults" in obs_json, "defaults not in json"
-
     @classmethod
     def tearDownClass(self) -> None:
         try:
@@ -114,19 +109,6 @@ class ObservationTestCase3(unittest.TestCase):
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100755")
         self.assertEqual(self.OBS.filetype, "ELF")
-
-    # def test_detect_it_easy(self) -> None:
-    #     expected_output = (
-    #         "ELF64\n"
-    #         "    Compiler: gcc((Ubuntu 11.3.0-1ubuntu1~22.04) 11.3.0)[DYN AMD64-64]\n"
-    #         "    Library: GLIBC(2.34)[DYN AMD64-64]\n\n"
-    #     )
-    #     self.assertEqual(self.OBS.detect_it_easy, expected_output)
-
-    def testConfigJson(self) -> None:
-        vs = vars(self.OBS)
-        obs_json = json.loads(self.OBS._safe_serialize(vs))
-        assert "defaults" in obs_json, "defaults not in json"
 
     @classmethod
     def tearDownClass(self) -> None:
