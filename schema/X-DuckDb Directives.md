@@ -5,7 +5,9 @@ Here's a comprehensive table of all x-duckdb directives we've defined:
 | **x-duckdb-table** | Specifies the table name for this schema node | `"signatures": { "type": "array", "x-duckdb-table": "signatures" }` | `CREATE TABLE signatures (...)` |
 | **x-duckdb-pk** | Defines the primary key column name | `"x-duckdb-pk": "uuid"` | `uuid VARCHAR PRIMARY KEY` |
 | **x-duckdb-pk-type** | Specifies the data type for the primary key (default: VARCHAR) | `"x-duckdb-pk": "signature_id", "x-duckdb-pk-type": "INTEGER"` | `signature_id INTEGER PRIMARY KEY` |
+| **x-duckdb-pk-seq** | Defines the SEQUENCE object to use for auto-incrementing the PK. Used when no natural PK exists | `"x-duckdb-pk-seq": "certificate_seq"` | `CREATE SEQUENCE certificate_seq; PRIMARY KEY DEFAULT NEXTVAL('certificate_seq')` |
 | **x-duckdb-fk** | Defines the foreign key column name referencing parent table | `"x-duckdb-fk": "observation_uuid"` | `observation_uuid VARCHAR, FOREIGN KEY (observation_uuid) REFERENCES observations(uuid)` |
+| **x-duckdb-type** | Specifies the data type for this column (default: type defined in schema) | `"x-duckdb-type": "BIGINT"` | `bytesize BIGINT` | 
 | **x-duckdb-flatten** | Flattens nested object properties into parent table with prefix | `"elfIdent": { "type": "object", "x-duckdb-flatten": true, "properties": {"EI_CLASS": {...}} }` | `elfIdent_EI_CLASS INTEGER DEFAULT NULL` (in parent table) |
 | **x-duckdb-array** | Stores array as native DuckDB array type | `"elfDependencies": { "type": "array", "x-duckdb-array": true, "items": {"type": "string"} }` | `elfDependencies VARCHAR[] DEFAULT NULL` |
 | **x-duckdb-json** | Stores complex nested structures as JSON | `"binaries": { "type": "array", "x-duckdb-json": true }` | `binaries JSON DEFAULT NULL` |

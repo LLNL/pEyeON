@@ -6,7 +6,7 @@ create or replace view raw_json as from read_json('~/data/eyeon/se-firmware/*.js
 insert into observations by name 
   select * exclude (signatures, metadata, defaults) from raw_json
 ;
-insert into file_metadata by name 
+insert into base_metadata by name 
 -- Dynamic list to account for any new Struct types in metadata.
 -- Push this list down to the next inner query?
 select * --exclude (FileInfo, aoutMachineType, EI_CLASS, binaries)

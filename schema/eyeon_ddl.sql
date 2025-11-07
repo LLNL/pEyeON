@@ -1,3 +1,6 @@
+CREATE SEQUENCE certificate_seq
+;
+
 CREATE TABLE observations (
   uuid VARCHAR PRIMARY KEY,
   bytecount BIGINT,
@@ -21,7 +24,7 @@ CREATE TABLE observations (
   detect_it_easy VARCHAR DEFAULT NULL
 );
 
-CREATE TABLE file_metadata (
+CREATE TABLE base_metadata (
   observation_uuid VARCHAR PRIMARY KEY,
   filetype VARCHAR,
   aoutMachineType VARCHAR DEFAULT NULL,
@@ -84,14 +87,12 @@ CREATE TABLE signatures (
   FOREIGN KEY (observation_uuid) REFERENCES observations(uuid)
 );
 
-CREATE SEQUENCE certificate_id_seq START 1;
-
 CREATE TABLE certificates (
-  certificate_id integer  PRIMARY KEY default nextval('certificate_id_seq'),
-  sha256 VARCHAR,
+  certificate_id integer PRIMARY KEY DEFAULT NEXTVAL('certificate_seq'),
   signature_id VARCHAR,
+  sha256 VARCHAR DEFAULT NULL,
   issuer_sha256 VARCHAR DEFAULT NULL,
-  cert_version VARCHAR DEFAULT NULL,
+  cert._version VARCHAR DEFAULT NULL,
   serial_number VARCHAR DEFAULT NULL,
   issuer_name VARCHAR DEFAULT NULL,
   subject_name VARCHAR DEFAULT NULL,
@@ -108,64 +109,64 @@ CREATE TABLE certificates (
 
 CREATE VIEW aout_metadata AS
 SELECT observation_uuid, aoutMachineType
-FROM file_metadata
+FROM base_metadata
 WHERE filetype = 'A.OUT big' OR filetype = 'A.OUT little';
 
 CREATE VIEW coff_metadata AS
 SELECT observation_uuid, coffMachineType
-FROM file_metadata
+FROM base_metadata
 WHERE filetype = 'COFF' OR filetype = 'XCOFF32' OR filetype = 'XCOFF64' OR filetype = 'ECOFF';
 
 CREATE VIEW docker_metadata AS
 SELECT observation_uuid, whateverdockerthing
-FROM file_metadata
+FROM base_metadata
 WHERE filetype = 'DOCKER_GZIP' OR filetype = 'DOCKER_TAR';
 
 CREATE VIEW elf_metadata AS
 SELECT observation_uuid, OS, EI_CLASS, EI_DATA, EI_VERSION, EI_OSABI, EI_ABIVERSION, E_MACHINE, elfDependencies, elfRpath, elfRunpath, elfSoname, elfInterpreter, elfDynamicFlags, elfDynamicFlags1, elfGnuRelro, elfComment, elfNote, elfOsAbi, elfHumanArch, elfArchNumber, elfArchitecture, elfIsExe, elfIsLib, elfIsRel, elfIsCore
-FROM file_metadata
+FROM base_metadata
 WHERE filetype = 'ELF' OR filetype = 'Linux Kernel Image';
 
 CREATE VIEW java_metadata AS
 SELECT observation_uuid
-FROM file_metadata
+FROM base_metadata
 WHERE filetype = 'JAVACLASS' OR filetype = 'JAR' OR filetype = 'WAR' OR filetype = 'EAR' OR filetype = 'APK';
 
 CREATE VIEW javascript_metadata AS
 SELECT observation_uuid, whateverjsthing
-FROM file_metadata;
+FROM base_metadata;
 
 CREATE VIEW macho_metadata AS
 SELECT observation_uuid, OS, numBinaries, binaries
-FROM file_metadata
+FROM base_metadata
 WHERE filetype = 'MACHOFAT' OR filetype = 'MACHOFAT64' OR filetype = 'EFIFAT' OR filetype = 'MACHO32' OR filetype = 'MACHO64' OR filetype = 'IPA' OR filetype = 'MACOS_DMG';
 
 CREATE VIEW native_metadata AS
 SELECT observation_uuid, whatevernativething
-FROM file_metadata
+FROM base_metadata
 WHERE filetype = 'LLVM_BITCODE' OR filetype = 'LLVM_IR';
 
 CREATE VIEW ole_metadata AS
 SELECT observation_uuid, whateverolething
-FROM file_metadata
+FROM base_metadata
 WHERE filetype = 'OLE' OR filetype = 'MSCAB' OR filetype = 'ISCAB' OR filetype = 'MSIX';
 
 CREATE VIEW pe_metadata AS
 SELECT observation_uuid, OS, peMachine, peOperatingSystemVersion, peSubsystemVersion, peSubsystem, peLinkerVersion, peImport, peIsExe, peIsDll, peIsClr, FileInfo, dllRedirectionLocal
-FROM file_metadata
+FROM base_metadata
 WHERE filetype = 'PE' OR filetype = 'Malformed PE' OR filetype = 'DOS';
 
 CREATE VIEW rpm_metadata AS
 SELECT observation_uuid, whateverrpmthing
-FROM file_metadata
+FROM base_metadata
 WHERE filetype = 'RPM Package';
 
 CREATE VIEW uboot_metadata AS
 SELECT observation_uuid, whateveruimagething
-FROM file_metadata
+FROM base_metadata
 WHERE filetype = 'UIMAGE';
 
 CREATE VIEW other_metadata AS
 SELECT observation_uuid, description
-FROM file_metadata
+FROM base_metadata
 WHERE filetype = 'GZIP' OR filetype = 'BZIP2' OR filetype = 'XZ' OR filetype = 'TAR' OR filetype = 'RAR' OR filetype = 'ZIP' OR filetype = 'AR_LIB' OR filetype = 'OMF_LIB' OR filetype = 'ZLIB' OR filetype = 'CPIO_BIN big' OR filetype = 'CPIO_BIN little' OR filetype = 'CPIO_ASCII_OLD' OR filetype = 'CPIO_ASCII_NEW' OR filetype = 'CPIO_ASCII_NEW_CRC' OR filetype = 'ZSTANDARD' OR filetype = 'ZSTANDARD_DICTIONARY' OR filetype = 'ISO_9660_CD';

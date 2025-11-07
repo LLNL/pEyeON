@@ -15,6 +15,7 @@ class DuckDBDDLGenerator:
         self.foreign_keys: Dict[str, List[str]] = {}  # table_name -> list of FK constraints
         self.table_pks: Dict[str, str] = {}  # table_name -> pk column name
         self.views: Dict[str, str] = {}  # view_name -> view definition
+        self.sequences: List[str] = [] # sequence name
         
     def generate(self) -> str:
         """Generate complete DDL for the schema."""
@@ -32,7 +33,13 @@ class DuckDBDDLGenerator:
         
         # Build DDL statements
         ddl_statements = []
-        
+
+        # Build sequences
+        for seq_name in self.sequences:
+            ddl = f"CREATE SEQUENCE {seq_name}\n;"
+            ddl_statements.append(ddl)
+
+        # Build tables
         for table_name, columns in self.tables.items():
             ddl = f"CREATE TABLE {table_name} (\n"
             
@@ -91,8 +98,13 @@ class DuckDBDDLGenerator:
             # Check if this is also a FK (for metadata tables)
             is_fk = parent_table and obj_schema.get('x-duckdb-fk')
             flags = "PK_FK" if is_fk else "PK"
-            
-            self._add_column(table_name, pk, f"{pk} {pk_type} PRIMARY KEY")
+
+            # Is a sequence defined to use for auto-incrementing
+            if obj_schema.get('x-duckdb-pk-seq'):
+                self.sequences.append(obj_schema.get('x-duckdb-pk-seq','default_seq'))
+                self._add_column(table_name, pk, f"{pk} {pk_type} PRIMARY KEY DEFAULT NEXTVAL('{obj_schema.get('x-duckdb-pk-seq')}')")
+            else:
+                self._add_column(table_name, pk, f"{pk} {pk_type} PRIMARY KEY")
         
         # Add parent FK if this is a child table
         parent_fk = obj_schema.get('x-duckdb-fk')
@@ -187,7 +199,7 @@ class DuckDBDDLGenerator:
                     self._add_fk(base_table, f"FOREIGN KEY ({fk_col}) REFERENCES {table_name}({table_pk})")
                 
                 # Add discriminator column
-                self._add_column(base_table, f"{discriminator}_type", f"{discriminator}_type VARCHAR")
+                self._add_column(base_table, f"{discriminator}", f"{discriminator} VARCHAR")
                 
                 # Collect all columns from all variants
                 variant_info: Dict[str, Tuple[List[str], List[str]]] = {}  # variant_table -> (column_names, when_values)
@@ -220,7 +232,7 @@ class DuckDBDDLGenerator:
                     cols_str = ", ".join(cols)
                     
                     if when_values:
-                        when_clause = " OR ".join([f"{discriminator}_type = '{w}'" for w in when_values])
+                        when_clause = " OR ".join([f"{discriminator} = '{w}'" for w in when_values])
                         view_def = f"CREATE VIEW {variant_table} AS\nSELECT {cols_str}\nFROM {base_table}\nWHERE {when_clause};"
                     else:
                         view_def = f"CREATE VIEW {variant_table} AS\nSELECT {cols_str}\nFROM {base_table};"
@@ -269,7 +281,10 @@ class DuckDBDDLGenerator:
                 
                 if items_schema.get('type') == 'object':
                     # Array of objects -> separate table
-                    # Add auto-increment PK if specified
+                    # Add auto-increment sequence for PK if specified
+                    if prop_schema.get('x-duckdb-pk-seq'):
+                        items_schema['x-duckdb-pk-seq']=prop_schema.get('x-duckdb-pk-seq')
+
                     if child_pk:
                         items_schema = {**items_schema, 'x-duckdb-pk': child_pk}
                         pk_type = prop_schema.get('x-duckdb-pk-type', 'INTEGER')
@@ -306,6 +321,7 @@ class DuckDBDDLGenerator:
                 for nested_name, nested_schema in nested_props.items():
                     # Use flattened naming: parent_child
                     # flat_name = f"{prop_name}_{nested_name}"
+                    # Switched to just use nested_name. Adding the prop_name prefix won't match SQL version of the name.
                     flat_name = nested_name
                     self._process_property(
                         flat_name,
@@ -335,6 +351,14 @@ class DuckDBDDLGenerator:
             self._add_column(table_name, prop_name, column_def)
             return
         
+        # Check for type override
+        if prop_schema.get('x-duckdb-type'):
+            column_def = f"{prop_name} {prop_schema.get('x-duckdb-type')}"
+            if not is_required:
+                column_def += " DEFAULT NULL"
+            self._add_column(table_name, prop_name, column_def)
+            return
+
         # Handle regular types
         if prop_type in ['string', 'integer', 'number', 'boolean']:
             sql_type = self._map_type(prop_type)

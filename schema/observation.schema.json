@@ -8,6 +8,7 @@
   "required": ["bytecount", "filename", "filetype", "magic", "md5", "observation_ts", "sha1", "sha256", "uuid"],
   "properties": {
     "bytecount": {
+      "x-duckdb-type": "BIGINT",
       "type":"integer",
       "description": "Size of file in bytes"
     },
@@ -21,7 +22,8 @@
     },
     "filetype": {
       "type": "string",
-      "enum": ["ELF", "Malformed PE", "DOS", "Linux Kernel Image", "PE", "OLE", "MSCAB", "ISCAB", "DOCKER_GZIP", "GZIP", "BZIP2", "XZ", "DOCKER_TAR", "TAR", "RAR", "ZIP", "JAR", "WAR", "EAR", "APK", "IPA", "MSIX", "MACHOFAT", "JAVACLASS", "MACHOFAT", "MACHOFAT64", "EFIFAT", "MACHO32", "MACHO64", "LLVM_BITCODE", "LLVM_IR", "A.OUT big", "A.OUT little", "COFF", "XCOFF32", "XCOFF64", "ECOFF", "AR_LIB", "OMF_LIB", "UIMAGE", "ZLIB", "CPIO_BIN big", "CPIO_BIN little", "CPIO_ASCII_OLD", "CPIO_ASCII_NEW", "CPIO_ASCII_NEW_CRC", "ZSTANDARD", "ZSTANDARD_DICTIONARY", "ISO_9660_CD", "MACOS_DMG", "RPM Package"]
+      "enum": ["ELF", "Malformed PE", "DOS", "Linux Kernel Image", "PE", "OLE", "MSCAB", "ISCAB", "DOCKER_GZIP", "GZIP", "BZIP2", "XZ", "DOCKER_TAR", "TAR", "RAR", "ZIP", "JAR", "WAR", "EAR", "APK", "IPA", "MSIX", "MACHOFAT", "JAVACLASS", "MACHOFAT", "MACHOFAT64", "EFIFAT", "MACHO32", "MACHO64", "LLVM_BITCODE", "LLVM_IR", "A.OUT big", "A.OUT little", "COFF", "XCOFF32", "XCOFF64", "ECOFF", "AR_LIB", "OMF_LIB", "UIMAGE", "ZLIB", "CPIO_BIN big", "CPIO_BIN little", "CPIO_ASCII_OLD", "CPIO_ASCII_NEW", "CPIO_ASCII_NEW_CRC", "ZSTANDARD", "ZSTANDARD_DICTIONARY", "ISO_9660_CD", "MACOS_DMG", "RPM Package"],
+      "description": "Specific file types recognized by EyeON. These are grouped together in the metadata definitions based on the properties they have in common"
     },
     "imphash": {
       "type": "string",
@@ -183,7 +185,8 @@
             "x-duckdb-table": "certificates",
             "x-duckdb-fk": "signature_id",
             "x-duckdb-pk": "certificate_id",
-            "x-duckdb-pk-type": "integer"
+            "x-duckdb-pk-type": "integer",
+            "x-duckdb-pk-seq": "certificate_seq"
           },
           "signers": { "type": "string" },
           "digest_algorithm": { "type": "string" },
