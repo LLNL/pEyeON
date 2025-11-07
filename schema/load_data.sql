@@ -1,26 +1,27 @@
 .read eyeon_ddl.sql
-create or replace view raw_json as from '../testfiles/*.json'
+create or replace view raw_json as from read_json('~/data/eyeon/se-firmware/*.json', union_by_name=true)
 ;
+.read raw_base_metadata.sql
+
 insert into observations by name 
   select * exclude (signatures, metadata, defaults) from raw_json
 ;
-insert into observations_metadata by name 
+insert into file_metadata by name 
 -- Dynamic list to account for any new Struct types in metadata.
 -- Push this list down to the next inner query?
-select * exclude (elfIdent, FileInfo, dotnetFlags, dotnetAssembly, dotnetAssemblyRef, dotnetImplMap, ole, aoutMachineType, EI_CLASS, binaries)
+select * --exclude (FileInfo, aoutMachineType, EI_CLASS, binaries)
 from 
   (select *,
     -- Return all fields
-    unnest(elfIdent),
     -- Return just the subset that are known
-    FileInfo.CompanyName,
-    FileInfo.FileDescription,
-    FileInfo.FileVersion,
-    FileInfo.LegalCopyright,
-    FileInfo.ProductName,
-    FileInfo.ProductVersion
+    -- FileInfo.CompanyName,
+    -- FileInfo.FileDescription,
+    -- FileInfo.FileVersion,
+    -- FileInfo.LegalCopyright,
+    -- FileInfo.ProductName,
+    -- FileInfo.ProductVersion
     from 
-      (select * exclude (description, peMachine) from (select uuid observation_uuid, filetype, unnest(metadata) from raw_json)))
+      (select * exclude (description, peMachine) from (select * from raw_base_metadata)))
 ;
 
 insert into signatures by name
@@ -34,7 +35,7 @@ from
 
 insert into certificates by name
 select signature_id:concat_ws(':',observation_uuid,sha1), "cert._version" cert_version, * 
-  exclude ("observation_uuid", "signers", "digest_algorithm", "verification", "sha1", "cert._version")
+  exclude ("observation_uuid", "signers", "digest_algorithm", "verification", "sha1", "cert._version", "subject_alt_name_:","directoryName")
 from 
   (select 
     unnest(certs, recursive := true),
