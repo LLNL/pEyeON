@@ -3,9 +3,12 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "EyeON Observation",
   "type": "object",
+  "x-duckdb-table": "observations",
+  "x-duckdb-pk": "uuid",
   "required": ["bytecount", "filename", "filetype", "magic", "md5", "observation_ts", "sha1", "sha256", "uuid"],
   "properties": {
     "bytecount": {
+      "x-duckdb-type": "BIGINT",
       "type":"integer",
       "description": "Size of file in bytes"
     },
@@ -19,7 +22,8 @@
     },
     "filetype": {
       "type": "string",
-      "enum": [ "elf", "pe", "macho", "other" ]
+      "enum": ["ELF", "Malformed PE", "DOS", "Linux Kernel Image", "PE", "OLE", "MSCAB", "ISCAB", "DOCKER_GZIP", "GZIP", "BZIP2", "XZ", "DOCKER_TAR", "TAR", "RAR", "ZIP", "JAR", "WAR", "EAR", "APK", "IPA", "MSIX", "MACHOFAT", "JAVACLASS", "MACHOFAT", "MACHOFAT64", "EFIFAT", "MACHO32", "MACHO64", "LLVM_BITCODE", "LLVM_IR", "A.OUT big", "A.OUT little", "COFF", "XCOFF32", "XCOFF64", "ECOFF", "AR_LIB", "OMF_LIB", "UIMAGE", "ZLIB", "CPIO_BIN big", "CPIO_BIN little", "CPIO_ASCII_OLD", "CPIO_ASCII_NEW", "CPIO_ASCII_NEW_CRC", "ZSTANDARD", "ZSTANDARD_DICTIONARY", "ISO_9660_CD", "MACOS_DMG", "RPM Package"],
+      "description": "Specific file types recognized by EyeON. These are grouped together in the metadata definitions based on the properties they have in common"
     },
     "imphash": {
       "type": "string",
@@ -82,24 +86,107 @@
       "description": "Checks if signatures are OK and if digest matches hashed authenticode"
     },
     "metadata": {
-      "type": "object", 
+      "type": "object",
+      "x-duckdb-discriminator": "filetype",
+      "x-duckdb-polymorphic-strategy": "single-table",
+      "x-duckdb-table": "base_metadata",
       "oneOf": [
-        { "$ref": "#/$defs/PEMetadata" },
-        { "$ref": "#/$defs/ELFMetadata" },
-        { "$ref": "#/$defs/MachOMetadata" },
-        { "$ref": "#/$defs/OtherMetadata" }
+        { 
+          "$ref": "#/$defs/AOUTMetadata",
+          "x-duckdb-table": "aout_metadata",
+          "x-duckdb-pk": "observation_uuid",
+          "x-duckdb-when": ["A.OUT big", "A.OUT little"]
+        },
+        { 
+          "$ref": "#/$defs/CoffMetadata",
+          "x-duckdb-table": "coff_metadata",
+          "x-duckdb-pk": "observation_uuid",
+          "x-duckdb-when": ["COFF", "XCOFF32", "XCOFF64", "ECOFF"]
+        },
+        { 
+          "$ref": "#/$defs/DockerImageMetadata",
+          "x-duckdb-table": "docker_metadata",
+          "x-duckdb-pk": "observation_uuid",
+          "x-duckdb-when": ["DOCKER_GZIP", "DOCKER_TAR"]
+        },
+        { 
+          "$ref": "#/$defs/ELFMetadata",
+          "x-duckdb-table": "elf_metadata",
+          "x-duckdb-pk": "observation_uuid",
+          "x-duckdb-when": ["ELF", "Linux Kernel Image"]
+        },
+        { 
+          "$ref": "#/$defs/JavaMetadata",
+          "x-duckdb-table": "java_metadata",
+          "x-duckdb-pk": "observation_uuid",
+          "x-duckdb-when": ["JAVACLASS", "JAR", "WAR", "EAR", "APK"]
+        },
+        { 
+          "$ref": "#/$defs/JavascriptMetadata",
+          "x-duckdb-table": "javascript_metadata",
+          "x-duckdb-pk": "observation_uuid",
+          "x-duckdb-when": []
+        },
+        { 
+          "$ref": "#/$defs/MachOMetadata",
+          "x-duckdb-table": "macho_metadata",
+          "x-duckdb-pk": "observation_uuid",
+          "x-duckdb-when": ["MACHOFAT", "MACHOFAT64", "EFIFAT", "MACHO32", "MACHO64", "IPA", "MACOS_DMG"]
+        },
+        { 
+          "$ref": "#/$defs/NativeMetadata",
+          "x-duckdb-table": "native_metadata",
+          "x-duckdb-pk": "observation_uuid",
+          "x-duckdb-when": ["LLVM_BITCODE", "LLVM_IR"]
+        },
+        { 
+          "$ref": "#/$defs/OleMetadata",
+          "x-duckdb-table": "ole_metadata",
+          "x-duckdb-pk": "observation_uuid",
+          "x-duckdb-when": ["OLE", "MSCAB", "ISCAB", "MSIX"]
+        },
+        { 
+          "$ref": "#/$defs/PEMetadata",
+          "x-duckdb-table": "pe_metadata",
+          "x-duckdb-pk": "observation_uuid",
+          "x-duckdb-when": ["PE", "Malformed PE", "DOS"]
+        },
+        { 
+          "$ref": "#/$defs/RPMMetadata",
+          "x-duckdb-table": "rpm_metadata",
+          "x-duckdb-pk": "observation_uuid",
+          "x-duckdb-when": ["RPM Package"]
+        },
+        { 
+          "$ref": "#/$defs/UbootImageMetadata",
+          "x-duckdb-table": "uboot_metadata",
+          "x-duckdb-pk": "observation_uuid",
+          "x-duckdb-when": ["UIMAGE"]
+        },
+        { 
+          "$ref": "#/$defs/OtherMetadata",
+          "x-duckdb-table": "other_metadata",
+          "x-duckdb-pk": "observation_uuid",
+          "x-duckdb-when": ["GZIP", "BZIP2", "XZ", "TAR", "RAR", "ZIP", "AR_LIB", "OMF_LIB", "ZLIB", "CPIO_BIN big", "CPIO_BIN little", "CPIO_ASCII_OLD", "CPIO_ASCII_NEW", "CPIO_ASCII_NEW_CRC", "ZSTANDARD", "ZSTANDARD_DICTIONARY", "ISO_9660_CD"]
+        }
       ]
-    },
-    "defaults": {
-      "$ref": "#/$defs/defaults"
     },
     "signatures": {
       "type": "array",
+      "x-duckdb-table": "signatures",
+      "x-duckdb-fk": "observation_uuid",
+      "x-duckdb-pk": "signature_id",
+      "x-duckdb-pk-type": "VARCHAR",
       "items": {
         "type": "object",
         "properties": {
           "certs": {
-            "$ref": "#/$defs/certs"
+            "$ref": "#/$defs/certs",
+            "x-duckdb-table": "certificates",
+            "x-duckdb-fk": "signature_id",
+            "x-duckdb-pk": "certificate_id",
+            "x-duckdb-pk-type": "integer",
+            "x-duckdb-pk-seq": "certificate_seq"
           },
           "signers": { "type": "string" },
           "digest_algorithm": { "type": "string" },
@@ -138,26 +225,26 @@
        }
      }
     },
-    "PEMetadata": {
+    "AOUTMetadata": {
       "type": "object",
-      "required": ["peMachine"],
+      "required": [ "aoutMachineType" ],
       "properties": {
-        "OS": { "type": "string" },
-        "peMachine": { "type": "string" },
-        "peOperatingSystemVersion": { "type": "string" },
-        "peSubsystemVersion": { "type": "string" },
-        "peSubsystem": { "type": "string" },
-        "peLinkerVersion": { "type": "string" },
-        "peImport": { "type": "array",
-            "items": { "type": "string" }
-        },
-        "peIsExe": { "type": "boolean" }, 
-        "peIsDll": { "type": "boolean" }, 
-        "peIsClr": { "type": "boolean" }, 
-        "FileInfo": { "type": "object" }, 
-        "dllRedirectionLocal": { "type": "boolean" }
+        "aoutMachineType": { "type": "string" }
       }
-
+    },
+    "CoffMetadata": {
+      "type": "object",
+      "required": ["coffMachineType"],
+      "properties": {
+        "coffMachineType": {"type": "string"}
+      }
+    },
+    "DockerImageMetadata": {
+      "type": "object",
+      "required": ["whateverdockerthing"],
+      "properties": {
+        "whateverdockerthing": { "type": "string" }
+      }
     },
     "ELFMetadata": {
       "type": "object",
@@ -166,6 +253,7 @@
         "OS": { "type": "string" },
         "elfIdent": {
           "type": "object",
+          "x-duckdb-flatten": true,
           "properties": {
             "EI_CLASS": { "type": "integer" },
             "EI_DATA": { "type": "integer" },
@@ -175,16 +263,43 @@
             "E_MACHINE": { "type": "integer" }
           }
         },
-        "elfDependencies": { "type": "array" },
-        "elfRpath": { "type": "array" },
-        "elfRunpath": { "type": "array" },
-        "elfSoname": { "type": "array" },
-        "elfInterpreter": { "type": "array" },
-        "elfDynamicFlags": { "type": "array" },
-        "elfDynamicFlags1": { "type": "array" },
+        "elfDependencies": { 
+          "type": "array",
+          "x-duckdb-array": true
+        },
+        "elfRpath": { 
+          "type": "array",
+          "x-duckdb-array": true
+        },
+        "elfRunpath": { 
+          "type": "array",
+          "x-duckdb-array": true
+        },
+        "elfSoname": { 
+          "type": "array",
+          "x-duckdb-array": true
+        },
+        "elfInterpreter": { 
+          "type": "array",
+          "x-duckdb-array": true
+        },
+        "elfDynamicFlags": { 
+          "type": "array",
+          "x-duckdb-array": true
+        },
+        "elfDynamicFlags1": { 
+          "type": "array",
+          "x-duckdb-array": true
+        },
         "elfGnuRelro": { "type": "boolean" },
-        "elfComment": { "type": "array" },
-        "elfNote": { "type": "array" },
+        "elfComment": { 
+          "type": "array",
+          "x-duckdb-array": true
+        },
+        "elfNote": { 
+          "type": "array",
+          "x-duckdb-array": true
+        },
         "elfOsAbi": { "type": "string" },
         "elfHumanArch": { "type": "string" },
         "elfArchNumber": { "type": "integer" },
@@ -195,6 +310,37 @@
         "elfIsCore": { "type": "boolean" }
       }
     },
+    "JavaMetadata": {
+      "type": "object",
+      "required": ["javaClasses"],
+      "javaClasses": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "className": { "type": "string" },
+          "javaMinSEVersion": { "type": "string" },
+          "javaExports": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "javaImports": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "JavascriptMetadata": {
+      "type": "object",
+      "required": ["whateverjsthing"],
+      "properties": {
+        "whateverjsthing": { "type": "string" }
+      }
+    },
     "MachOMetadata": {
       "type": "object",
       "required": ["numBinaries", "binaries"],
@@ -203,6 +349,7 @@
         "numBinaries": { "type": "integer" },
         "binaries": {
           "type": "array",
+          "x-duckdb-json": true,
           "items": {
             "type": "object",
             "properties": {
@@ -271,34 +418,62 @@
         }
       }
     },
+    "NativeMetadata": {
+      "type": "object",
+      "required": ["whatevernativething"],
+      "properties": {
+        "whatevernativething": { "type": "string" }
+      }
+    },
+    "OleMetadata": {
+      "type": "object",
+      "required": ["whateverolething"],
+      "properties": {
+        "whateverolething": { "type": "string" }
+      }
+    },
+    
+    "PEMetadata": {
+      "type": "object",
+      "required": ["peMachine"],
+      "properties": {
+        "OS": { "type": "string" },
+        "peMachine": { "type": "string" },
+        "peOperatingSystemVersion": { "type": "string" },
+        "peSubsystemVersion": { "type": "string" },
+        "peSubsystem": { "type": "string" },
+        "peLinkerVersion": { "type": "string" },
+        "peImport": { "type": "array",
+            "x-duckdb-array": true,
+            "items": { "type": "string" }
+        },
+        "peIsExe": { "type": "boolean" }, 
+        "peIsDll": { "type": "boolean" }, 
+        "peIsClr": { "type": "boolean" }, 
+        "FileInfo": { "type": "object" }, 
+        "dllRedirectionLocal": { "type": "boolean" }
+      }
+
+    },
+    "RPMMetadata": {
+      "type": "object",
+      "required": ["whateverrpmthing"],
+      "properties": {
+        "whateverrpmthing": { "type": "string" }
+      }
+    },
+    "UbootImageMetadata": {
+      "type": "object",
+      "required": ["whateveruimagething"],
+      "properties": {
+        "whateveruimagething": { "type": "string" }
+      }
+    },
     "OtherMetadata": {
       "type": "object",
       "required": ["description"],
       "properties": {
         "description": { "type": "string" }
-      }
-    },
-    "defaults": {
-      "type": "object",
-      "properties": {
-        "default_filename": { "type": "string" },
-        "manufacturer_org": { "type": "string" },
-        "location": {
-          "type": "object",
-          "properties": {
-            "location": { "type": "string" },
-            "filelocation": { "type": "string" }
-          }
-        },
-        "machines": {
-          "type": "object",
-          "properties": {
-            "machines": { "type": "string" },
-            "os": { "type": "string" },
-            "version": { "type": "string" },
-            "x-version": { "type": "string" }
-          }
-        }
       }
     }
   }
