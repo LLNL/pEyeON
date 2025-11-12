@@ -17,11 +17,10 @@ jobs:
       - name: Install Dependencies
         run: |
           source .venv/bin/activate
-          pip install .
+          pip install -e .
           echo "Packages installed"
       - name: Run Unittests
         run: |
           source .venv/bin/activate
-          export PYTHONPATH=$PWD/src
           coverage run --source=src/ -m unittest discover -s tests/
           coverage report
