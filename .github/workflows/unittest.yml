@@ -22,5 +22,6 @@ jobs:
       - name: Run Unittests
         run: |
           source .venv/bin/activate
+          export PYTHONPATH=$PWD/src
           coverage run --source=src/ -m unittest discover -s tests/
           coverage report
