@@ -206,6 +206,15 @@ class Observe:
         except Exception as E:
             log.error(E)
 
+    def set_checksum_verification(self, checksum_data:dict):
+        """
+        set checksum verification data from checksum function. allows for integration from optional check
+        """
+        if checksum_data:
+            self.checksum_data=checksum_data
+        else:
+            print("No checksum data")
+
     # @staticmethod
     def _cert_parser(self, cert: lief.PE.x509) -> dict:
         """lief certs are messy. convert to json data"""

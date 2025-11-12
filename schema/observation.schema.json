@@ -300,6 +300,16 @@
           }
         }
       }
+    },
+    "checksum_verification": {
+      "type": "object",
+      "properties": {
+          "algorithm": { "type": "string" },
+          "expected": { "type": "string" },
+          "actual": { "type": "string" },
+          "verified": { "type": "boolean" }
+      },
+      "required": ["algorithm", "expected", "actual", "verified"]
     }
   }
 }
