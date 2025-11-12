@@ -167,9 +167,7 @@ class CommandLine:
             p.write_database(args.database, outdir)
 
         if args.upload:
-            print(outdir)
             archive_path=eyeon.upload.compress_file(outdir, compression="tar.gz")
-            print(archive_path)
             eyeon.upload.upload(archive_path)
             
 
