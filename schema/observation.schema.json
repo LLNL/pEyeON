@@ -354,7 +354,28 @@
           "sourcerpm": { "type": "string" },
           "version": { "type": "string" },
           "release": { "type": "string" },
-          "summary": { "type": "string" }
+          "summary": { "type": "string" },
+          "description": { "type": "string"},
+          "rpmversion": { "type": "string"},
+          "copyright": { "type": "string"},
+          "os": { "type": "string"},
+          "arch": { "type": "string"},
+          "target": { "type": "string"},
+          "archive_format": { "type": "string"},
+          "archive_compression": { "type": "string"},
+          "optflags": { "type": "string"},
+          "sha256": { "type": "string"},
+          "md5": { "type": "string"},
+          "requirename": {
+            "type": "object"
+          },
+          "provides": {
+            "type": "object"
+          },
+          "buildtime": { "type": "integer"},
+          "associated_files": {
+            "type": "object"
+          }
         }
       }
     },
