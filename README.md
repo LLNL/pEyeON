@@ -178,7 +178,7 @@ If you want to run jupyter, the `./docker-run.sh` script exposes port 8888. Laun
 In the `src` directory, there exist the bones of a data exploration applet. To generate data for this, add the database flag like `eyeon parse -d tests/data/20240925-eyeon/dbhelpers/20240925-eyeon.db`. Then, if necessary, update the database path variable in the `src/streamlit/eyeon_settings.toml`. Note that the path needs to point to the grandparent directory of the `dbhelpers` directory. This is a specific path for the streamlit app; the streamlit directory has more information in its own README.
 
 ## Uploading Results
-The Eyeon tool leverages the Box platform for data uploads and storage. All data handled by Eyeon is voluntarily submitted by users and securely stored in your Box account. If you wish to share the results of the eyeon tool with us please contact ... to get setup.
+The Eyeon tool leverages the Box platform for data uploads and storage. All data handled by Eyeon is voluntarily submitted by users and securely stored in your Box account. If you wish to share the results of the eyeon tool with us please contact `eyeon@llnl.gov` to get setup.
 
 #### Authenticating with Box
 To use Eyeon with Box, you’ll need to generate a `box_tokens.json` file. This process requires a browser-friendly environment and will vary depending on your Eyeon build selection. Below are the steps when using a container setup:
