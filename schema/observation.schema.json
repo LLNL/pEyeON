@@ -319,7 +319,23 @@
       "type": "object",
       "required": ["ole"],
       "properties": {
-        "ole": { "type": "object" }
+        "ole": { 
+          "type": "object",
+          "clsid": { "type": "string" },
+          "clsid_type": { "type": "string" },
+          "codepage": { "type": "string" },
+          "title": { "type": "string" },
+          "author": { "type": "string" },
+          "template": { "type": "string" },
+          "revision_number": { "type": "string" },
+          "last_printed": { "type": "string" },
+          "create_time": { "type": "string" },
+          "last_saved_time": { "type": "string" },
+          "num_pages": { "type": "string" },
+          "num_words": { "type": "string" },
+          "creating_application": { "type": "string" },
+          "security": { "type": "string" }
+        }
       }
     },
     
