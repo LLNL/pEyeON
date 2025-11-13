@@ -9,29 +9,31 @@ from eyeon import parse
 
 class X86ParseTestCase(unittest.TestCase):
     def checkOutputs(self) -> None:  # these files + paths should be created by parse
-        self.assertTrue(os.path.isdir("./testresults"))
-        self.assertTrue(os.path.isdir("./testresults/certs"))
+        self.assertTrue(os.path.isdir("./tests/testresults"))
+        self.assertTrue(os.path.isdir("./tests/testresults/certs"))
         self.assertTrue(
-            os.path.isfile("./testresults/Wintap.exe.2950c0020a37b132718f5a832bc5cabd.json")
+            os.path.isfile("./tests/testresults/Wintap.exe.2950c0020a37b132718f5a832bc5cabd.json")
         )
         self.assertTrue(
-            os.path.isfile("./testresults/WintapSetup.msi.f06087338f3b3e301d841c29429a1c99.json")
+            os.path.isfile(
+                "./tests/testresults/WintapSetup.msi.f06087338f3b3e301d841c29429a1c99.json"
+            )
         )
 
     def certExtracted(self) -> None:
         self.assertTrue(
             os.path.isfile(
-                "./testresults/certs/552f7bdcf1a7af9e6ce672017f4f12abf77240c78e761ac203d1d9d20ac89988.crt"  # noqa: E501
+                "./tests/testresults/certs/552f7bdcf1a7af9e6ce672017f4f12abf77240c78e761ac203d1d9d20ac89988.crt"  # noqa: E501
             )
         )
         self.assertTrue(
             os.path.isfile(
-                "./testresults/certs/33846b545a49c9be4903c60e01713c1bd4e4ef31ea65cd95d69e62794f30b941.crt"  # noqa: E501
+                "./tests/testresults/certs/33846b545a49c9be4903c60e01713c1bd4e4ef31ea65cd95d69e62794f30b941.crt"  # noqa: E501
             )
         )  # noqa: E501
 
     def validateWintapExeJson(self) -> None:
-        with open("./testresults/Wintap.exe.2950c0020a37b132718f5a832bc5cabd.json") as schem:
+        with open("./tests/testresults/Wintap.exe.2950c0020a37b132718f5a832bc5cabd.json") as schem:
             schema = json.loads(schem.read())
         self.assertEqual(schema["bytecount"], 201080)
         self.assertEqual(schema["filename"], "Wintap.exe")
@@ -53,7 +55,9 @@ class X86ParseTestCase(unittest.TestCase):
         )
 
     def validateWintapSetupMsiJson(self) -> None:
-        with open("./testresults/WintapSetup.msi.f06087338f3b3e301d841c29429a1c99.json") as schem:
+        with open(
+            "./tests/testresults/WintapSetup.msi.f06087338f3b3e301d841c29429a1c99.json"
+        ) as schem:
             schema = json.loads(schem.read())
         self.assertEqual(schema["bytecount"], 13679616)
         self.assertEqual(schema["filename"], "WintapSetup.msi")
@@ -66,14 +70,14 @@ class X86ParseTestCase(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self) -> None:
-        shutil.rmtree("./testresults")
+        shutil.rmtree("./tests/testresults")
 
 
 class X86SinglethreadTestCase(X86ParseTestCase):
     @classmethod
     def setUpClass(self) -> None:
-        self.PRS = parse.Parse("./binaries/Wintap", logging.WARNING, "./testParse.log")
-        self.PRS(result_path="testresults")  # run scan
+        self.PRS = parse.Parse("./tests/binaries", logging.WARNING, "./tests/testParse.log")
+        self.PRS(result_path="tests/testresults")  # run scan
 
     def testCommon(self):
         self.checkOutputs()
@@ -82,19 +86,19 @@ class X86SinglethreadTestCase(X86ParseTestCase):
         self.validateWintapSetupMsiJson()
 
     def testLogCreated(self):
-        self.assertTrue(os.path.isfile("./testParse.log"))
+        self.assertTrue(os.path.isfile("./tests/testParse.log"))
 
     @classmethod
     def tearDownClass(self) -> None:
-        shutil.rmtree("./testresults")
-        os.remove("./testParse.log")
+        shutil.rmtree("./tests/testresults")
+        os.remove("./tests/testParse.log")
 
 
 class X86TwoThreadTestCase(X86ParseTestCase):
     @classmethod
     def setUpClass(self) -> None:
-        self.PRS = parse.Parse("./binaries/Wintap")
-        self.PRS(result_path="testresults", threads=2)
+        self.PRS = parse.Parse("./tests/binaries")
+        self.PRS(result_path="tests/testresults", threads=2)
 
     def testCommon(self):
         self.checkOutputs()
@@ -106,8 +110,8 @@ class X86TwoThreadTestCase(X86ParseTestCase):
 class X86ThreeThreadTestCase(X86ParseTestCase):
     @classmethod
     def setUpClass(self) -> None:
-        self.PRS = parse.Parse("./binaries/")
-        self.PRS(result_path="testresults", threads=3)
+        self.PRS = parse.Parse("./tests/binaries")
+        self.PRS(result_path="tests/testresults", threads=3)
 
     def testCommon(self):
         self.checkOutputs()

@@ -17,13 +17,10 @@ jobs:
       - name: Install Dependencies
         run: |
           source .venv/bin/activate
-          pip install build
-          python3 -m build
-          pip install dist/peyeon*.whl
+          pip install -e .
           echo "Packages installed"
       - name: Run Unittests
         run: |
           source .venv/bin/activate
-          cd tests/
-          coverage run -m unittest
+          coverage run --source=src/ -m unittest discover -s tests/
           coverage report

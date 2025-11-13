@@ -115,9 +115,15 @@
         "required": ["signers", "digest_algorithm"]
       }
     },
-    "detect_it_easy": {
-      "type": "string",
-      "description": "Program that determines types of files for Windows, Linux and MacOS"
+    "checksum_verification": {
+      "type": "object",
+      "properties": {
+          "algorithm": { "type": "string" },
+          "expected": { "type": "string" },
+          "actual": { "type": "string" },
+          "verified": { "type": "boolean" }
+      },
+      "required": ["algorithm", "expected", "actual", "verified"]
     }
   },
   "additionalProperties": false,

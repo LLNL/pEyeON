@@ -101,7 +101,7 @@ class ExeObserveTestCase(GeneralDatabaseTestCase):
     def setUpClass(self):
         self.original_output = "Wintap.exe.2950c0020a37b132718f5a832bc5cabd.json"
         self.database_output = "test_database"
-        self.OBS = observe.Observe("./binaries/Wintap/Wintap.exe")
+        self.OBS = observe.Observe("tests/binaries/Wintap/Wintap.exe")
 
     def testCommon(self):
         self.writeObserve()
@@ -114,7 +114,7 @@ class ElfObserveTestCase(GeneralDatabaseTestCase):
     def setUpClass(self):
         self.original_output = "hello_world.d2a52fd35b9bec826c814f26cba50b4d.json"
         self.database_output = "test_database"
-        self.OBS = observe.Observe("./binaries/ELF_shared_obj_test_no1/bin/hello_world")
+        self.OBS = observe.Observe("tests/binaries/ELF_shared_obj_test_no1/bin/hello_world")
 
     def testCommon(self):
         self.writeObserve()
@@ -127,7 +127,7 @@ class PowerPCObserveTestCase(GeneralDatabaseTestCase):
     def setUpClass(self):
         self.original_output = "hello_world_ppc.0c51f3e375a077b1ab85106cd8339f1d.json"
         self.database_output = "test_database"
-        self.OBS = observe.Observe("./binaries/powerpc/hello_world_ppc")
+        self.OBS = observe.Observe("tests/binaries/powerpc/hello_world_ppc")
 
     def testCommon(self):
         self.writeObserve()
@@ -138,9 +138,9 @@ class PowerPCObserveTestCase(GeneralDatabaseTestCase):
 class X86ParseDatabaseTestCase(GeneralDatabaseTestCase):
     @classmethod
     def setUpClass(self):
-        self.original_output = "./testresults"
+        self.original_output = "tests/testresults"
         self.database_output = "data/testing/test_database"
-        self.PRS = parse.Parse("./binaries/ELF_shared_obj_test_no1/")
+        self.PRS = parse.Parse("tests/binaries/ELF_shared_obj_test_no1/")
         self.PRS(result_path=self.original_output)
 
     def testCommon(self):
@@ -152,9 +152,9 @@ class X86ParseDatabaseTestCase(GeneralDatabaseTestCase):
 class ARMParseDatabaseTestCase(GeneralDatabaseTestCase):
     @classmethod
     def setUpClass(self):
-        self.original_output = "./testresults"
+        self.original_output = "tests/testresults"
         self.database_output = "test_database"
-        self.PRS = parse.Parse("./binaries/ELF_shared_obj_test_arm/")
+        self.PRS = parse.Parse("tests/binaries/ELF_shared_obj_test_arm/")
         self.PRS(result_path=self.original_output)
 
     def testCommon(self):
@@ -167,8 +167,8 @@ class TestErrorHandling(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.database = "test_database"
-        self.parse_path = "./binaries/Wintap/"
-        self.observe_path = "./binaries/Wintap/Wintap.exe"
+        self.parse_path = "tests/binaries/Wintap/"
+        self.observe_path = "tests/binaries/Wintap/Wintap.exe"
         self.PRS = parse.Parse(self.parse_path)
         self.OBS = observe.Observe(self.observe_path)
 

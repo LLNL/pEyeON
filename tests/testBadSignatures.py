@@ -41,9 +41,9 @@ class CorruptFileTestCase(unittest.TestCase):
     def scan(self, badbinpath):
         # scan the corrupted binary
         self.OBS = observe.Observe(
-            badbinpath, log_level=logging.INFO, log_file="testBadSignatures.log"
+            badbinpath, log_level=logging.INFO, log_file="tests/testBadSignatures.log"
         )
-        self.assertTrue(os.path.isfile("testBadSignatures.log"))
+        self.assertTrue(os.path.isfile("tests/testBadSignatures.log"))
 
     def corruptedVarsExe(
         self, md5, sha1, sha256, filename, bytecount, sigflag, codeflag, magic=None
@@ -68,25 +68,25 @@ class CorruptFileTestCase(unittest.TestCase):
         self.assertEqual(self.OBS.authenticode_integrity, codeflag)
 
     def validateSchema(self) -> None:
-        with open("../schema/observation.schema.json") as schem:
+        with open("schema/observation.schema.json") as schem:
             schema = json.loads(schem.read())
 
-        with open("../schema/meta.schema.json") as schem:
+        with open("schema/meta.schema.json") as schem:
             meta = json.loads(schem.read())
 
         print(jsonschema.validate(instance=schema, schema=meta))
 
     @classmethod
     def tearDownClass(self):
-        os.remove("./testBadSignatures.log")
+        os.remove("tests/testBadSignatures.log")
         os.remove(self.badbinpath)
 
 
 class WintapCertCorrupt(CorruptFileTestCase):
     def setUp(self):
         # path for reading original, and path for writing exe with broken cert
-        self.binpath = "./binaries/Wintap/Wintap.exe"
-        self.badbinpath = "./binaries/Wintap/WintapSetup_corrupted.exe"
+        self.binpath = "tests/binaries/Wintap/Wintap.exe"
+        self.badbinpath = "tests/binaries/Wintap/WintapSetup_corrupted.exe"
 
         # corrupt the first cert, write bad binary, and scan
         self.corrupt(0x0002E940, self.binpath, self.badbinpath)  # location of first cert
@@ -107,8 +107,8 @@ class WintapCertCorrupt(CorruptFileTestCase):
 
 class WintapBreakAuthenticode(CorruptFileTestCase):
     def setUp(self):
-        self.binpath = "./binaries/Wintap/Wintap.exe"
-        self.badbinpath = "./binaries/Wintap/WintapSetup_corrupted.exe"
+        self.binpath = "tests/binaries/Wintap/Wintap.exe"
+        self.badbinpath = "tests/binaries/Wintap/WintapSetup_corrupted.exe"
         self.corrupt(0x0016490, self.binpath, self.badbinpath)
         self.scan(self.badbinpath)
 
@@ -126,8 +126,8 @@ class WintapBreakAuthenticode(CorruptFileTestCase):
 
 # class CurlBreakAuthenticode2(CorruptFileTestCase):
 #     def setUp(self):
-#         self.binpath = "./binaries/arm/curl-8.8.0_1-win64arm-mingw.exe"
-#         self.badbinpath = "./binaries/arm/curl-8.8.0_1-win64arm-mingw_corrupted.exe"
+#         self.binpath = "tests/binaries/arm/curl-8.8.0_1-win64arm-mingw.exe"
+#         self.badbinpath = "tests/binaries/arm/curl-8.8.0_1-win64arm-mingw_corrupted.exe"
 #         self.corrupt(0x00415BB0, self.binpath, self.badbinpath)
 #         self.scan(self.badbinpath)
 

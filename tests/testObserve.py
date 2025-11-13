@@ -14,7 +14,7 @@ import jsonschema
 class ObservationTestCase(unittest.TestCase):
     @classmethod
     def setUp(self) -> None:
-        self.OBS = observe.Observe("./binaries/a_out_files/big_m68020.aout")
+        self.OBS = observe.Observe("tests/binaries/a_out_files/big_m68020.aout")
 
     def testVars(self) -> None:
         self.assertEqual(self.OBS.bytecount, 4)
@@ -44,7 +44,7 @@ class ObservationTestCase(unittest.TestCase):
 class ObservationTestCase2(unittest.TestCase):
     @classmethod
     def setUp(self) -> None:
-        self.OBS = observe.Observe("./binaries/coff_files/intel_80386_coff")
+        self.OBS = observe.Observe("tests/binaries/coff_files/intel_80386_coff")
 
     def testVars(self) -> None:
         self.assertEqual(self.OBS.bytecount, 2)
@@ -66,16 +66,16 @@ class ObservationTestCase2(unittest.TestCase):
         self.assertEqual(self.OBS.filetype, "COFF")
 
     def testValidateJson(self) -> None:
-        with open("../schema/observation.schema.json") as schem:
+        with open("schema/observation.schema.json") as schem:
             schema = json.loads(schem.read())
         obs_json = json.loads(json.dumps(vars(self.OBS)))
         print(jsonschema.validate(instance=obs_json, schema=schema))
 
     def testValidateSchema(self) -> None:
-        with open("../schema/observation.schema.json") as schem:
+        with open("schema/observation.schema.json") as schem:
             schema = json.loads(schem.read())
 
-        with open("../schema/meta.schema.json") as schem:
+        with open("schema/meta.schema.json") as schem:
             meta = json.loads(schem.read())
 
         print(jsonschema.validate(instance=schema, schema=meta))
@@ -92,7 +92,7 @@ class ObservationTestCase2(unittest.TestCase):
 class ObservationTestCase3(unittest.TestCase):
     @classmethod
     def setUp(self) -> None:
-        self.OBS = observe.Observe("./binaries/ELF_shared_obj_test_no1/bin/hello_world")
+        self.OBS = observe.Observe("tests/binaries/ELF_shared_obj_test_no1/bin/hello_world")
 
     def testVars(self) -> None:
         self.assertEqual(self.OBS.bytecount, 16424)
@@ -124,7 +124,7 @@ class ObservationTestCase3(unittest.TestCase):
 class ObservationTestCase4(unittest.TestCase):
     @classmethod
     def setUp(self) -> None:
-        self.OBS = observe.Observe("./binaries/java_class_no1/HelloWorld.class")
+        self.OBS = observe.Observe("tests/binaries/java_class_no1/HelloWorld.class")
 
     def testVars(self) -> None:
         self.assertEqual(self.OBS.bytecount, 1091)
@@ -154,14 +154,14 @@ class ObservationTestCase5(unittest.TestCase):
     @classmethod
     def setUpClass(self) -> None:
         self.OBS = observe.Observe(
-            "./binaries/NET_app_config_test_no1/ConsoleApp2.exe",
+            "tests/binaries/NET_app_config_test_no1/ConsoleApp2.exe",
             log_level="INFO",
             log_file="./observe.log",
         )
 
     def testLog(self):  # check log is created and correct info logged
-        self.assertTrue(os.path.exists("./observe.log"))
-        with open("./observe.log", "r") as f:
+        self.assertTrue(os.path.exists("tests/observe.log"))
+        with open("tests/observe.log", "r") as f:
             log = f.read()
 
         messages = []
@@ -184,7 +184,8 @@ class ObservationTestCase5(unittest.TestCase):
 
         # check message correctly logged
         self.assertIn(
-            "file ./binaries/NET_app_config_test_no1/ConsoleApp2.exe has no signatures.", messages
+            "file tests/binaries/NET_app_config_test_no1/ConsoleApp2.exe has no signatures.",
+            messages,
         )
 
     def testToString(self):
@@ -195,13 +196,13 @@ class ObservationTestCase5(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        os.remove("./observe.log")
+        os.remove("tests/observe.log")
 
 
 class ObservationTestCase6(unittest.TestCase):
     @classmethod
     def setUp(self) -> None:
-        self.OBS = observe.Observe("./binaries/macho_arm_files/hello_world")
+        self.OBS = observe.Observe("tests/binaries/macho_arm_files/hello_world")
 
     def testVars(self) -> None:
         self.assertEqual(self.OBS.bytecount, 39224)
@@ -227,16 +228,16 @@ class ObservationTestCase6(unittest.TestCase):
     #     self.assertEqual(self.OBS.detect_it_easy, expected_output)
 
     def testValidateJson(self) -> None:
-        with open("../schema/observation.schema.json") as schem:
+        with open("schema/observation.schema.json") as schem:
             schema = json.loads(schem.read())
         obs_json = json.loads(json.dumps(vars(self.OBS)))
         print(jsonschema.validate(instance=obs_json, schema=schema))
 
     def testValidateSchema(self) -> None:
-        with open("../schema/observation.schema.json") as schem:
+        with open("schema/observation.schema.json") as schem:
             schema = json.loads(schem.read())
 
-        with open("../schema/meta.schema.json") as schem:
+        with open("schema/meta.schema.json") as schem:
             meta = json.loads(schem.read())
 
         print(jsonschema.validate(instance=schema, schema=meta))
@@ -253,7 +254,7 @@ class ObservationTestCase6(unittest.TestCase):
 class ObservationTestCase7(unittest.TestCase):
     @classmethod
     def setUp(self) -> None:
-        self.OBS = observe.Observe("./binaries/Windows_dll_test_no1/hello_world.exe")
+        self.OBS = observe.Observe("tests/binaries/Windows_dll_test_no1/hello_world.exe")
 
     def testVars(self) -> None:
         self.assertEqual(self.OBS.bytecount, 58880)
@@ -275,7 +276,7 @@ class ObservationTestCase7(unittest.TestCase):
 class ObservationTestCase8(unittest.TestCase):
     @classmethod
     def setUp(self) -> None:
-        self.OBS = observe.Observe("./binaries/powerpc/hello_world_ppc")
+        self.OBS = observe.Observe("tests/binaries/powerpc/hello_world_ppc")
 
     def testVars(self) -> None:
         self.assertEqual(self.OBS.bytecount, 71056)
@@ -305,7 +306,7 @@ class ObservationTestCase8(unittest.TestCase):
 class ObservationTestCase9(unittest.TestCase):
     @classmethod
     def setUp(self) -> None:
-        self.OBS = observe.Observe("./binaries/msitest_no1/test.msi")
+        self.OBS = observe.Observe("tests/binaries/msitest_no1/test.msi")
 
     def testVars(self) -> None:
         self.assertEqual(self.OBS.bytecount, 12288)
@@ -327,7 +328,7 @@ class ObservationTestCase9(unittest.TestCase):
 class ObservationTestCase10(unittest.TestCase):
     @classmethod
     def setUp(self) -> None:
-        self.OBS = observe.Observe("./binaries/Wintap.exe")
+        self.OBS = observe.Observe("tests/binaries/Wintap.exe")
 
     def testVars(self) -> None:
         self.assertEqual(self.OBS.bytecount, 201080)
@@ -368,7 +369,7 @@ class TestFolderPermissions(unittest.TestCase):
         self.assertRaises(PermissionError, observe.Observe, "/root")
 
 
-with open("../schema/observation.schema.json") as schem:
+with open("schema/observation.schema.json") as schem:
     schema = json.loads(schem.read())
 
 
