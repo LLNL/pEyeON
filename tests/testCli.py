@@ -54,22 +54,23 @@ class CliTestCase(unittest.TestCase):
         with self.assertRaises(SystemExit):
             CommandLine([])
 
+
 class CliTestObserve(unittest.TestCase):
     def setUp(self):
-        #patch observe and checksum functions
-        self.observe_patch=patch('eyeon.observe.Observe')
-        self.checksum_patch=patch('eyeon.checksum.Checksum')
+        # patch observe and checksum functions
+        self.observe_patch = patch("eyeon.observe.Observe")
+        self.checksum_patch = patch("eyeon.checksum.Checksum")
 
         self.observe_mock = self.observe_patch.start()
         self.checksum_mock = self.checksum_patch.start()
 
     def tearDown(self):
         self.addCleanup(self.observe_patch.stop)
-        self.addCleanup(self.checksum_patch.stop)    
-    
+        self.addCleanup(self.checksum_patch.stop)
+
     def testObserve_no_checksum(self):
-        args=["observe", "Wintap.exe"]
-        cli=CommandLine(args)
+        args = ["observe", "Wintap.exe"]
+        cli = CommandLine(args)
 
         print(cli.args)
 
@@ -78,24 +79,33 @@ class CliTestObserve(unittest.TestCase):
         self.checksum_mock.assert_not_called()
 
     def testObserve_checksum(self):
-        args=["observe", "Wintap.exe", "-c", "abc123"]
-        cli=CommandLine(args)
+        args = ["observe", "Wintap.exe", "-c", "abc123"]
+        cli = CommandLine(args)
 
         cli.observe(cli.args)
         self.observe_mock.assert_called_once_with("Wintap.exe", 40, None)
         self.checksum_mock.assert_called_once_with("Wintap.exe", "md5", "abc123")
 
     def testObserve_checksum_alg(self):
-        args=["observe", "Wintap.exe", "-c", "abc123", "-a", "sha1"]
-        cli=CommandLine(args)
+        args = ["observe", "Wintap.exe", "-c", "abc123", "-a", "sha1"]
+        cli = CommandLine(args)
 
         cli.observe(cli.args)
         self.observe_mock.assert_called_once_with("Wintap.exe", 40, None)
         self.checksum_mock.assert_called_once_with("Wintap.exe", "sha1", "abc123")
 
     def testObserve_optional_args(self):
-        args=["observe", "Wintap.exe", "-o", "./output", "-g", "mylog.log", "-v", f"{logging.DEBUG}"]
-        cli=CommandLine(args)
+        args = [
+            "observe",
+            "Wintap.exe",
+            "-o",
+            "./output",
+            "-g",
+            "mylog.log",
+            "-v",
+            f"{logging.DEBUG}",
+        ]
+        cli = CommandLine(args)
 
         cli.observe(cli.args)
         self.observe_mock.assert_called_once_with("Wintap.exe", 10, "mylog.log")

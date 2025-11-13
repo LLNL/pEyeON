@@ -13,17 +13,17 @@ def Checksum(file: str, algorithm: str, expected_checksum: str) -> dict:
     # compare it to the expected checksum, returns true if match
     if fileHash == expected_checksum:
         print("Checksum verification pass")
-        verified=True
+        verified = True
     else:
         print(
             "Checksum verification fail, double check the expected checksum provided. ",
-            "Otherwise file may have been modified"
+            "Otherwise file may have been modified",
         )
-        verified=False
-    
+        verified = False
+
     return {
         "algorithm": algorithm,
         "expected": expected_checksum,
         "actual": fileHash,
-        "verified": verified
+        "verified": verified,
     }

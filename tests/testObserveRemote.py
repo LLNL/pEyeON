@@ -71,7 +71,6 @@ class ObservationTestCase2(unittest.TestCase):
         )  # this file is unsigned, should have no signatures
         self.assertEqual(self.OBS.filetype, "other")
 
-
     def testValidateJson(self) -> None:
         with open("schema/observation.schema.json") as schem:
             schema = json.loads(schem.read())
@@ -116,7 +115,6 @@ class ObservationTestCase3(unittest.TestCase):
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100755")
         self.assertEqual(self.OBS.filetype, "elf")
-
 
     # def test_detect_it_easy(self) -> None:
     #     expected_output = (
@@ -163,7 +161,6 @@ class ObservationTestCase4(unittest.TestCase):
         self.assertEqual(self.OBS.permissions, "0o100644")
         self.assertEqual(self.OBS.filetype, "other")
 
-
     # def test_detect_it_easy(self) -> None:
     #     expected_output = (
     #         "Binary\n"
@@ -204,7 +201,8 @@ class ObservationTestCase5(unittest.TestCase):
 
         # check message correctly logged
         self.assertIn(
-            "file tests/binaries/NET_app_config_test_no1/ConsoleApp2.exe has no signatures.", messages
+            "file tests/binaries/NET_app_config_test_no1/ConsoleApp2.exe has no signatures.",
+            messages,
         )
 
     def testToString(self):
@@ -239,7 +237,6 @@ class ObservationTestCase6(unittest.TestCase):
         self.assertEqual(self.OBS.permissions, "0o100755")
         self.assertEqual(len(self.OBS.signatures), 0)  # unsigned, should have no signatures
         self.assertEqual(self.OBS.filetype, "macho")
-
 
     # def test_detect_it_easy(self) -> None:
     #     expected_output = (
@@ -313,7 +310,6 @@ class ObservationTestCase8(unittest.TestCase):
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100755")
         self.assertEqual(self.OBS.filetype, "elf")
-
 
     # def test_detect_it_easy(self) -> None:
     #     expected_output = (
@@ -405,7 +401,7 @@ class TestJSONSchema(unittest.TestCase):
             "sha1": "f265f86a2f7bde59b88a47e53c0893d66a55a6cc",
             "sha256": "0dabc62368f8c774acf547ee84e794d172a72c0e8bb3c78d261a6e896ea60c42",
             "uuid": "f1eba7e3-e4c0-43e8-91dc-009a85367517",
-            "filetype": "other"
+            "filetype": "other",
         }
         assert jsonschema.validate(instance=valid_data, schema=schema) is None
 
@@ -420,7 +416,7 @@ class TestJSONSchema(unittest.TestCase):
             "sha256": "0dabc62368f8c774acf547ee84e794d172a72c0e8bb3c78d261a6e896ea60c42",
             "uuid": "f1eba7e3-e4c0-43e8-91dc-009a85367517",
             "invalid": "Invalid required property",
-            "filetype": "other"
+            "filetype": "other",
         }
         with self.assertRaises(jsonschema.exceptions.ValidationError):
             assert jsonschema.validate(instance=invalid_data, schema=schema) is None
@@ -435,7 +431,7 @@ class TestJSONSchema(unittest.TestCase):
             "sha1": "f265f86a2f7bde59b88a47e53c0893d66a55a6cc",
             "sha256": "0dabc62368f8c774acf547ee84e794d172a72c0e8bb3c78d261a6e896ea60c42",
             "uuid": "f1eba7e3-e4c0-43e8-91dc-009a85367517",
-            "filetype": "other"
+            "filetype": "other",
         }
         with self.assertRaises(jsonschema.exceptions.ValidationError):
             assert jsonschema.validate(instance=invalid_type_data, schema=schema) is None
@@ -449,7 +445,7 @@ class TestJSONSchema(unittest.TestCase):
             "observation_ts": "2024-12-04 22:27:45",
             "sha256": "0dabc62368f8c774acf547ee84e794d172a72c0e8bb3c78d261a6e896ea60c42",
             "uuid": "f1eba7e3-e4c0-43e8-91dc-009a85367517",
-            "filetype": "other"
+            "filetype": "other",
         }
         with self.assertRaises(jsonschema.exceptions.ValidationError):
             assert jsonschema.validate(instance=missing_data, schema=schema) is None
@@ -465,7 +461,7 @@ class TestJSONSchema(unittest.TestCase):
             "sha256": "0dabc62368f8c774acf547ee84e794d172a72c0e8bb3c78d261a6e896ea60c42",
             "uuid": "f1eba7e3-e4c0-43e8-91dc-009a85367517",
             "extra_property": "Extra property",
-            "filetype": "other"
+            "filetype": "other",
         }
         with self.assertRaises(jsonschema.exceptions.ValidationError):
             assert jsonschema.validate(instance=additional_data, schema=schema) is None

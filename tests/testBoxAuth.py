@@ -4,6 +4,7 @@ from unittest.mock import patch, MagicMock, mock_open
 from queue import Queue
 from box import box_auth
 
+
 class TestOAuthCallbackHandler(unittest.TestCase):
     def setUp(self):
         self.queue = Queue()
@@ -15,7 +16,9 @@ class TestOAuthCallbackHandler(unittest.TestCase):
     @patch("box.box_auth.OAuthCallbackHandler.send_response")
     @patch("box.box_auth.OAuthCallbackHandler.send_header")
     @patch("box.box_auth.OAuthCallbackHandler.end_headers")
-    def test_do_GET_with_code_file_found(self, mock_end_headers, mock_send_header, mock_send_response):
+    def test_do_GET_with_code_file_found(
+        self, mock_end_headers, mock_send_header, mock_send_response
+    ):
         handler = self.handler
         handler.path = "/?code=abc123"
         handler.server = self.server
@@ -40,7 +43,9 @@ class TestOAuthCallbackHandler(unittest.TestCase):
     @patch("box.box_auth.OAuthCallbackHandler.send_response")
     @patch("box.box_auth.OAuthCallbackHandler.send_header")
     @patch("box.box_auth.OAuthCallbackHandler.end_headers")
-    def test_do_GET_with_code_file_not_found(self, mock_end_headers, mock_send_header, mock_send_response):
+    def test_do_GET_with_code_file_not_found(
+        self, mock_end_headers, mock_send_header, mock_send_response
+    ):
         handler = self.handler
         handler.path = "/?code=abc123"
         handler.server = self.server
@@ -72,13 +77,17 @@ class TestOAuthCallbackHandler(unittest.TestCase):
         handler.do_GET(handler)
         handler.send_error.assert_called_with(400, "Missing 'code' parameter in query")
 
+
 class TestThreadedHTTPServer(unittest.TestCase):
     def test_queue_attached(self):
         queue = Queue()
-        server = box_auth.ThreadedHTTPServer(("localhost", 8000), box_auth.OAuthCallbackHandler, queue)
+        server = box_auth.ThreadedHTTPServer(
+            ("localhost", 8000), box_auth.OAuthCallbackHandler, queue
+        )
         self.assertIs(server.queue, queue)
 
         server.server_close()
+
 
 class TestGetAuthorizationCode(unittest.TestCase):
     @patch("box.box_auth.webbrowser.open")
@@ -114,12 +123,15 @@ class TestGetAuthorizationCode(unittest.TestCase):
             with self.assertRaises(TimeoutError):
                 box_auth.get_authorization_code("http://auth.url", queue, timeout=0.01)
 
+
 class TestAuthenticateOAuth(unittest.TestCase):
     @patch("box.box_auth.load_tokens", return_value=(None, None))
     @patch("box.box_auth.OAuth2")
     @patch("box.box_auth.get_authorization_code", return_value="auth_code")
     @patch("box.box_auth.Client")
-    def test_authenticate_oauth_no_tokens(self, mock_client, mock_get_code, mock_oauth2_class, mock_load_tokens):
+    def test_authenticate_oauth_no_tokens(
+        self, mock_client, mock_get_code, mock_oauth2_class, mock_load_tokens
+    ):
         settings = MagicMock()
         settings.BOX_CLIENT_ID = "id"
         settings.BOX_CLIENT_SECRET = "secret"
@@ -131,7 +143,7 @@ class TestAuthenticateOAuth(unittest.TestCase):
         mock_oauth2.authenticate = MagicMock()
         mock_oauth2_class.return_value = mock_oauth2
 
-        client = box_auth.authenticate_oauth(settings)
+        box_auth.authenticate_oauth(settings)
         mock_oauth2.get_authorization_url.assert_called_once()
         mock_get_code.assert_called_once()
         mock_oauth2.authenticate.assert_called_once_with("auth_code")
@@ -150,9 +162,10 @@ class TestAuthenticateOAuth(unittest.TestCase):
         mock_oauth2 = MagicMock()
         mock_oauth2_class.return_value = mock_oauth2
 
-        client = box_auth.authenticate_oauth(settings)
+        box_auth.authenticate_oauth(settings)
         mock_oauth2_class.assert_called_once()
         mock_client.assert_called_once_with(mock_oauth2)
+
 
 if __name__ == "__main__":
     unittest.main()

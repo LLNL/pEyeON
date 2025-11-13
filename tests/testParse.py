@@ -15,7 +15,9 @@ class X86ParseTestCase(unittest.TestCase):
             os.path.isfile("./tests/testresults/Wintap.exe.2950c0020a37b132718f5a832bc5cabd.json")
         )
         self.assertTrue(
-            os.path.isfile("./tests/testresults/WintapSetup.msi.f06087338f3b3e301d841c29429a1c99.json")
+            os.path.isfile(
+                "./tests/testresults/WintapSetup.msi.f06087338f3b3e301d841c29429a1c99.json"
+            )
         )
 
     def certExtracted(self) -> None:
@@ -53,7 +55,9 @@ class X86ParseTestCase(unittest.TestCase):
         )
 
     def validateWintapSetupMsiJson(self) -> None:
-        with open("./tests/testresults/WintapSetup.msi.f06087338f3b3e301d841c29429a1c99.json") as schem:
+        with open(
+            "./tests/testresults/WintapSetup.msi.f06087338f3b3e301d841c29429a1c99.json"
+        ) as schem:
             schema = json.loads(schem.read())
         self.assertEqual(schema["bytecount"], 13679616)
         self.assertEqual(schema["filename"], "WintapSetup.msi")

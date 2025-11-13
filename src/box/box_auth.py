@@ -8,6 +8,7 @@ from boxsdk import OAuth2, Client
 from box.box_config import get_box_settings, store_tokens_callback, load_tokens, BoxSettings
 from pathlib import Path
 
+
 # ─── LOCAL HTTP SERVER FOR CALLBACK ────────────────────────────────────────────
 class OAuthCallbackHandler(BaseHTTPRequestHandler):
     """
@@ -32,7 +33,7 @@ class OAuthCallbackHandler(BaseHTTPRequestHandler):
             self.send_header("Content-type", "text/html")
             self.end_headers()
             try:
-                html_path=f"{Path(__file__).parent}/auth_success.html"
+                html_path = f"{Path(__file__).parent}/auth_success.html"
                 with open(html_path, "rb") as file:
                     html_content = file.read()
                     self.wfile.write(html_content)
@@ -48,18 +49,23 @@ class OAuthCallbackHandler(BaseHTTPRequestHandler):
         else:
             self.send_error(400, "Missing 'code' parameter in query")
 
+
 class ThreadedHTTPServer(HTTPServer):
     """
     Extends HTTPServer by attaching a queue for passing the OAuth code back.
     """
+
     def __init__(self, server_address, RequestHandlerClass, queue):
         super().__init__(server_address, RequestHandlerClass)
         self.queue = queue
 
-def get_authorization_code(auth_url: str, queue: Queue, timeout:int=120) -> str:
+
+def get_authorization_code(auth_url: str, queue: Queue, timeout: int = 120) -> str:
     # Start HTTP server in background
-    settings=get_box_settings()
-    server = ThreadedHTTPServer((settings.REDIRECT_HOST, settings.REDIRECT_PORT), OAuthCallbackHandler, queue)
+    settings = get_box_settings()
+    server = ThreadedHTTPServer(
+        (settings.REDIRECT_HOST, settings.REDIRECT_PORT), OAuthCallbackHandler, queue
+    )
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
 
@@ -77,8 +83,9 @@ def get_authorization_code(auth_url: str, queue: Queue, timeout:int=120) -> str:
 
     return code
 
+
 # ─── OAUTH2 AUTHENTICATION ─────────────────────────────────────────────────────
-def authenticate_oauth(settings:BoxSettings) -> Client:
+def authenticate_oauth(settings: BoxSettings) -> Client:
     access_token, refresh_token = load_tokens()
     oauth2 = OAuth2(
         client_id=settings.BOX_CLIENT_ID,
@@ -89,7 +96,7 @@ def authenticate_oauth(settings:BoxSettings) -> Client:
     )
 
     if not access_token:
-        REDIRECT_URI=f"http://{settings.REDIRECT_HOST}:{settings.REDIRECT_PORT}/"
+        REDIRECT_URI = f"http://{settings.REDIRECT_HOST}:{settings.REDIRECT_PORT}/"
         # print(vars(oauth2))
         # print(REDIRECT_URI)
         auth_url, _csrf_token = oauth2.get_authorization_url(REDIRECT_URI)
@@ -100,13 +107,14 @@ def authenticate_oauth(settings:BoxSettings) -> Client:
 
     return Client(oauth2)
 
+
 def main():
-    '''
+    """
     run this script independently to generate the box-tokens in a browser friendly environment
 
     from src/ directory run 'python -m box.box_auth'
-    '''
-    settings=get_box_settings()
+    """
+    settings = get_box_settings()
     authenticate_oauth(settings)
 
 

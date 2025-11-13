@@ -28,4 +28,3 @@ run yum update -y && yum install -y python3.12 file \
 ENV PATH="/eye/bin:$PATH"
 
 ENV PATH=/root/.local/bin:$PATH
-
