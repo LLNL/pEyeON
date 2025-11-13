@@ -3,7 +3,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "EyeON Observation",
   "type": "object",
-  "required": ["bytecount", "filename", "magic", "md5", "observation_ts", "sha1", "sha256", "uuid"],
+  "required": ["bytecount", "filename", "filetype", "magic", "md5", "observation_ts", "sha1", "sha256", "uuid"],
   "properties": {
     "bytecount": {
       "type":"integer",
@@ -17,12 +17,9 @@
       "type": "string",
       "description": "Basename of file"
     },
-    "hosts": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "List of hosts file will target"
+    "filetype": {
+      "type": "string",
+      "enum": [ "elf", "pe", "macho", "other" ]
     },
     "imphash": {
       "type": "string",
@@ -85,7 +82,13 @@
       "description": "Checks if signatures are OK and if digest matches hashed authenticode"
     },
     "metadata": {
-      "$ref": "#/$defs/metadata"
+      "type": "object", 
+      "oneOf": [
+        { "$ref": "#/$defs/PEMetadata" },
+        { "$ref": "#/$defs/ELFMetadata" },
+        { "$ref": "#/$defs/MachOMetadata" },
+        { "$ref": "#/$defs/OtherMetadata" }
+      ]
     },
     "defaults": {
       "$ref": "#/$defs/defaults"
@@ -135,8 +138,9 @@
        }
      }
     },
-    "metadata": {
+    "PEMetadata": {
       "type": "object",
+      "required": ["peMachine"],
       "properties": {
         "OS": { "type": "string" },
         "peMachine": { "type": "string" },
@@ -150,20 +154,129 @@
         "peIsExe": { "type": "boolean" }, 
         "peIsDll": { "type": "boolean" }, 
         "peIsClr": { "type": "boolean" }, 
-        "FileInfo": { 
-          "type": "object",
-          "properties": {
-            "CompanyName": { "type": "string" },
-            "FileDescription": { "type": "string" },
-            "FileVersion": { "type": "string" },
-            "LegalCopyright": { "type": "string" },
-            "ProductName": { "type": "string" },
-            "ProductVersion": { "type": "string" }
-          } 
-        }, 
+        "FileInfo": { "type": "object" }, 
         "dllRedirectionLocal": { "type": "boolean" }
       }
 
+    },
+    "ELFMetadata": {
+      "type": "object",
+      "required": ["elfIdent", "elfDependencies"],
+      "properties": {
+        "OS": { "type": "string" },
+        "elfIdent": {
+          "type": "object",
+          "properties": {
+            "EI_CLASS": { "type": "integer" },
+            "EI_DATA": { "type": "integer" },
+            "EI_VERSION": { "type": "integer" },
+            "EI_OSABI": { "type": "integer" },
+            "EI_ABIVERSION": { "type": "integer" },
+            "E_MACHINE": { "type": "integer" }
+          }
+        },
+        "elfDependencies": { "type": "array" },
+        "elfRpath": { "type": "array" },
+        "elfRunpath": { "type": "array" },
+        "elfSoname": { "type": "array" },
+        "elfInterpreter": { "type": "array" },
+        "elfDynamicFlags": { "type": "array" },
+        "elfDynamicFlags1": { "type": "array" },
+        "elfGnuRelro": { "type": "boolean" },
+        "elfComment": { "type": "array" },
+        "elfNote": { "type": "array" },
+        "elfOsAbi": { "type": "string" },
+        "elfHumanArch": { "type": "string" },
+        "elfArchNumber": { "type": "integer" },
+        "elfArchitecture": { "type": "string" },
+        "elfIsExe": { "type": "boolean" },
+        "elfIsLib": { "type": "boolean" },
+        "elfIsRel": { "type": "boolean" },
+        "elfIsCore": { "type": "boolean" }
+      }
+    },
+    "MachOMetadata": {
+      "type": "object",
+      "required": ["numBinaries", "binaries"],
+      "properties": {
+        "OS": { "type": "string" },
+        "numBinaries": { "type": "integer" },
+        "binaries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "format": { "type": "string" },
+              "header": {
+                "type": "object",
+                "properties": {
+                  "cpuType": { "type": "string" },
+                  "cpuTypeValue": { "type": "integer" },
+                  "cpuSubtype": { "type": "string" },
+                  "cpuSubtypeValue": { "type": "integer" },
+                  "fileType": { "type": "string" },
+                  "fileTypeValue": { "type": "integer" },
+                  "flags": { "type": "array" },
+                  "numCommands": { "type": "integer" }
+                }
+              },
+              "build": {
+                "type": "object",
+                "properties": {
+                  "platform": { "type": "string" },
+                  "platformValue": { "type": "integer" },
+                  "minOSVersion": { "type": "string" },
+                  "sdkVersion": { "type": "string" },
+                  "tools": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "tool": { "type": "string" },
+                        "version": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              },
+              "signature": {
+                "type": "object",
+                "properties": {
+                  "offset": { "type":"integer" },
+                  "size": { "type":"integer" },
+                  "type": { "type":"string" }
+                }
+              },
+              "dependencies": {
+                "type": "array",
+                "items": {
+                  "name": { "type": "string" },
+                  "currentVersion": { "type": "string" },
+                  "compatibilityVersion": { "type": "string" }
+                }
+              },
+              "rpaths": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "dyld": {
+                "type": "object",
+                "properties": {
+                  "linker": { "type": "string" }
+                }
+              },
+              "encryption": { "type": "object" }
+            }
+          }
+        }
+      }
+    },
+    "OtherMetadata": {
+      "type": "object",
+      "required": ["description"],
+      "properties": {
+        "description": { "type": "string" }
+      }
     },
     "defaults": {
       "type": "object",
@@ -187,6 +300,16 @@
           }
         }
       }
+    },
+    "checksum_verification": {
+      "type": "object",
+      "properties": {
+          "algorithm": { "type": "string" },
+          "expected": { "type": "string" },
+          "actual": { "type": "string" },
+          "verified": { "type": "boolean" }
+      },
+      "required": ["algorithm", "expected", "actual", "verified"]
     }
   }
 }

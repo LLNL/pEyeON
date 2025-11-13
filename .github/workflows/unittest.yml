@@ -13,16 +13,14 @@ jobs:
           python-version: '3.10'
       - name: Virtual Environment Setup
         run: |
-          python3 -m venv .venv
+          python3 -m venv .venv --upgrade-deps
       - name: Install Dependencies
         run: |
           source .venv/bin/activate
-          pip install --upgrade pip
-          pip install .
+          pip install -e .
           echo "Packages installed"
       - name: Run Unittests
         run: |
           source .venv/bin/activate
-          cd tests/
-          coverage run -m unittest discover
+          coverage run --source=src/ -m unittest discover -s tests/
           coverage report

@@ -30,10 +30,10 @@ This dockerfile contains all the pertinent tools specific to data extraction. Th
 
 #### Docker
 ```bash
-wget https://raw.githubusercontent.com/LLNL/pEyeON/refs/heads/main/builds/docker-build.sh \
-     https://raw.githubusercontent.com/LLNL/pEyeON/refs/heads/main/builds/docker-run.sh \
+wget https://raw.githubusercontent.com/LLNL/pEyeON/refs/heads/main/builds/docker-run.sh \
+     https://raw.githubusercontent.com/LLNL/pEyeON/refs/heads/main/builds/entrypoint.sh \
      https://raw.githubusercontent.com/LLNL/pEyeON/refs/heads/main/builds/python3-slim-bookworm.Dockerfile
-chmod +x docker-build.sh && ./docker-build.sh
+docker build -t peyeon -f python3-slim-bookworm.Dockerfile .
 chmod +x docker-run.sh && ./docker-run.sh
 ```
 #### Podman
@@ -133,12 +133,42 @@ Example json file:
 obs = eyeon.parse.Parse(args.dir)
 ```
 
+#### Checksum Check
+
+The Eyeon tool has the ability to verify against a provided sha1, md5, or sha256 hash. This can be leveraged as a stand alone function or with observe command to record the result in the output. If no algorithm is specified with `-a, --algorithm` it will default to md5.
+
+```bash
+eyeon checksum -a [md5,sha1,sha256] <file> <provided_checksum>
+```
+
 For convenience you can parse, compress, and upload your results to box in a single command:
 
 ```bash
 eyeon parse <dir> --upload
 ```
 To set up box and upload results, see **Uploading Results** section below
+
+
+**Examples**
+Stand Alone Check
+```bash
+eyeon checksum -a sha256 tests/binaries/Wintap.exe bdd73b73b50350a55e27f64f022db0f62dd28a0f1d123f3468d3f0958c5fcc39
+```
+
+Eyeon Observe
+```bash
+eyeon observe tests/binaries/Wintap.exe -a sha256 -c bdd73b73b50350a55e27f64f022db0f62dd28a0f1d123f3468d3f0958c5fcc39
+```
+
+Recorded Result in Eyeon Output
+```json
+    "checksum_data": {
+        "algorithm": "sha256",
+        "expected": "bdd73b73b50350a55e27f64f022db0f62dd28a0f1d123f3468d3f0958c5fcc39",
+        "actual": "bdd73b73b50350a55e27f64f022db0f62dd28a0f1d123f3468d3f0958c5fcc39",
+        "verified": true
+    }
+```
 
 #### Jupyter Notebook
 If you want to run jupyter, the `./docker-run.sh` script exposes port 8888. Launch it from the `/workdir` or eyeon root directory via `jupyter notebook --ip=0.0.0.0 --no-browser` and open the `demo.ipynb` notebook for a quick demonstration.
