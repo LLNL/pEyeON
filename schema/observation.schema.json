@@ -323,9 +323,25 @@
     },
     "OleMetadata": {
       "type": "object",
-      "required": ["whateverolething"],
+      "required": ["ole"],
       "properties": {
-        "whateverolething": { "type": "string" }
+        "ole": { 
+          "type": "object",
+          "clsid": { "type": "string" },
+          "clsid_type": { "type": "string" },
+          "codepage": { "type": "string" },
+          "title": { "type": "string" },
+          "author": { "type": "string" },
+          "template": { "type": "string" },
+          "revision_number": { "type": "string" },
+          "last_printed": { "type": "string" },
+          "create_time": { "type": "string" },
+          "last_saved_time": { "type": "string" },
+          "num_pages": { "type": "string" },
+          "num_words": { "type": "string" },
+          "creating_application": { "type": "string" },
+          "security": { "type": "string" }
+        }
       }
     },
     
@@ -352,16 +368,60 @@
     },
     "RPMMetadata": {
       "type": "object",
-      "required": ["whateverrpmthing"],
+      "required": ["rpm"],
       "properties": {
-        "whateverrpmthing": { "type": "string" }
+        "rpm": { 
+          "type": "object",
+          "name": { "type": "string" },
+          "sourcerpm": { "type": "string" },
+          "version": { "type": "string" },
+          "release": { "type": "string" },
+          "summary": { "type": "string" },
+          "description": { "type": "string"},
+          "rpmversion": { "type": "string"},
+          "copyright": { "type": "string"},
+          "os": { "type": "string"},
+          "arch": { "type": "string"},
+          "target": { "type": "string"},
+          "archive_format": { "type": "string"},
+          "archive_compression": { "type": "string"},
+          "optflags": { "type": "string"},
+          "sha256": { "type": "string"},
+          "md5": { "type": "string"},
+          "requirename": {
+            "type": "object"
+          },
+          "provides": {
+            "type": "object"
+          },
+          "buildtime": { "type": "integer"},
+          "associated_files": {
+            "type": "object"
+          }
+        }
       }
     },
     "UbootImageMetadata": {
       "type": "object",
-      "required": ["whateveruimagething"],
+      "required": ["uimage_header"],
       "properties": {
-        "whateveruimagething": { "type": "string" }
+        "uimage_header": { 
+          "type": "object",
+          "header_crc": { "type": "string" },
+          "timestamp" : { "type": "integer" },
+          "data_size" : { "type": "integer" },
+          "load_addr" : { "type": "string" },
+          "entry_point" : { "type": "string" },
+          "data_crc" : { "type": "string" },
+          "os" : { "type": "string" },
+          "os_description" : { "type": "string" },
+          "arch" : { "type": "string" },
+          "arch_description" : { "type": "string" },
+          "image_type" : { "type": "string" },
+          "image_type_description" : { "type": "string" },
+          "compression_type" : { "type": "string" },
+          "name" : { "type": "string" }
+        }
       }
     },
     "OtherMetadata": {
