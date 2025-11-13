@@ -233,9 +233,9 @@
     },
     "JavascriptMetadata": {
       "type": "object",
-      "required": ["description"],
+      "required": ["jsLibraries"],
       "properties": {
-        "description": { "type": "string" }
+        "jsLibraries": { "type": "array" }
       }
     },
     "MachOMetadata": {
