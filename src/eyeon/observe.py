@@ -38,11 +38,13 @@ log = logging.getLogger("eyeon.observe")
 #         except FileNotFoundError:
 #             pass
 
+
 class MisreadBytesException(Exception):
-    '''
+    """
     Create exeption for when lief reads jar files as macho.
     TODO: link Wangmos issue
-    '''
+    """
+
     pass
 
 
@@ -206,12 +208,13 @@ class Observe:
         except Exception as E:
             log.error(E)
 
-    def set_checksum_verification(self, checksum_data:dict):
+    def set_checksum_verification(self, checksum_data: dict):
         """
-        set checksum verification data from checksum function. allows for integration from optional check
+        set checksum verification data from checksum function.
+        Allows for integration from optional check.
         """
         if checksum_data:
-            self.checksum_data=checksum_data
+            self.checksum_data = checksum_data
         else:
             print("No checksum data")
 
@@ -362,7 +365,6 @@ class Observe:
                     return os.path.join(dirpath, file)
         return None
 
-
     def set_windows_metadata(self, file: str) -> None:
         """Finds the metadata from surfactant"""
         from surfactant.infoextractors.pe_file import extract_pe_info
@@ -379,7 +381,7 @@ class Observe:
 
         try:
             test_metadata = extract_elf_info(file)
-            counter = 0
+
             # fix elfnote section
             og_elfnote = test_metadata["elfNote"]
             new_elfnote_dict = dict()
@@ -423,7 +425,7 @@ class Observe:
 
     def set_other_metadata(self, file: str) -> None:
         self.metadata = {"description": "some other file not in {elf, pe, macho}"}
-    
+
     def _safe_serialize(self, obj) -> str:
         """
         Certs are byte objects, not json.

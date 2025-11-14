@@ -43,4 +43,3 @@ ENV PATH="/eye/bin:$PATH"
 
 WORKDIR /workdir
 ENTRYPOINT ["/entrypoint.sh"]
-
