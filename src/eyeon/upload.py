@@ -90,9 +90,10 @@ def delete_file(file: str):
 
 
 def compress_file(file: str, compression: str):
-    # normalize path to remove trailing slashes
+    #currently creates the archive in the directory the tool is ran from 
+    # normalize path to remove trailing slashes for renaming/extensions
     file = os.path.normpath(file)
-    # get just the directory or file name (not the full path)
+    # get just the directory or file name (not the full path or extension)
     base_name = os.path.basename(file).split(".")[0]
 
     if compression == "zip":
@@ -115,7 +116,7 @@ def compress_file(file: str, compression: str):
     else:
         print("Unsupported compression format. Use zip, tar, or tar.gz")
         return None
-
+    
     return output_path
 
 
