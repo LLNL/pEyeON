@@ -25,7 +25,7 @@ class testChecksum(unittest.TestCase):
         result = checksum.Checksum(
             self.temp_file.name, algorithm="md5", expected_checksum=self.expected_sha256
         )
-        for key, value in result.items():
+        for _, value in result.items():
             self.assertIsNotNone(value)
 
     # Check passes

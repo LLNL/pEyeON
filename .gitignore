@@ -12,3 +12,7 @@ docs/build
 _version.py
 results
 build
+*.env
+.venv
+.coverage
+box_tokens.json
