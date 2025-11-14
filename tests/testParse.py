@@ -76,7 +76,7 @@ class X86ParseTestCase(unittest.TestCase):
 class X86SinglethreadTestCase(X86ParseTestCase):
     @classmethod
     def setUpClass(self) -> None:
-        self.PRS = parse.Parse("./tests/binaries/Wintap", logging.WARNING, "./tests/testParse.log")
+        self.PRS = parse.Parse("./tests/binaries", logging.WARNING, "./tests/testParse.log")
         self.PRS(result_path="tests/testresults")  # run scan
 
     def testCommon(self):
@@ -97,7 +97,7 @@ class X86SinglethreadTestCase(X86ParseTestCase):
 class X86TwoThreadTestCase(X86ParseTestCase):
     @classmethod
     def setUpClass(self) -> None:
-        self.PRS = parse.Parse("./tests/binaries/Wintap")
+        self.PRS = parse.Parse("./tests/binaries")
         self.PRS(result_path="tests/testresults", threads=2)
 
     def testCommon(self):
@@ -110,7 +110,7 @@ class X86TwoThreadTestCase(X86ParseTestCase):
 class X86ThreeThreadTestCase(X86ParseTestCase):
     @classmethod
     def setUpClass(self) -> None:
-        self.PRS = parse.Parse("./tests/binaries/Wintap")
+        self.PRS = parse.Parse("./tests/binaries")
         self.PRS(result_path="tests/testresults", threads=3)
 
     def testCommon(self):
