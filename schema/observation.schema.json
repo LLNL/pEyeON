@@ -166,9 +166,9 @@
     },
     "DockerImageMetadata": {
       "type": "object",
-      "required": ["whateverdockerthing"],
+      "required": ["description"],
       "properties": {
-        "whateverdockerthing": { "type": "string" }
+        "description": { "type": "string" }
       }
     },
     "ELFMetadata": {
@@ -233,9 +233,9 @@
     },
     "JavascriptMetadata": {
       "type": "object",
-      "required": ["whateverjsthing"],
+      "required": ["jsLibraries"],
       "properties": {
-        "whateverjsthing": { "type": "string" }
+        "jsLibraries": { "type": "array" }
       }
     },
     "MachOMetadata": {
