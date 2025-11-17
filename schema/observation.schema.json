@@ -166,9 +166,75 @@
     },
     "DockerImageMetadata": {
       "type": "object",
-      "required": ["description"],
+      "required": ["dockerSPDX"],
       "properties": {
-        "description": { "type": "string" }
+        "dockerSPDX": { 
+          "type": "object",
+          "properties": {
+            "spdxVersion": {"type": "string"},
+            "dataLicense": {"type": "string"},
+            "SPDXID": {"type": "string"},
+            "name": {"type": "string"},
+            "documentNamespace": {"type": "string"},
+            "creationInfo": {
+              "type": "object",
+              "properties": {
+                "creators": {"type": "array"},
+                "created": {"type": "string"}
+              }
+            },
+            "packages": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {"type": "string"},
+                  "SPDXID": {"type": "string"},
+                  "supplier": {"type": "string"},
+                  "downloadLocation": {"type": "string"},
+                  "filesAnalyzed": {"type": "boolean"},
+                  "licenseConcluded": {"type": "string"}
+                }
+              }
+            },
+            "files": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "fileName": {"type": "string"},
+                  "SPDXID": {"type": "string"},
+                  "checksums": {
+                    "type": "array",
+                    "algorithm": {"type": "string"},
+                    "checksumValue": {"type": "string"}
+                  },
+                  "licenseConcluded": {"type": "string"},
+                  "copyrightText": {"type": "string"},
+                  "comment": {"type": "string"},
+                  "annotations": {
+                    "type": "array",
+                    "annotator": {"type": "string"},
+                    "annotationDate": {"type": "string"},
+                    "annotationType": {"type": "string"},
+                    "comment": {"type": "string"}
+                  }
+                }
+              }
+            },
+            "relationships": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "spdxElementId": {"type": "string"},
+                  "relatedSpdxElement": {"type": "string"},
+                  "relationshipType": {"type": "string"}
+                }
+              }
+            }
+          }
+        }
       }
     },
     "ELFMetadata": {
@@ -214,12 +280,14 @@
         "type": "array",
         "items": {
           "type": "object",
-          "className": { "type": "string" },
-          "javaMinSEVersion": { "type": "string" },
-          "javaExports": {
-            "type": "array",
-            "items": {
-              "type": "string"
+          "properties": {
+            "className": { "type": "string" },
+            "javaMinSEVersion": { "type": "string" },
+            "javaExports": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           "javaImports": {
@@ -327,20 +395,22 @@
       "properties": {
         "ole": { 
           "type": "object",
-          "clsid": { "type": "string" },
-          "clsid_type": { "type": "string" },
-          "codepage": { "type": "string" },
-          "title": { "type": "string" },
-          "author": { "type": "string" },
-          "template": { "type": "string" },
-          "revision_number": { "type": "string" },
-          "last_printed": { "type": "string" },
-          "create_time": { "type": "string" },
-          "last_saved_time": { "type": "string" },
-          "num_pages": { "type": "string" },
-          "num_words": { "type": "string" },
-          "creating_application": { "type": "string" },
-          "security": { "type": "string" }
+          "properties": {
+            "clsid": { "type": "string" },
+            "clsid_type": { "type": "string" },
+            "codepage": { "type": "string" },
+            "title": { "type": "string" },
+            "author": { "type": "string" },
+            "template": { "type": "string" },
+            "revision_number": { "type": "string" },
+            "last_printed": { "type": "string" },
+            "create_time": { "type": "string" },
+            "last_saved_time": { "type": "string" },
+            "num_pages": { "type": "string" },
+            "num_words": { "type": "string" },
+            "creating_application": { "type": "string" },
+            "security": { "type": "string" }
+          }
         }
       }
     },
@@ -372,31 +442,36 @@
       "properties": {
         "rpm": { 
           "type": "object",
-          "name": { "type": "string" },
-          "sourcerpm": { "type": "string" },
-          "version": { "type": "string" },
-          "release": { "type": "string" },
-          "summary": { "type": "string" },
-          "description": { "type": "string"},
-          "rpmversion": { "type": "string"},
-          "copyright": { "type": "string"},
-          "os": { "type": "string"},
-          "arch": { "type": "string"},
-          "target": { "type": "string"},
-          "archive_format": { "type": "string"},
-          "archive_compression": { "type": "string"},
-          "optflags": { "type": "string"},
-          "sha256": { "type": "string"},
-          "md5": { "type": "string"},
-          "requirename": {
-            "type": "object"
-          },
-          "provides": {
-            "type": "object"
-          },
-          "buildtime": { "type": "integer"},
-          "associated_files": {
-            "type": "object"
+          "properties": {
+            "name": { "type": "string" },
+            "sourcerpm": { "type": "string" },
+            "version": { "type": "string" },
+            "release": { "type": "string" },
+            "summary": { "type": "string" },
+            "description": { "type": "string"},
+            "rpmversion": { "type": "string"},
+            "copyright": { "type": "string"},
+            "os": { "type": "string"},
+            "arch": { "type": "string"},
+            "target": { "type": "string"},
+            "archive_format": { "type": "string"},
+            "archive_compression": { "type": "string"},
+            "optflags": { "type": "string"},
+            "sha256": { "type": "string"},
+            "md5": { "type": "string"},
+            "requirename": {
+              "type": "object",
+              "properties": {}
+            },
+            "provides": {
+              "type": "object",
+              "properties": {}
+            },
+            "buildtime": { "type": "integer"},
+            "associated_files": {
+              "type": "object",
+              "properties": {}
+            }
           }
         }
       }
