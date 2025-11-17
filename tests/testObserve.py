@@ -156,7 +156,7 @@ class ObservationTestCase5(unittest.TestCase):
         self.OBS = observe.Observe(
             "tests/binaries/NET_app_config_test_no1/ConsoleApp2.exe",
             log_level="INFO",
-            log_file="./observe.log",
+            log_file="tests/observe.log",
         )
 
     def testLog(self):  # check log is created and correct info logged

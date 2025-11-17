@@ -221,9 +221,9 @@ class Observe:
             for line in crt:
                 if line:  # catch empty string
                     try:
-                        k, v = re.split("\s+: ", line)  # noqa: W605
+                        k, v = re.split(r"\s+: ", line)  # noqa: W605
                     except ValueError:  # not enough values to unpack
-                        k = re.split("\s+: ", line)[0]  # noqa: W605
+                        k = re.split(r"\s+: ", line)[0]  # noqa: W605
                         v = ""
                     except Exception as e:
                         print(line)
@@ -352,8 +352,27 @@ class Observe:
             return
 
         elif len(self.metadata) > 1:
-            # TODO: test this
-            raise Exception("multiple metadata returned")
+            # TODO: test
+            nl = {}
+            nli = None
+            for i, m in enumerate(self.metadata):
+                if "nativeLibraries" in m:
+                    nli = i
+                    if m["nativeLibraries"]:
+                        nl = m
+                    break
+            if nli is not None:
+                met = [m for i, m in enumerate(self.metadata) if i != nli]
+                if len(met) > 1:
+                    raise Exception(f"multiple metadata returned for {file}")
+
+                met = met[0]
+                if nl:
+                    met["nativeLibraries"] = nl["nativeLibraries"]
+                self.metadata = met
+            else:
+                raise Exception(f"multiple metadata returned for {file}")
+
         else:
             self.metadata = self.metadata[0]
 
