@@ -19,7 +19,7 @@
     },
     "filetype": {
       "type": "string",
-      "enum": [ "elf", "pe", "macho", "other" ]
+      "enum": ["ELF", "Malformed PE", "DOS", "Linux Kernel Image", "PE", "OLE", "MSCAB", "ISCAB", "DOCKER_GZIP", "GZIP", "BZIP2", "XZ", "DOCKER_TAR", "TAR", "RAR", "ZIP", "JAR", "WAR", "EAR", "APK", "IPA", "MSIX", "MACHOFAT", "JAVACLASS", "MACHOFAT", "MACHOFAT64", "EFIFAT", "MACHO32", "MACHO64", "LLVM_BITCODE", "LLVM_IR", "A.OUT big", "A.OUT little", "COFF", "XCOFF32", "XCOFF64", "ECOFF", "AR_LIB", "OMF_LIB", "UIMAGE", "ZLIB", "CPIO_BIN big", "CPIO_BIN little", "CPIO_ASCII_OLD", "CPIO_ASCII_NEW", "CPIO_ASCII_NEW_CRC", "ZSTANDARD", "ZSTANDARD_DICTIONARY", "ISO_9660_CD", "MACOS_DMG", "RPM Package"]
     },
     "imphash": {
       "type": "string",
@@ -84,14 +84,20 @@
     "metadata": {
       "type": "object", 
       "oneOf": [
-        { "$ref": "#/$defs/PEMetadata" },
+        { "$ref": "#/$defs/AOUTMetadata" },
+        { "$ref": "#/$defs/CoffMetadata" },
+        { "$ref": "#/$defs/DockerImageMetadata" },
         { "$ref": "#/$defs/ELFMetadata" },
+        { "$ref": "#/$defs/JavaMetadata" },
+        { "$ref": "#/$defs/JavascriptMetadata" },
         { "$ref": "#/$defs/MachOMetadata" },
+        { "$ref": "#/$defs/NativeMetadata" },
+        { "$ref": "#/$defs/OleMetadata" },
+        { "$ref": "#/$defs/PEMetadata" },
+        { "$ref": "#/$defs/RPMMetadata" },
+        { "$ref": "#/$defs/UbootImageMetadata" },
         { "$ref": "#/$defs/OtherMetadata" }
       ]
-    },
-    "defaults": {
-      "$ref": "#/$defs/defaults"
     },
     "signatures": {
       "type": "array",
@@ -109,9 +115,15 @@
         "required": ["signers", "digest_algorithm"]
       }
     },
-    "detect_it_easy": {
-      "type": "string",
-      "description": "Program that determines types of files for Windows, Linux and MacOS"
+    "checksum_verification": {
+      "type": "object",
+      "properties": {
+          "algorithm": { "type": "string" },
+          "expected": { "type": "string" },
+          "actual": { "type": "string" },
+          "verified": { "type": "boolean" }
+      },
+      "required": ["algorithm", "expected", "actual", "verified"]
     }
   },
   "additionalProperties": false,
@@ -138,26 +150,92 @@
        }
      }
     },
-    "PEMetadata": {
+    "AOUTMetadata": {
       "type": "object",
-      "required": ["peMachine"],
+      "required": [ "aoutMachineType" ],
       "properties": {
-        "OS": { "type": "string" },
-        "peMachine": { "type": "string" },
-        "peOperatingSystemVersion": { "type": "string" },
-        "peSubsystemVersion": { "type": "string" },
-        "peSubsystem": { "type": "string" },
-        "peLinkerVersion": { "type": "string" },
-        "peImport": { "type": "array",
-            "items": { "type": "string" }
-        },
-        "peIsExe": { "type": "boolean" }, 
-        "peIsDll": { "type": "boolean" }, 
-        "peIsClr": { "type": "boolean" }, 
-        "FileInfo": { "type": "object" }, 
-        "dllRedirectionLocal": { "type": "boolean" }
+        "aoutMachineType": { "type": "string" }
       }
-
+    },
+    "CoffMetadata": {
+      "type": "object",
+      "required":  ["coffMachineType" ],
+      "properties": {
+        "coffMachineType": {"type": "string"}
+      }
+    },
+    "DockerImageMetadata": {
+      "type": "object",
+      "required": ["dockerSPDX"],
+      "properties": {
+        "dockerSPDX": { 
+          "type": "object",
+          "properties": {
+            "spdxVersion": {"type": "string"},
+            "dataLicense": {"type": "string"},
+            "SPDXID": {"type": "string"},
+            "name": {"type": "string"},
+            "documentNamespace": {"type": "string"},
+            "creationInfo": {
+              "type": "object",
+              "properties": {
+                "creators": {"type": "array"},
+                "created": {"type": "string"}
+              }
+            },
+            "packages": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {"type": "string"},
+                  "SPDXID": {"type": "string"},
+                  "supplier": {"type": "string"},
+                  "downloadLocation": {"type": "string"},
+                  "filesAnalyzed": {"type": "boolean"},
+                  "licenseConcluded": {"type": "string"}
+                }
+              }
+            },
+            "files": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "fileName": {"type": "string"},
+                  "SPDXID": {"type": "string"},
+                  "checksums": {
+                    "type": "array",
+                    "algorithm": {"type": "string"},
+                    "checksumValue": {"type": "string"}
+                  },
+                  "licenseConcluded": {"type": "string"},
+                  "copyrightText": {"type": "string"},
+                  "comment": {"type": "string"},
+                  "annotations": {
+                    "type": "array",
+                    "annotator": {"type": "string"},
+                    "annotationDate": {"type": "string"},
+                    "annotationType": {"type": "string"},
+                    "comment": {"type": "string"}
+                  }
+                }
+              }
+            },
+            "relationships": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "spdxElementId": {"type": "string"},
+                  "relatedSpdxElement": {"type": "string"},
+                  "relationshipType": {"type": "string"}
+                }
+              }
+            }
+          }
+        }
+      }
     },
     "ELFMetadata": {
       "type": "object",
@@ -193,6 +271,39 @@
         "elfIsLib": { "type": "boolean" },
         "elfIsRel": { "type": "boolean" },
         "elfIsCore": { "type": "boolean" }
+      }
+    },
+    "JavaMetadata": {
+      "type": "object",
+      "required": ["javaClasses"],
+      "javaClasses": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "className": { "type": "string" },
+            "javaMinSEVersion": { "type": "string" },
+            "javaExports": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "javaImports": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "JavascriptMetadata": {
+      "type": "object",
+      "required": ["jsLibraries"],
+      "properties": {
+        "jsLibraries": { "type": "array" }
       }
     },
     "MachOMetadata": {
@@ -271,45 +382,126 @@
         }
       }
     },
+    "NativeMetadata": {
+      "type": "object",
+      "required": ["nativeLibraries"],
+      "properties": {
+        "nativeLibraries": { "type": "array" }
+      }
+    },
+    "OleMetadata": {
+      "type": "object",
+      "required": ["ole"],
+      "properties": {
+          "ole": { 
+            "type": "object",
+            "properties": {
+            "clsid": { "type": "string" },
+            "clsid_type": { "type": "string" },
+            "codepage": { "type": "string" },
+            "title": { "type": "string" },
+            "author": { "type": "string" },
+            "template": { "type": "string" },
+            "revision_number": { "type": "string" },
+            "last_printed": { "type": "string" },
+            "create_time": { "type": "string" },
+            "last_saved_time": { "type": "string" },
+            "num_pages": { "type": "string" },
+            "num_words": { "type": "string" },
+            "creating_application": { "type": "string" },
+            "security": { "type": "string" }
+          }
+        }
+      }
+    },
+    
+    "PEMetadata": {
+      "type": "object",
+      "required": ["peMachine"],
+      "properties": {
+        "OS": { "type": "string" },
+        "peMachine": { "type": "string" },
+        "peOperatingSystemVersion": { "type": "string" },
+        "peSubsystemVersion": { "type": "string" },
+        "peSubsystem": { "type": "string" },
+        "peLinkerVersion": { "type": "string" },
+        "peImport": { "type": "array",
+            "items": { "type": "string" }
+        },
+        "peIsExe": { "type": "boolean" }, 
+        "peIsDll": { "type": "boolean" }, 
+        "peIsClr": { "type": "boolean" }, 
+        "FileInfo": { "type": "object" }, 
+        "dllRedirectionLocal": { "type": "boolean" }
+      }
+
+    },
+    "RPMMetadata": {
+      "type": "object",
+      "required": ["rpm"],
+      "properties": {
+        "rpm": { 
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "sourcerpm": { "type": "string" },
+            "version": { "type": "string" },
+            "release": { "type": "string" },
+            "summary": { "type": "string" },
+            "description": { "type": "string" },
+            "rpmversion": { "type": "string"},
+            "copyright": { "type": "string"},
+            "os": { "type": "string"},
+            "arch": { "type": "string"},
+            "target": { "type": "string"},
+            "archive_format": { "type": "string"},
+            "archive_compression": { "type": "string"},
+            "optflags": { "type": "string"},
+            "sha256": { "type": "string"},
+            "md5": { "type": "string"},
+            "requirename": {
+              "type": "object"
+            },
+            "provides": {
+              "type": "object"
+            },
+            "buildtime": { "type": "integer"},
+            "associated_files": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "UbootImageMetadata": {
+      "type": "object",
+      "required": ["uimage_header"],
+      "properties": {
+        "uimage_header": { 
+          "type": "object",
+          "header_crc": { "type": "string" },
+          "timestamp" : { "type": "integer" },
+          "data_size" : { "type": "integer" },
+          "load_addr" : { "type": "string" },
+          "entry_point" : { "type": "string" },
+          "data_crc" : { "type": "string" },
+          "os" : { "type": "string" },
+          "os_description" : { "type": "string" },
+          "arch" : { "type": "string" },
+          "arch_description" : { "type": "string" },
+          "image_type" : { "type": "string" },
+          "image_type_description" : { "type": "string" },
+          "compression_type" : { "type": "string" },
+          "name" : { "type": "string" }
+        }
+      }
+    },
     "OtherMetadata": {
       "type": "object",
       "required": ["description"],
       "properties": {
         "description": { "type": "string" }
       }
-    },
-    "defaults": {
-      "type": "object",
-      "properties": {
-        "default_filename": { "type": "string" },
-        "manufacturer_org": { "type": "string" },
-        "location": {
-          "type": "object",
-          "properties": {
-            "location": { "type": "string" },
-            "filelocation": { "type": "string" }
-          }
-        },
-        "machines": {
-          "type": "object",
-          "properties": {
-            "machines": { "type": "string" },
-            "os": { "type": "string" },
-            "version": { "type": "string" },
-            "x-version": { "type": "string" }
-          }
-        }
-      }
-    },
-    "checksum_verification": {
-      "type": "object",
-      "properties": {
-          "algorithm": { "type": "string" },
-          "expected": { "type": "string" },
-          "actual": { "type": "string" },
-          "verified": { "type": "boolean" }
-      },
-      "required": ["algorithm", "expected", "actual", "verified"]
     }
   }
 }

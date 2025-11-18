@@ -1,7 +1,5 @@
-FROM python:3.13.7-slim-bookworm AS builder
-
-ARG USER_ID
-ARG OUN
+ARG LATEST_PYTHON_3_13=python:3.13.7-slim-bookworm
+FROM $LATEST_PYTHON_3_13 AS builder
 
 RUN apt-get update \
     && apt-get install -y \
@@ -24,7 +22,7 @@ RUN python3 -m venv /eye && /eye/bin/pip install peyeon
 
 #################################################
 
-FROM python:3.13.1-slim-bookworm
+FROM $LATEST_PYTHON_3_13
 COPY --from=builder /opt/tlsh/bin /opt/tlsh/bin
 COPY --from=builder /eye /eye
 
@@ -40,6 +38,8 @@ COPY *entrypoint.sh *builds/*entrypoint.sh /
 RUN chmod +x /entrypoint.sh
 ENV PATH="/eye/bin:$PATH"
 
+# pull the plugin dbs # uncomment after merging to main
+# RUN surfactant plugin update-db --all
 
 WORKDIR /workdir
 ENTRYPOINT ["/entrypoint.sh"]

@@ -67,11 +67,6 @@ class CorruptFileTestCase(unittest.TestCase):
         self.assertEqual(self.OBS.signatures[0]["verification"], sigflag)
         self.assertEqual(self.OBS.authenticode_integrity, codeflag)
 
-    def configJson(self) -> None:
-        vs = vars(self.OBS)
-        obs_json = json.loads(self.OBS._safe_serialize(vs))
-        assert "defaults" in obs_json, "defaults not in json"
-
     def validateSchema(self) -> None:
         with open("schema/observation.schema.json") as schem:
             schema = json.loads(schem.read())
@@ -107,7 +102,6 @@ class WintapCertCorrupt(CorruptFileTestCase):
         codeflag = "CERT_NOT_FOUND | BAD_SIGNATURE"
         filename = self.badbinpath.rsplit("/", maxsplit=1)[-1]
         self.corruptedVarsExe(md5, sha1, sha256, filename, bytecount, sigflag, codeflag, magic)
-        self.configJson()
         self.validateSchema()
 
 
@@ -127,7 +121,6 @@ class WintapBreakAuthenticode(CorruptFileTestCase):
         codeflag = "BAD_DIGEST | BAD_SIGNATURE"
         filename = self.badbinpath.rsplit("/", maxsplit=1)[-1]
         self.corruptedVarsExe(md5, sha1, sha256, filename, bytecount, sigflag, codeflag)
-        self.configJson()
         self.validateSchema()
 
 

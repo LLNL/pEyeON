@@ -10,6 +10,8 @@ dist
 outputs/
 docs/build
 _version.py
+results
+build
 *.env
 .venv
 .coverage

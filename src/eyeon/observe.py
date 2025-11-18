@@ -11,41 +11,19 @@ import json
 import os
 import pprint
 import subprocess
-import eyeon.config
+
 import re
 import duckdb
 from importlib.resources import files
 from pathlib import Path
+import pluggy
+from surfactant.plugin.manager import get_plugin_manager
+from surfactant.sbomtypes._software import Software
+from queue import Queue
 from uuid import uuid4
+from sys import stderr
 
-import lief
-import logging
-from .setup_log import logger  # noqa: F401
-
-log = logging.getLogger("eyeon.observe")
-# from glob import glob
-
-# import tempfile
-# from unblob import models
-
-# def decore() -> None:
-#     """for some reason detect-it-easy generates these big core dumps
-#     they will fill up the disk if we don't clean them up
-#     """
-#     for rm in glob("core.*"):
-#         try:
-#             os.remove(rm)
-#         except FileNotFoundError:
-#             pass
-
-
-class MisreadBytesException(Exception):
-    """
-    Create exeption for when lief reads jar files as macho.
-    TODO: link Wangmos issue
-    """
-
-    pass
+from loguru import logger
 
 
 class Observe:
@@ -100,44 +78,51 @@ class Observe:
             Windows File Properties -- OS, Architecture, File Info, etc.
     """
 
-    def __init__(self, file: str, log_level: int = logging.ERROR, log_file: str = None) -> None:
+    def __init__(self, file: str, log_level: str = "ERROR", log_file: str = None) -> None:
+        logger.remove()
+        fmt = "{time:%Y-%m-%d %H:%M:%S,%f} - {name} - {level} - {message}"
         if log_file:
-            fh = logging.FileHandler(log_file)
-            fh.setFormatter(
-                logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-            )
-            logging.getLogger().handlers.clear()  # remove console log
-            log.addHandler(fh)
-        logging.getLogger().setLevel(log_level)
+            logger.add(log_file, level=log_level, format=fmt)
+        logger.add(stderr, level=log_level, format=fmt)
+
         self.uuid = str(uuid4())
         stat = os.stat(file)
         self.bytecount = stat.st_size
         self.filename = os.path.basename(file)  # TODO: split into absolute path maybe?
         self.signatures = []
-        self.set_detect_it_easy(file)
-        if lief.is_pe(file):
+        # self.set_detect_it_easy(file)
+        # surfactant stuff
+        mgr = get_plugin_manager()
+        self.filetype = mgr.hook.identify_file_type(filepath=file, context=None)
+        if (self.filetype is None) or (self.filetype == []):
+            self.metadata = {
+                "description": "some other file not in"
+                "{a.out, coff, docker image, elf, java, "
+                "js, mach-o, native lib, ole, pe, rpm, uboot image}"
+            }
+        else:
+            if len(self.filetype) > 1:  # TODO: test this
+                print(self.filetype)
+                raise Exception("Multiple filetypes")
+            self.filetype = self.filetype[0]
+            self.set_metadata(file, mgr)
+
+        if self.filetype == "PE":
             self.set_imphash(file)
             self.certs = {}
             self.set_signatures(file)
             self.set_issuer_sha256()
-            self.set_windows_metadata(file)
-            self.filetype = "pe"
-        elif lief.is_elf(file):
+
+        elif self.filetype == "ELF":
             self.set_telfhash(file)
-            self.set_elf_metadata(file)
-            self.filetype = "elf"
-        elif lief.is_macho(file):
-            try:
-                self.set_macho_metadata(file)
-                self.filetype = "macho"
-            except MisreadBytesException:
-                self.imphash = "N/A"
-                self.filetype = "other"
-                self.set_other_metadata(file)
+
+        elif self.filetype == "JAVACLASS":
+            if "description" not in self.metadata:  # if the environment is not missing javatools
+                self.prep_javaclass_metadata()
+
         else:
             self.imphash = "N/A"
-            self.filetype = "other"
-            self.set_other_metadata(file)
+
         self.set_magic(file)
         self.modtime = datetime.datetime.fromtimestamp(
             stat.st_mtime, tz=datetime.timezone.utc
@@ -149,13 +134,8 @@ class Observe:
         self.sha1 = Observe.create_hash(file, "sha1")
         self.sha256 = Observe.create_hash(file, "sha256")
         self.set_ssdeep(file)
-        configfile = self.find_config()
-        if configfile:
-            self.defaults = eyeon.config.ConfigRead(configfile)
-        else:
-            log.info("toml config not found")
-            self.defaults = {}
-        log.debug("end of init")
+
+        logger.debug("end of init")
 
     @staticmethod
     def create_hash(file, hash):
@@ -179,7 +159,7 @@ class Observe:
         try:
             import magic
         except ImportError:
-            log.warning("libmagic1 or python-magic is not installed.")
+            logger.warning("libmagic1 or python-magic is not installed.")
         self.magic = magic.from_file(file)
 
     def set_imphash(self, file: str) -> None:
@@ -192,56 +172,11 @@ class Observe:
         pef = pefile.PE(file)
         self.imphash = pef.get_imphash()
 
-    def set_detect_it_easy(self, file: str) -> None:
-        """
-        Sets Detect-It-Easy info.
-        """
-        try:
-            dp = "/usr/bin"
-            self.detect_it_easy = subprocess.run(
-                [os.path.join(dp, "diec"), file], capture_output=True, timeout=30
-            ).stdout.decode("utf-8")
-        except KeyError:
-            log.warning("No $DIEPATH set. See README.md for more information.")
-        except FileNotFoundError:
-            log.warning("Please install Detect-It-Easy.")
-        except Exception as E:
-            log.error(E)
-
-    def set_checksum_verification(self, checksum_data: dict):
-        """
-        set checksum verification data from checksum function.
-        Allows for integration from optional check.
-        """
-        if checksum_data:
-            self.checksum_data = checksum_data
-        else:
-            print("No checksum data")
-
-    # @staticmethod
-    def _cert_parser(self, cert: lief.PE.x509) -> dict:
-        """lief certs are messy. convert to json data"""
-        crt = str(cert).split("\n")
-        cert_d = {}
-        for line in crt:
-            if line:  # catch empty string
-                try:
-                    k, v = re.split("\s+: ", line)  # noqa: W605
-                except ValueError:  # not enough values to unpack
-                    k = re.split("\s+: ", line)[0]  # noqa: W605
-                    v = ""
-                except Exception as e:
-                    print(line)
-                    raise (e)
-                k = "_".join(k.split())  # replace space with underscore
-                cert_d[k] = v
-            cert_d["sha256"] = self.hashit(cert)
-        return cert_d
-
     def set_signatures(self, file: str) -> None:
         """
         Runs LIEF signature validation and collects certificate chain.
         """
+        import lief
 
         def verif_flags(flag: lief.PE.Signature.VERIFICATION_FLAGS) -> str:
             """
@@ -274,12 +209,36 @@ class Observe:
 
             return vf
 
+        def hashit(c: lief.PE.x509):
+            hc = hashlib.sha256()
+            hc.update(c.raw)
+            return hc.hexdigest()
+
+        def cert_parser(cert: lief.PE.x509) -> dict:
+            """lief certs are messy. convert to json data"""
+            crt = str(cert).split("\n")
+            cert_d = {}
+            for line in crt:
+                if line:  # catch empty string
+                    try:
+                        k, v = re.split(r"\s+: ", line)  # noqa: W605
+                    except ValueError:  # not enough values to unpack
+                        k = re.split(r"\s+: ", line)[0]  # noqa: W605
+                        v = ""
+                    except Exception as e:
+                        print(line)
+                        raise (e)
+                    k = "_".join(k.split())  # replace space with underscore
+                    cert_d[k] = v
+                cert_d["sha256"] = hashit(cert)
+            return cert_d
+
         pe = lief.parse(file)
         if len(pe.signatures) > 1:
-            log.info("file has multiple signatures")
+            logger.info("file has multiple signatures")
         self.signatures = []
         if not pe.signatures:
-            log.info(f"file {file} has no signatures.")
+            logger.info(f"file {file} has no signatures.")
             return
 
         # perform authentihash computation
@@ -288,20 +247,26 @@ class Observe:
         # verifies signature digest vs the hashed code to validate code integrity
         self.authenticode_integrity = verif_flags(pe.verify_signature())
 
-        # signinfo = sig.SignerInfo
-        # this thing is documented but has no constructor defined
-        self.signatures = [
-            {
-                "certs": [self._cert_parser(c) for c in sig.certificates],
-                "signers": str(sig.signers[0]),
-                "digest_algorithm": str(sig.digest_algorithm),
-                "verification": verif_flags(sig.check()),  # gives us more info than a bool on fail
-                "sha1": sig.content_info.digest.hex(),
-                # "sections": [s.__str__() for s in pe.sections]
-                # **signinfo,
-            }
-            for sig in pe.signatures
-        ]
+        self.signatures = []
+        for sig in pe.signatures:
+            certs = []
+            for c in sig.certificates:
+                cert_dict = cert_parser(c)
+                certs.append(cert_dict)
+                self.certs[cert_dict["sha256"]] = c.raw
+            self.signatures.append(
+                {
+                    "certs": certs,
+                    "signers": str(sig.signers[0]),
+                    "digest_algorithm": str(sig.digest_algorithm),
+                    "verification": verif_flags(
+                        sig.check()
+                    ),  # gives us more info than a bool on fail
+                    "sha1": sig.content_info.digest.hex(),
+                    # "sections": [s.__str__() for s in pe.sections]
+                    # **signinfo,
+                }
+            )
 
     def set_issuer_sha256(self) -> None:
         """
@@ -319,14 +284,6 @@ class Observe:
                 if cert["issuer_name"].casefold() in subject_sha:
                     cert["issuer_sha256"] = subject_sha[cert["issuer_name"].casefold()]
 
-    # @staticmethod
-    def hashit(self, c: lief.PE.x509):
-        hc = hashlib.sha256()
-        hc.update(c.raw)
-        hc = hc.hexdigest()
-        self.certs[hc] = c.raw
-        return hc
-
     def set_telfhash(self, file: str) -> None:
         """
         Sets telfhash for ELF files.
@@ -335,7 +292,7 @@ class Observe:
         try:
             import telfhash
         except ModuleNotFoundError:
-            log.warning("tlsh and telfhash are not installed.")
+            logger.warning("tlsh and telfhash are not installed.")
             return
         self.telfhash = telfhash.telfhash(file)[0]["telfhash"]
 
@@ -349,7 +306,7 @@ class Observe:
                 ["ssdeep", "-b", file], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
             ).stdout.decode("utf-8")
         except FileNotFoundError:
-            log.warning("ssdeep is not installed.")
+            logger.warning("ssdeep is not installed.")
             return
         out = out.split("\n")[1]  # header/hash/emptystring
         out = out.split(",")[0]  # hash/filename
@@ -365,66 +322,59 @@ class Observe:
                     return os.path.join(dirpath, file)
         return None
 
-    def set_windows_metadata(self, file: str) -> None:
-        """Finds the metadata from surfactant"""
-        from surfactant.infoextractors.pe_file import extract_pe_info
+    def set_metadata(self, file: str, mgr: pluggy.PluginManager):
+        sw = Software()  # dummy
+        q = Queue()  # dummy
+        # mgr = get_plugin_manager()
 
         try:
-            self.metadata = extract_pe_info(file)
+            self.metadata = mgr.hook.extract_file_info(
+                sbom=None,
+                software=sw,
+                filename=file,
+                filetype=[self.filetype],
+                context_queue=q,
+                current_context=None,
+                children=None,
+                software_field_hints=[],
+                omit_unrecognized_types=None,
+            )
         except Exception as e:
-            print(file, e)
-            self.metadata = {}
+            logger.error(file, e)
+            self.metadata = []
 
-    def set_elf_metadata(self, file: str) -> None:
-        """Finds the metadata from surfactant"""
-        from surfactant.infoextractors.elf_file import extract_elf_info
+        if (self.metadata is None) or (self.metadata == []):
+            self.metadata = {
+                "description": "some other file not in"
+                "{a.out, coff, docker image, elf, java, "
+                "js, mach-o, native lib, ole, pe, rpm, uboot image}"
+            }
+            return
 
-        try:
-            test_metadata = extract_elf_info(file)
+        elif len(self.metadata) > 1:
+            # TODO: test
+            nl = {}
+            nli = None
+            for i, m in enumerate(self.metadata):
+                if "nativeLibraries" in m:
+                    nli = i
+                    if m["nativeLibraries"]:
+                        nl = m
+                    break
+            if nli is not None:
+                met = [m for i, m in enumerate(self.metadata) if i != nli]
+                if len(met) > 1:
+                    raise Exception(f"multiple metadata returned for {file}")
 
-            # fix elfnote section
-            og_elfnote = test_metadata["elfNote"]
-            new_elfnote_dict = dict()
+                met = met[0]
+                if nl:
+                    met["nativeLibraries"] = nl["nativeLibraries"]
+                self.metadata = met
+            else:
+                raise Exception(f"multiple metadata returned for {file}")
 
-            # iterate through each elfnote dictionary
-            for elfnote_dict in og_elfnote:
-                # get type
-                type_key_value = elfnote_dict["type"]
-                # want to create this only if type_key_value has not been seen before
-                if type_key_value in new_elfnote_dict:
-                    type_key_list = new_elfnote_dict[type_key_value]
-                else:
-                    type_key_list = []
-                new_dict = dict()
-                for key in elfnote_dict:
-                    if not key == "type":
-                        # add to dict
-                        new_dict[key] = elfnote_dict[key]
-                type_key_list.append(new_dict)
-                # add the type_key into the elfNote dict
-                new_elfnote_dict[type_key_value] = type_key_list
-            new_elfnote = [new_elfnote_dict]
-            test_metadata["elfNote"] = new_elfnote
-            self.metadata = test_metadata
-
-        except Exception as e:
-            print(file, e)
-            self.metadata = {}
-
-    def set_macho_metadata(self, file: str) -> None:
-        """Finds the metadata from surfactant"""
-        from surfactant.infoextractors.mach_o_file import extract_mach_o_info
-
-        if lief.parse(file) is None:
-            raise MisreadBytesException
-        try:
-            self.metadata = extract_mach_o_info(file)
-        except Exception as e:
-            print(file, e)
-            self.metadata = {}
-
-    def set_other_metadata(self, file: str) -> None:
-        self.metadata = {"description": "some other file not in {elf, pe, macho}"}
+        else:
+            self.metadata = self.metadata[0]
 
     def _safe_serialize(self, obj) -> str:
         """
@@ -512,7 +462,15 @@ class Observe:
     def __str__(self) -> str:
         return pprint.pformat(vars(self), indent=2)
 
-    # def extract(self) -> None:
-    #     # TODO: add the system heirarchy stuff here
-    #     with tempfile.TemporaryDirectory() as td:
-    #         extr = models.Extractor().extract(self.filename, td)
+    def prep_javaclass_metadata(self) -> None:
+        nmd = {"javaClasses": []}
+
+        if len(self.metadata.keys()) > 1:
+            print(self.metadata)
+        i = 0
+        for k, v in self.metadata["javaClasses"].items():
+            nmd["javaClasses"].append(v)
+            nmd["javaClasses"][i]["javaClassName"] = k
+            i += 1
+
+        self.metadata = nmd
