@@ -38,8 +38,8 @@ COPY *entrypoint.sh *builds/*entrypoint.sh /
 RUN chmod +x /entrypoint.sh
 ENV PATH="/eye/bin:$PATH"
 
-# pull the plugin dbs # uncomment after merging to main
-# RUN surfactant plugin update-db --all
+# pull the plugin dbs
+RUN surfactant plugin update-db --all
 
 WORKDIR /workdir
 ENTRYPOINT ["/entrypoint.sh"]
