@@ -24,5 +24,8 @@ if ! getent passwd $VOLUME_UID > /dev/null 2>&1; then
     useradd -u $VOLUME_UID -g $VOLUME_GID -s /bin/bash -m eyeon
 fi
 
+#change ownership of /tmp to eyeon for surfactant
+chown $VOLUME_UID:$VOLUME_GID /tmp
+
 # Run the command as the appropriate user
 exec gosu $VOLUME_UID:$VOLUME_GID "$@"
