@@ -13,7 +13,7 @@ class BoxSettings(BaseSettings):
     FOLDER:int
     
     model_config=SettingsConfigDict(env_file=f"{Path(__file__).parent}/box.env")
-    
+
     @property
     def base_path(self):
         '''
