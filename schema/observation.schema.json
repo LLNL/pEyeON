@@ -196,9 +196,16 @@
         "required": ["signers", "digest_algorithm"]
       }
     },
-    "detect_it_easy": {
-      "type": "string",
-      "description": "Program that determines types of files for Windows, Linux and MacOS"
+    "checksum_verification": {
+      "type": "object",
+      "x-duckdb-flatten": true,
+      "properties": {
+          "algorithm": { "type": "string" },
+          "expected": { "type": "string" },
+          "actual": { "type": "string" },
+          "verified": { "type": "boolean" }
+      },
+      "required": ["algorithm", "expected", "actual", "verified"]
     }
   },
   "additionalProperties": false,
@@ -234,16 +241,82 @@
     },
     "CoffMetadata": {
       "type": "object",
-      "required": ["coffMachineType"],
+      "required":  ["coffMachineType" ],
       "properties": {
         "coffMachineType": {"type": "string"}
       }
     },
     "DockerImageMetadata": {
       "type": "object",
-      "required": ["whateverdockerthing"],
+      "required": ["dockerSPDX"],
       "properties": {
-        "whateverdockerthing": { "type": "string" }
+        "dockerSPDX": { 
+          "type": "object",
+          "properties": {
+            "spdxVersion": {"type": "string"},
+            "dataLicense": {"type": "string"},
+            "SPDXID": {"type": "string"},
+            "name": {"type": "string"},
+            "documentNamespace": {"type": "string"},
+            "creationInfo": {
+              "type": "object",
+              "properties": {
+                "creators": {"type": "array"},
+                "created": {"type": "string"}
+              }
+            },
+            "packages": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {"type": "string"},
+                  "SPDXID": {"type": "string"},
+                  "supplier": {"type": "string"},
+                  "downloadLocation": {"type": "string"},
+                  "filesAnalyzed": {"type": "boolean"},
+                  "licenseConcluded": {"type": "string"}
+                }
+              }
+            },
+            "files": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "fileName": {"type": "string"},
+                  "SPDXID": {"type": "string"},
+                  "checksums": {
+                    "type": "array",
+                    "algorithm": {"type": "string"},
+                    "checksumValue": {"type": "string"}
+                  },
+                  "licenseConcluded": {"type": "string"},
+                  "copyrightText": {"type": "string"},
+                  "comment": {"type": "string"},
+                  "annotations": {
+                    "type": "array",
+                    "annotator": {"type": "string"},
+                    "annotationDate": {"type": "string"},
+                    "annotationType": {"type": "string"},
+                    "comment": {"type": "string"}
+                  }
+                }
+              }
+            },
+            "relationships": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "spdxElementId": {"type": "string"},
+                  "relatedSpdxElement": {"type": "string"},
+                  "relationshipType": {"type": "string"}
+                }
+              }
+            }
+          }
+        }
       }
     },
     "ELFMetadata": {
@@ -315,14 +388,17 @@
       "required": ["javaClasses"],
       "javaClasses": {
         "type": "array",
+        "x-duckdb-array": true,
         "items": {
           "type": "object",
-          "className": { "type": "string" },
-          "javaMinSEVersion": { "type": "string" },
-          "javaExports": {
-            "type": "array",
-            "items": {
-              "type": "string"
+          "properties": {
+            "className": { "type": "string" },
+            "javaMinSEVersion": { "type": "string" },
+            "javaExports": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           "javaImports": {
@@ -336,9 +412,12 @@
     },
     "JavascriptMetadata": {
       "type": "object",
-      "required": ["whateverjsthing"],
+      "required": ["jsLibraries"],
       "properties": {
-        "whateverjsthing": { "type": "string" }
+        "jsLibraries": {
+            "type": "array",
+            "x-duckdb-array": true
+        }
       }
     },
     "MachOMetadata": {
@@ -420,16 +499,34 @@
     },
     "NativeMetadata": {
       "type": "object",
-      "required": ["whatevernativething"],
+      "required": ["nativeLibraries"],
       "properties": {
-        "whatevernativething": { "type": "string" }
+        "nativeLibraries": { "type": "array" }
       }
     },
     "OleMetadata": {
       "type": "object",
-      "required": ["whateverolething"],
+      "required": ["ole"],
       "properties": {
-        "whateverolething": { "type": "string" }
+          "ole": { 
+            "type": "object",
+            "properties": {
+            "clsid": { "type": "string" },
+            "clsid_type": { "type": "string" },
+            "codepage": { "type": "string" },
+            "title": { "type": "string" },
+            "author": { "type": "string" },
+            "template": { "type": "string" },
+            "revision_number": { "type": "string" },
+            "last_printed": { "type": "string" },
+            "create_time": { "type": "string" },
+            "last_saved_time": { "type": "string" },
+            "num_pages": { "type": "string" },
+            "num_words": { "type": "string" },
+            "creating_application": { "type": "string" },
+            "security": { "type": "string" }
+          }
+        }
       }
     },
     
@@ -457,16 +554,62 @@
     },
     "RPMMetadata": {
       "type": "object",
-      "required": ["whateverrpmthing"],
+      "required": ["rpm"],
       "properties": {
-        "whateverrpmthing": { "type": "string" }
+        "rpm": { 
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "sourcerpm": { "type": "string" },
+            "version": { "type": "string" },
+            "release": { "type": "string" },
+            "summary": { "type": "string" },
+            "description": { "type": "string" },
+            "rpmversion": { "type": "string"},
+            "copyright": { "type": "string"},
+            "os": { "type": "string"},
+            "arch": { "type": "string"},
+            "target": { "type": "string"},
+            "archive_format": { "type": "string"},
+            "archive_compression": { "type": "string"},
+            "optflags": { "type": "string"},
+            "sha256": { "type": "string"},
+            "md5": { "type": "string"},
+            "requirename": {
+              "type": "object"
+            },
+            "provides": {
+              "type": "object"
+            },
+            "buildtime": { "type": "integer"},
+            "associated_files": {
+              "type": "object"
+            }
+          }
+        }
       }
     },
     "UbootImageMetadata": {
       "type": "object",
-      "required": ["whateveruimagething"],
+      "required": ["uimage_header"],
       "properties": {
-        "whateveruimagething": { "type": "string" }
+        "uimage_header": { 
+          "type": "object",
+          "header_crc": { "type": "string" },
+          "timestamp" : { "type": "integer" },
+          "data_size" : { "type": "integer" },
+          "load_addr" : { "type": "string" },
+          "entry_point" : { "type": "string" },
+          "data_crc" : { "type": "string" },
+          "os" : { "type": "string" },
+          "os_description" : { "type": "string" },
+          "arch" : { "type": "string" },
+          "arch_description" : { "type": "string" },
+          "image_type" : { "type": "string" },
+          "image_type_description" : { "type": "string" },
+          "compression_type" : { "type": "string" },
+          "name" : { "type": "string" }
+        }
       }
     },
     "OtherMetadata": {
