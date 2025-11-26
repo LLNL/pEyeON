@@ -325,9 +325,8 @@ class Observe:
     def set_metadata(self, file: str, mgr: pluggy.PluginManager):
         sw = Software()  # dummy
         q = Queue()  # dummy
-        # mgr = get_plugin_manager()
 
-        try:
+        try:  # surfactant call
             self.metadata = mgr.hook.extract_file_info(
                 sbom=None,
                 software=sw,
@@ -343,38 +342,23 @@ class Observe:
             logger.error(file, e)
             self.metadata = []
 
+        nl = {}
+
+        for m in self.metadata:  # comes back as a list. want to collapse into dict
+            for k, v in m.items():
+                if k in nl:
+                    raise Exception(f"Multiple {k} metadata for {file}")
+                if v:
+                    nl[k] = v
+
+        self.metadata = nl
+
         if (self.metadata is None) or (self.metadata == []):
             self.metadata = {
                 "description": "some other file not in"
                 "{a.out, coff, docker image, elf, java, "
                 "js, mach-o, native lib, ole, pe, rpm, uboot image}"
             }
-            return
-
-        elif len(self.metadata) > 1:
-            # TODO: test
-            nl = {}
-            nli = None
-            for i, m in enumerate(self.metadata):
-                if "nativeLibraries" in m:
-                    nli = i
-                    if m["nativeLibraries"]:
-                        nl = m
-                    break
-            if nli is not None:
-                met = [m for i, m in enumerate(self.metadata) if i != nli]
-                if len(met) > 1:
-                    raise Exception(f"multiple metadata returned for {file}")
-
-                met = met[0]
-                if nl:
-                    met["nativeLibraries"] = nl["nativeLibraries"]
-                self.metadata = met
-            else:
-                raise Exception(f"multiple metadata returned for {file}")
-
-        else:
-            self.metadata = self.metadata[0]
 
     def _safe_serialize(self, obj) -> str:
         """
