@@ -30,7 +30,7 @@ class ObservationTestCase(unittest.TestCase):
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100644")
-        self.assertEqual(self.OBS.filetype, "A.OUT big")
+        self.assertEqual(self.OBS.filetype, ["A.OUT big"])
 
     @classmethod
     def tearDownClass(self) -> None:
@@ -108,7 +108,7 @@ class ObservationTestCase3(unittest.TestCase):
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100755")
-        self.assertEqual(self.OBS.filetype, "ELF")
+        self.assertEqual(self.OBS.filetype, ["ELF"])
 
     @classmethod
     def tearDownClass(self) -> None:
@@ -140,7 +140,7 @@ class ObservationTestCase4(unittest.TestCase):
             self.fail()
         self.assertIsInstance(self.OBS.observation_ts, str)
         self.assertEqual(self.OBS.permissions, "0o100644")
-        self.assertEqual(self.OBS.filetype, "JAVACLASS")
+        self.assertEqual(self.OBS.filetype, ["JAVACLASS"])
 
     # def test_detect_it_easy(self) -> None:
     #     expected_output = (
