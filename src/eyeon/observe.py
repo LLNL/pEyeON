@@ -109,6 +109,10 @@ class Observe:
             # self.filetype = self.filetype[0]
             self.set_metadata(file, mgr)
 
+        if self.filetype is None:  # md files etc have no filetype
+            logger.warning(f"file {self.filename} has no type")
+            self.filetype = []
+
         if "PE" in self.filetype:
             self.set_imphash(file)
             self.certs = {}
