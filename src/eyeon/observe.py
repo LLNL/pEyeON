@@ -96,27 +96,33 @@ class Observe:
         self.filetype = mgr.hook.identify_file_type(filepath=file, context=None)
         if (self.filetype is None) or (self.filetype == []):
             self.metadata = {
-                "description": "some other file not in"
-                "{a.out, coff, docker image, elf, java, "
-                "js, mach-o, native lib, ole, pe, rpm, uboot image}"
+                "Unknown": {
+                    "description": "some other file not in"
+                    "{a.out, coff, docker image, elf, java, "
+                    "js, mach-o, native lib, ole, pe, rpm, uboot image}"
+                }
             }
         else:
-            if len(self.filetype) > 1:  # TODO: test this
-                print(self.filetype)
-                raise Exception("Multiple filetypes")
-            self.filetype = self.filetype[0]
+            # if len(self.filetype) > 1:  # TODO: test this
+            #     print(self.filetype)
+            #     raise Exception("Multiple filetypes")
+            # self.filetype = self.filetype[0]
             self.set_metadata(file, mgr)
 
-        if self.filetype == "PE":
+        if self.filetype is None:  # md files etc have no filetype
+            logger.warning(f"file {self.filename} has no type")
+            self.filetype = []
+
+        if "PE" in self.filetype:
             self.set_imphash(file)
             self.certs = {}
             self.set_signatures(file)
             self.set_issuer_sha256()
 
-        elif self.filetype == "ELF":
+        if "ELF" in self.filetype:
             self.set_telfhash(file)
 
-        elif self.filetype == "JAVACLASS":
+        if "JAVACLASS" in self.filetype:
             if "description" not in self.metadata:  # if the environment is not missing javatools
                 self.prep_javaclass_metadata()
 
@@ -312,69 +318,43 @@ class Observe:
         out = out.split(",")[0]  # hash/filename
         self.ssdeep = out
 
-    def find_config(self, dir: str = "."):
-        """
-        Looks for the toml config file starting in the current directory the tool is run from
-        """
-        for dirpath, _, filenames in os.walk(dir):
-            for file in filenames:
-                if file.endswith(".toml") and not file.startswith("pyproject"):
-                    return os.path.join(dirpath, file)
-        return None
-
-    def set_metadata(self, file: str, mgr: pluggy.PluginManager):
+    def set_metadata(self, file: str, mgr: pluggy.PluginManager) -> None:
         sw = Software()  # dummy
         q = Queue()  # dummy
-        # mgr = get_plugin_manager()
+        kwargs = {
+            "sbom": None,
+            "software": sw,
+            "filename": file,
+            "filetype": self.filetype,
+            "context_queue": q,
+            "current_context": None,
+            "children": None,
+            "software_field_hints": [],
+            "omit_unrecognized_types": None,
+        }
+        try:  # surfactant call; have to get hacky due to pluggy
+            self.metadata = {}
+            for hk_impl in mgr.hook.extract_file_info.get_hookimpls():
+                m = hk_impl.function(**{k: v for k, v in kwargs.items() if k in hk_impl.argnames})
+                if m:
+                    plugin_name = hk_impl.plugin_name.split(".")[-1]
+                    redo = self.metadata.get(plugin_name)
+                    if redo is not None:
+                        raise Exception(f"duplicate {self.filetype} metadata for {file}")
+                    self.metadata[plugin_name] = m
 
-        try:
-            self.metadata = mgr.hook.extract_file_info(
-                sbom=None,
-                software=sw,
-                filename=file,
-                filetype=[self.filetype],
-                context_queue=q,
-                current_context=None,
-                children=None,
-                software_field_hints=[],
-                omit_unrecognized_types=None,
-            )
         except Exception as e:
             logger.error(file, e)
-            self.metadata = []
+            self.metadata = {}
 
         if (self.metadata is None) or (self.metadata == []):
             self.metadata = {
-                "description": "some other file not in"
-                "{a.out, coff, docker image, elf, java, "
-                "js, mach-o, native lib, ole, pe, rpm, uboot image}"
+                "Unknown": {
+                    "description": "some other file not in"
+                    "{a.out, coff, docker image, elf, java, "
+                    "js, mach-o, native lib, ole, pe, rpm, uboot image}"
+                }
             }
-            return
-
-        elif len(self.metadata) > 1:
-            # TODO: test
-            nl = {}
-            nli = None
-            for i, m in enumerate(self.metadata):
-                if "nativeLibraries" in m:
-                    nli = i
-                    if m["nativeLibraries"]:
-                        nl = m
-                    break
-            if nli is not None:
-                met = [m for i, m in enumerate(self.metadata) if i != nli]
-                if len(met) > 1:
-                    raise Exception(f"multiple metadata returned for {file}")
-
-                met = met[0]
-                if nl:
-                    met["nativeLibraries"] = nl["nativeLibraries"]
-                self.metadata = met
-            else:
-                raise Exception(f"multiple metadata returned for {file}")
-
-        else:
-            self.metadata = self.metadata[0]
 
     def _safe_serialize(self, obj) -> str:
         """
@@ -468,7 +448,7 @@ class Observe:
         if len(self.metadata.keys()) > 1:
             print(self.metadata)
         i = 0
-        for k, v in self.metadata["javaClasses"].items():
+        for k, v in self.metadata.get("javaClasses", {}).items():
             nmd["javaClasses"].append(v)
             nmd["javaClasses"][i]["javaClassName"] = k
             i += 1

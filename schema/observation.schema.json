@@ -18,8 +18,11 @@
       "description": "Basename of file"
     },
     "filetype": {
-      "type": "string",
-      "enum": ["ELF", "Malformed PE", "DOS", "Linux Kernel Image", "PE", "OLE", "MSCAB", "ISCAB", "DOCKER_GZIP", "GZIP", "BZIP2", "XZ", "DOCKER_TAR", "TAR", "RAR", "ZIP", "JAR", "WAR", "EAR", "APK", "IPA", "MSIX", "MACHOFAT", "JAVACLASS", "MACHOFAT", "MACHOFAT64", "EFIFAT", "MACHO32", "MACHO64", "LLVM_BITCODE", "LLVM_IR", "A.OUT big", "A.OUT little", "COFF", "XCOFF32", "XCOFF64", "ECOFF", "AR_LIB", "OMF_LIB", "UIMAGE", "ZLIB", "CPIO_BIN big", "CPIO_BIN little", "CPIO_ASCII_OLD", "CPIO_ASCII_NEW", "CPIO_ASCII_NEW_CRC", "ZSTANDARD", "ZSTANDARD_DICTIONARY", "ISO_9660_CD", "MACOS_DMG", "RPM Package"]
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["ELF", "Malformed PE", "DOS", "Linux Kernel Image", "PE", "OLE", "MSCAB", "ISCAB", "DOCKER_GZIP", "GZIP", "BZIP2", "XZ", "DOCKER_TAR", "TAR", "RAR", "ZIP", "JAR", "WAR", "EAR", "APK", "IPA", "MSIX", "MACHOFAT", "JAVACLASS", "MACHOFAT", "MACHOFAT64", "EFIFAT", "MACHO32", "MACHO64", "LLVM_BITCODE", "LLVM_IR", "A.OUT big", "A.OUT little", "COFF", "XCOFF32", "XCOFF64", "ECOFF", "AR_LIB", "OMF_LIB", "UIMAGE", "ZLIB", "CPIO_BIN big", "CPIO_BIN little", "CPIO_ASCII_OLD", "CPIO_ASCII_NEW", "CPIO_ASCII_NEW_CRC", "ZSTANDARD", "ZSTANDARD_DICTIONARY", "ISO_9660_CD", "MACOS_DMG", "RPM Package"]
+      }
     },
     "imphash": {
       "type": "string",
@@ -82,22 +85,58 @@
       "description": "Checks if signatures are OK and if digest matches hashed authenticode"
     },
     "metadata": {
-      "type": "object", 
-      "oneOf": [
-        { "$ref": "#/$defs/AOUTMetadata" },
-        { "$ref": "#/$defs/CoffMetadata" },
-        { "$ref": "#/$defs/DockerImageMetadata" },
-        { "$ref": "#/$defs/ELFMetadata" },
-        { "$ref": "#/$defs/JavaMetadata" },
-        { "$ref": "#/$defs/JavascriptMetadata" },
-        { "$ref": "#/$defs/MachOMetadata" },
-        { "$ref": "#/$defs/NativeMetadata" },
-        { "$ref": "#/$defs/OleMetadata" },
-        { "$ref": "#/$defs/PEMetadata" },
-        { "$ref": "#/$defs/RPMMetadata" },
-        { "$ref": "#/$defs/UbootImageMetadata" },
-        { "$ref": "#/$defs/OtherMetadata" }
-      ]
+      "a_out_file": {
+        "type": "object",
+        "$ref": "#/$defs/AOUTMetadata"
+      },
+      "coff_file": {
+        "type": "object",
+        "$ref": "#/$defs/CoffMetadata"
+      },
+      "docker_image": {
+        "type": "object",
+        "$ref": "#/$defs/DockerImageMetadata"
+      },
+      "elf_file": {
+        "type": "object",
+        "$ref": "#/$defs/ELFMetadata"
+      },
+      "java_file": {
+        "type": "object",
+        "$ref": "#/$defs/JavaMetadata"
+      },
+      "mach_o_file": {
+        "type": "object",
+        "$ref": "#/$defs/MachOMetadata"
+      },
+      "js_file": {
+        "type": "object",
+        "$ref": "#/$defs/JavascriptMetadata"
+      },
+      "pe_file": {
+        "type": "object",
+        "$ref": "#/$defs/PEMetadata"
+      },
+      "ole_file": {
+        "type": "object",
+        "$ref": "#/$defs/OleMetadata"
+      },
+      "uimage_file": {
+        "type": "object",
+        "$ref": "#/$defs/UbootImageMetadata"
+      },
+      "rpm_file": {
+        "type": "object",
+        "$ref": "#/$defs/RPMMetadata"
+      },
+      "native_lib_file": {
+        "type": "object",
+        "$ref": "#/$defs/NativeMetadata"
+      },
+      "file_decompression": {
+        "type": "object",
+        "$ref": "#/$defs/OtherMetadata"
+      }
     },
     "signatures": {
       "type": "array",

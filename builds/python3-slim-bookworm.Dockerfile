@@ -1,4 +1,4 @@
-ARG LATEST_PYTHON_3_13=python:3.13.7-slim-bookworm
+ARG LATEST_PYTHON_3_13=python:3.13-slim-bookworm
 FROM $LATEST_PYTHON_3_13 AS builder
 
 RUN apt-get update \
