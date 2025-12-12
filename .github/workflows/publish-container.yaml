@@ -2,7 +2,7 @@ name: Build and Push Image
 
 on:
   push:
-    branches: [docker-ghcr-release]
+    branches: [main]
 
 env:
   REGISTRY: ghcr.io

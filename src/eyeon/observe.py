@@ -347,17 +347,6 @@ class Observe:
             logger.error(file, e)
             self.metadata = {}
 
-        # nl = {}
-
-        # for m in self.metadata:  # comes back as a list. want to collapse into dict
-        #     for k, v in m.items():
-        #         if k in nl:
-        #             raise Exception(f"Multiple {k} metadata for {file}")
-        #         if v:
-        #             nl[k] = v
-
-        # self.metadata = nl
-
         if (self.metadata is None) or (self.metadata == []):
             self.metadata = {
                 "Unknown": {
