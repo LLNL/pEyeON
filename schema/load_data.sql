@@ -1,10 +1,15 @@
 .read eyeon_ddl.sql
-create or replace view raw_json as from read_json('~/data/eyeon/se-firmware/*.json', union_by_name=true)
+
+/** Partition files first:
+select 'mkdir -p partitioned/pk_filetype\='||coalesce(filetype,'other')||' && cp '||json_filename||' partitioned/pk_filetype\='||coalesce(filetype,'other') from raw_json;
+**/
+
+create or replace view raw_json as from read_json('partitioned/**/*.json', union_by_name=true, sample_size = -1)
 ;
 .read raw_base_metadata.sql
 
 insert into observations by name 
-  select * exclude (signatures, metadata, defaults) from raw_json
+  select * exclude (signatures, metadata) from raw_json
 ;
 insert into base_metadata by name 
 -- Dynamic list to account for any new Struct types in metadata.

@@ -21,7 +21,10 @@ CREATE TABLE observations (
   target_os VARCHAR DEFAULT NULL,
   authentihash VARCHAR DEFAULT NULL,
   authenticode_integrity VARCHAR DEFAULT NULL,
-  detect_it_easy VARCHAR DEFAULT NULL
+  algorithm VARCHAR,
+  expected VARCHAR,
+  actual VARCHAR,
+  verified BOOLEAN
 );
 
 CREATE TABLE base_metadata (
@@ -29,7 +32,7 @@ CREATE TABLE base_metadata (
   filetype VARCHAR,
   aoutMachineType VARCHAR DEFAULT NULL,
   coffMachineType VARCHAR DEFAULT NULL,
-  whateverdockerthing VARCHAR DEFAULT NULL,
+  dockerSPDX JSON DEFAULT NULL,
   OS VARCHAR DEFAULT NULL,
   EI_CLASS INTEGER DEFAULT NULL,
   EI_DATA INTEGER DEFAULT NULL,
@@ -55,11 +58,11 @@ CREATE TABLE base_metadata (
   elfIsLib BOOLEAN DEFAULT NULL,
   elfIsRel BOOLEAN DEFAULT NULL,
   elfIsCore BOOLEAN DEFAULT NULL,
-  whateverjsthing VARCHAR DEFAULT NULL,
+  jsLibraries VARCHAR[] DEFAULT NULL,
   numBinaries INTEGER DEFAULT NULL,
   binaries JSON DEFAULT NULL,
-  whatevernativething VARCHAR DEFAULT NULL,
-  whateverolething VARCHAR DEFAULT NULL,
+  nativeLibraries JSON DEFAULT NULL,
+  ole JSON DEFAULT NULL,
   peMachine VARCHAR DEFAULT NULL,
   peOperatingSystemVersion VARCHAR DEFAULT NULL,
   peSubsystemVersion VARCHAR DEFAULT NULL,
@@ -71,8 +74,8 @@ CREATE TABLE base_metadata (
   peIsClr BOOLEAN DEFAULT NULL,
   FileInfo JSON DEFAULT NULL,
   dllRedirectionLocal BOOLEAN DEFAULT NULL,
-  whateverrpmthing VARCHAR DEFAULT NULL,
-  whateveruimagething VARCHAR DEFAULT NULL,
+  rpm JSON DEFAULT NULL,
+  uimage_header JSON DEFAULT NULL,
   description VARCHAR DEFAULT NULL,
   FOREIGN KEY (observation_uuid) REFERENCES observations(uuid)
 );
@@ -92,7 +95,7 @@ CREATE TABLE certificates (
   signature_id VARCHAR,
   sha256 VARCHAR DEFAULT NULL,
   issuer_sha256 VARCHAR DEFAULT NULL,
-  cert._version VARCHAR DEFAULT NULL,
+  cert_version VARCHAR DEFAULT NULL,
   serial_number VARCHAR DEFAULT NULL,
   issuer_name VARCHAR DEFAULT NULL,
   subject_name VARCHAR DEFAULT NULL,
@@ -118,7 +121,7 @@ FROM base_metadata
 WHERE filetype = 'COFF' OR filetype = 'XCOFF32' OR filetype = 'XCOFF64' OR filetype = 'ECOFF';
 
 CREATE VIEW docker_metadata AS
-SELECT observation_uuid, whateverdockerthing
+SELECT observation_uuid, dockerSPDX
 FROM base_metadata
 WHERE filetype = 'DOCKER_GZIP' OR filetype = 'DOCKER_TAR';
 
@@ -133,7 +136,7 @@ FROM base_metadata
 WHERE filetype = 'JAVACLASS' OR filetype = 'JAR' OR filetype = 'WAR' OR filetype = 'EAR' OR filetype = 'APK';
 
 CREATE VIEW javascript_metadata AS
-SELECT observation_uuid, whateverjsthing
+SELECT observation_uuid, jsLibraries
 FROM base_metadata;
 
 CREATE VIEW macho_metadata AS
@@ -142,12 +145,12 @@ FROM base_metadata
 WHERE filetype = 'MACHOFAT' OR filetype = 'MACHOFAT64' OR filetype = 'EFIFAT' OR filetype = 'MACHO32' OR filetype = 'MACHO64' OR filetype = 'IPA' OR filetype = 'MACOS_DMG';
 
 CREATE VIEW native_metadata AS
-SELECT observation_uuid, whatevernativething
+SELECT observation_uuid, nativeLibraries
 FROM base_metadata
 WHERE filetype = 'LLVM_BITCODE' OR filetype = 'LLVM_IR';
 
 CREATE VIEW ole_metadata AS
-SELECT observation_uuid, whateverolething
+SELECT observation_uuid, ole
 FROM base_metadata
 WHERE filetype = 'OLE' OR filetype = 'MSCAB' OR filetype = 'ISCAB' OR filetype = 'MSIX';
 
@@ -157,12 +160,12 @@ FROM base_metadata
 WHERE filetype = 'PE' OR filetype = 'Malformed PE' OR filetype = 'DOS';
 
 CREATE VIEW rpm_metadata AS
-SELECT observation_uuid, whateverrpmthing
+SELECT observation_uuid, rpm
 FROM base_metadata
 WHERE filetype = 'RPM Package';
 
 CREATE VIEW uboot_metadata AS
-SELECT observation_uuid, whateveruimagething
+SELECT observation_uuid, uimage_header
 FROM base_metadata
 WHERE filetype = 'UIMAGE';
 
@@ -170,3 +173,4 @@ CREATE VIEW other_metadata AS
 SELECT observation_uuid, description
 FROM base_metadata
 WHERE filetype = 'GZIP' OR filetype = 'BZIP2' OR filetype = 'XZ' OR filetype = 'TAR' OR filetype = 'RAR' OR filetype = 'ZIP' OR filetype = 'AR_LIB' OR filetype = 'OMF_LIB' OR filetype = 'ZLIB' OR filetype = 'CPIO_BIN big' OR filetype = 'CPIO_BIN little' OR filetype = 'CPIO_ASCII_OLD' OR filetype = 'CPIO_ASCII_NEW' OR filetype = 'CPIO_ASCII_NEW_CRC' OR filetype = 'ZSTANDARD' OR filetype = 'ZSTANDARD_DICTIONARY' OR filetype = 'ISO_9660_CD';
+

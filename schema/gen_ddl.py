@@ -189,6 +189,8 @@ class DuckDBDDLGenerator:
                 # Create one wide table with all possible columns from all variants
                 base_table = prop_schema.get('x-duckdb-table', f"{table_name}_{prop_name}")
                 self._ensure_table(base_table)
+                # Also create a view on the raw_json that flattens the metadata fields. This will be used to help extract and convert the metadata.
+                base_view = prop_schema.get('x-duckdb-table', f"raw_{table_name}_{prop_name}")
                 
                 # Add FK to parent as PK
                 fk_col = f"{table_name[:-1]}_uuid" if table_name.endswith('s') else f"{table_name}_uuid"
@@ -200,6 +202,7 @@ class DuckDBDDLGenerator:
                 
                 # Add discriminator column
                 self._add_column(base_table, f"{discriminator}", f"{discriminator} VARCHAR")
+                self._add_column(base_view, f"{discriminator}", f"{discriminator} VARCHAR")
                 
                 # Collect all columns from all variants
                 variant_info: Dict[str, Tuple[List[str], List[str]]] = {}  # variant_table -> (column_names, when_values)
@@ -238,7 +241,19 @@ class DuckDBDDLGenerator:
                         view_def = f"CREATE VIEW {variant_table} AS\nSELECT {cols_str}\nFROM {base_table};"
                     
                     self.views[variant_table] = view_def
+
+                # Create the flattening view from the raw_json. This is all columns.
+                # Columns may be used across the sub-types, so de-dup here.
+                all_cols = []
+                for variant_table, (cols, when_values) in variant_info.items():
+                    all_cols += cols
+
+                # De-dup
+                uniq_cols = ", ".join(f"metadata.{col}" for col in set(all_cols))
+                view_def = f"CREATE VIEW raw_{base_table} AS\nSELECT {uniq_cols}\nFROM raw_json;"
                 
+                self.views[f"raw_{base_table}"] = view_def
+
                 return
             
             else:  # strategy == 'separate-tables' (default)

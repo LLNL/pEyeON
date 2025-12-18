@@ -2,7 +2,7 @@ PYTHON = python3
 DCG = datamodel-codegen
 SCHEMA = observation.schema.json
 MODELS = eyeon_models.py
-DDL = observation_ddl.sql
+DDL = eyeon_ddl.sql
 
 .PHONY: all clean models ddl regen
 
@@ -21,7 +21,7 @@ models: $(SCHEMA)
 		--use-default
 
 ddl: $(SCHEMA)
-	$(PYTHON) gen_ddl.py --schema $(SCHEMA) --table observation --out $(DDL)
+	$(PYTHON) gen_ddl.py $(SCHEMA) > $(DDL)
 
 regen: clean all
 
