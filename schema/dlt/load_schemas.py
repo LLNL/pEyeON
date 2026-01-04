@@ -19,7 +19,19 @@ def dlt_schema(source, depth):
                 with open(path, "r") as f:
                     data = json.load(f)
                     tables = data.pop("tables", None)
-                yield data
+                    for k,v in tables.items():
+                        # I want to rename just the name column, so pop it off and do it separately
+                        name = v.pop('name')
+                        record = {
+                            "table_name": name,
+#                            "write_disposition": v.get('write_disposition'),
+#                            "x-normalizer": v.get('x-normalizer'),
+                            **v,
+                            # Add all the top level fields
+                            **data
+                        }
+                        yield record
+
             except Exception as e:
                 # Yield error record instead of failing
                 yield {
