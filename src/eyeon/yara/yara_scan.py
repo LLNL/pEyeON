@@ -67,20 +67,13 @@ def parse_args(argv=None):
         "target",
         help="Path to target binary file to scan"
     )
-    parser.add_argument(
-    "-h",
-    "--help",
-    action="store_true",
-    help="Print help text"
-    )
+
     return parser.parse_args(argv)
 
 
 def main(argv=None):
     args = parse_args(argv)
-
-    if args.help:
-        print(f"Usage: {sys.argv[0]} -r <rules.yar> <binary_file>")
+    
 
     rule_file = Path(args.rules)
     target_file = Path(args.target)
