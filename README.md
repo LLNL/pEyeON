@@ -31,14 +31,13 @@ This dockerfile contains all the pertinent tools specific to data extraction. Th
 #### Docker
 ```bash
 cd builds/
-docker build -t peyeon -f python3-slim-bookworm.Dockerfile .
+docker build -t peyeon -f Dockerfile .
 chmod +x docker-run.sh && ./docker-run.sh
 ```
 #### Podman
 ```bash
-cd builds/
-chmod +x podman-build.sh && ./podman-build.sh
-chmod +x podman-run.sh && ./podman-run.sh
+podman build -t peyeon -f builds/podman.Dockerfile .
+chmod +x builds/podman-run.sh && ./builds/podman-run.sh
 ```
 
 This attaches the current directory as a working directory in the container. Files that need to be scanned should go in "tests" folder. If running in a docker container, the eyeon root directory is mounted to `/workdir`, so place samples in `/workdir/samples` or `/workdir/tests/samples`.

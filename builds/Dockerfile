@@ -1,4 +1,4 @@
-ARG LATEST_PYTHON_3_13=python:3.13-slim-bookworm
+ARG LATEST_PYTHON_3_13=python:3.13-slim
 FROM $LATEST_PYTHON_3_13 AS builder
 
 RUN apt-get update \
@@ -34,12 +34,12 @@ RUN apt-get update \
 
 # look for entrypoint in basedir when pulling files
 # or entrypoint from builds folder when cloning
-COPY *entrypoint.sh *builds/*entrypoint.sh /
-RUN chmod +x /entrypoint.sh
+# COPY *entrypoint.sh *builds/*entrypoint.sh /
+# RUN chmod +x /entrypoint.sh
 ENV PATH="/eye/bin:$PATH"
 
 # pull the plugin dbs
 RUN surfactant plugin update-db --all
 
 WORKDIR /workdir
-ENTRYPOINT ["/entrypoint.sh"]
+# ENTRYPOINT ["/entrypoint.sh"]
