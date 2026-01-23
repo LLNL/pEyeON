@@ -76,7 +76,7 @@ class X86ParseTestCase(unittest.TestCase):
 class X86SinglethreadTestCase(X86ParseTestCase):
     @classmethod
     def setUpClass(self) -> None:
-        self.PRS = parse.Parse("./tests/binaries", logging.WARNING, "./tests/testParse.log")
+        self.PRS = parse.Parse("./tests/binaries")
         self.PRS(result_path="tests/testresults")  # run scan
 
     def testCommon(self):
@@ -85,14 +85,9 @@ class X86SinglethreadTestCase(X86ParseTestCase):
         self.validateWintapExeJson()
         self.validateWintapSetupMsiJson()
 
-    def testLogCreated(self):
-        self.assertTrue(os.path.isfile("./tests/testParse.log"))
-
     @classmethod
     def tearDownClass(self) -> None:
         shutil.rmtree("./tests/testresults")
-        os.remove("./tests/testParse.log")
-
 
 class X86TwoThreadTestCase(X86ParseTestCase):
     @classmethod
