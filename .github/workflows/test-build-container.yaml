@@ -20,7 +20,7 @@ jobs:
 
       - name: Build Docker Image
         run: |
-            docker buildx build -f builds/python3-slim-bookworm.Dockerfile --platform linux/amd64 --load -t peyeon:buildx .
+            docker buildx build -f builds/Dockerfile --platform linux/amd64 --load -t peyeon:buildx .
     
       - name: Run Test Command
         run: |
