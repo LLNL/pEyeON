@@ -34,12 +34,12 @@ RUN apt-get update \
 
 # look for entrypoint in basedir when pulling files
 # or entrypoint from builds folder when cloning
-# COPY *entrypoint.sh *builds/*entrypoint.sh /
-# RUN chmod +x /entrypoint.sh
+COPY *entrypoint.sh *builds/*entrypoint.sh /
+RUN chmod +x /entrypoint.sh
 ENV PATH="/eye/bin:$PATH"
 
 # pull the plugin dbs
 RUN surfactant plugin update-db --all
 
 WORKDIR /workdir
-# ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/entrypoint.sh"]
