@@ -18,12 +18,14 @@ if [ -e "$surfactant_tmp_state" ] && [ ! -w "$surfactant_tmp_state" ]; then
     exit 1
 fi
 
-cd "$eyeon_dir"
-python3 -m venv eye
-source eye/bin/activate
-pip install --upgrade pip setuptools wheel
-pip install .
-surfactant plugin update-db --all
+wget -qO- https://astral.sh/uv/install.sh | sh
+source $HOME/.local/bin/env
 
-eyeon --help >/dev/null
-echo "EyeON user environment installed successfully in $eyeon_dir/eye"
+cd "$eyeon_dir"
+uv venv
+uv add install --upgrade pip setuptools wheel
+uv add install .
+uv run surfactant plugin update-db --all
+
+uv run eyeon --help >/dev/null
+echo "EyeON user environment installed successfully via uv"
