@@ -12,6 +12,7 @@ import os
 import pprint
 import subprocess
 import threading
+from typing import Optional
 
 import re
 from importlib.metadata import version
@@ -23,6 +24,7 @@ from queue import Queue
 from uuid import uuid4
 
 from loguru import logger
+from .container import container_metadata
 
 
 class Observe:
@@ -77,10 +79,12 @@ class Observe:
             Windows File Properties -- OS, Architecture, File Info, etc.
     """
 
-    def __init__(self, file: str) -> None:
+    def __init__(self, file: str, parent: Optional[str] = None) -> None:
         logger.debug(f"initializing observe object for {file}")
 
         self.uuid = str(uuid4())
+        if parent:
+            self.parent = parent
         stat = os.stat(file)
         self.bytecount = stat.st_size
         self.filename = os.path.basename(file)  # TODO: split into absolute path maybe?
@@ -106,6 +110,7 @@ class Observe:
             # self.filetype = self.filetype[0]
             logger.debug(f"Setting metadata for {file}")
             self.set_metadata(file, mgr)
+            self.set_container_metadata(file)
 
         if self.filetype is None:  # md files etc have no filetype
             logger.warning(f"file {self.filename} has no type")
@@ -377,6 +382,9 @@ class Observe:
 
         for plugin in hooks:
             plugin_name=plugin.plugin_name.split(".")[-1]
+            if plugin_name == "file_decompression":
+                # Parse owns extraction so it can create child observations and parent links.
+                continue
             logger.debug(f"trying hook: {plugin_name}")
 
             filtered_kwargs={}
@@ -438,6 +446,13 @@ class Observe:
             self.metadata["error"] = {
                 "message": plugin_errors[0]["message"],
             }
+
+    def set_container_metadata(self, file: str) -> None:
+        metadata = container_metadata(file, self.filetype)
+        if metadata:
+            if "Unknown" in self.metadata:
+                del self.metadata["Unknown"]
+            self.metadata["container_file"] = metadata
 
     def _safe_serialize(self, obj) -> str:
         """

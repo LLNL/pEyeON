@@ -508,6 +508,32 @@ class TestJSONSchema(unittest.TestCase):
         with self.assertRaises(jsonschema.exceptions.ValidationError):
             assert jsonschema.validate(instance=additional_data, schema=schema) is None
 
+    def test_container_metadata_schema(self) -> None:
+        valid_data = {
+            "filename": "sample.zip",
+            "bytecount": 123,
+            "magic": "Zip archive data",
+            "eyeon_version": "null",
+            "md5": "438c259fc1772422c9bfdf83823fbaee",
+            "observation_ts": "2024-12-04 22:27:45",
+            "sha1": "445f0ed5abb5dbd479a8ab4d969f52aff2b0795d",
+            "sha256": "e88fd5933e559f2dc29952900c0bd267675b6f00d9f1c71c4a99d9f296918f62",
+            "uuid": "f1eba7e3-e4c0-43e8-91dc-009a85367517",
+            "filetype": ["ZIP"],
+            "metadata": {
+                "container_file": {
+                    "formats": ["ZIP"],
+                    "extractable": True,
+                    "extracted": True,
+                    "extraction_status": "success",
+                    "child_count": 1,
+                    "extracted_child_count": 1,
+                    "members": [{"path": "child.txt", "size": 5, "is_dir": False}],
+                }
+            },
+        }
+        assert jsonschema.validate(instance=valid_data, schema=schema) is None
+
 
 if __name__ == "__main__":
     unittest.main()

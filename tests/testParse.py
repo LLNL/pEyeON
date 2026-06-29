@@ -3,6 +3,8 @@ import os
 import shutil
 import json
 import tempfile
+import tarfile
+import zipfile
 
 from unittest.mock import patch, MagicMock
 from eyeon import parse
@@ -307,6 +309,135 @@ class TestParseErrorFallback(unittest.TestCase):
             )
             self.assertEqual(observation["signatures"], [])
             mock_logger.exception.assert_called_once()
+
+
+class TestContainerParse(unittest.TestCase):
+    def test_zip_container_gets_metadata_and_child_parent_relationship(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            source = root / "source"
+            results = root / "results"
+            source.mkdir()
+            archive_path = source / "sample.zip"
+
+            with zipfile.ZipFile(archive_path, "w") as archive:
+                archive.writestr("nested/child.txt", "hello from zip")
+
+            parse.Parse(str(source))(result_path=str(results))
+
+            observations = []
+            for path in results.glob("*.json"):
+                with open(path) as f:
+                    observations.append(json.load(f))
+
+            self.assertEqual(len(observations), 2)
+            by_name = {observation["filename"]: observation for observation in observations}
+            self.assertIn("sample.zip", by_name)
+            self.assertIn("child.txt", by_name)
+
+            container = by_name["sample.zip"]
+            child = by_name["child.txt"]
+            container_metadata = container["metadata"]["container_file"]
+
+            self.assertEqual(container["filetype"], ["ZIP"])
+            self.assertEqual(container_metadata["formats"], ["ZIP"])
+            self.assertTrue(container_metadata["extractable"])
+            self.assertTrue(container_metadata["extracted"])
+            self.assertEqual(container_metadata["extraction_status"], "success")
+            self.assertEqual(container_metadata["child_count"], 1)
+            self.assertEqual(container_metadata["extracted_child_count"], 1)
+            self.assertEqual(child["parent"], container["uuid"])
+
+    def test_docker_tar_container_gets_extracted_and_linked_children(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            source = root / "source"
+            results = root / "results"
+            docker_root = root / "docker"
+            layer_dir = docker_root / "layer"
+            source.mkdir()
+            layer_dir.mkdir(parents=True)
+            docker_archive = source / "image.tar"
+            layer_tar = layer_dir / "layer.tar"
+            config_json = docker_root / "config.json"
+            manifest_json = docker_root / "manifest.json"
+
+            with tarfile.open(layer_tar, "w") as layer:
+                child = root / "child.txt"
+                child.write_text("hello from docker layer", encoding="utf-8")
+                layer.add(child, arcname="child.txt")
+            config_json.write_text("{}", encoding="utf-8")
+            manifest_json.write_text(
+                json.dumps([{"Config": "config.json", "Layers": ["layer/layer.tar"]}]),
+                encoding="utf-8",
+            )
+            with tarfile.open(docker_archive, "w") as archive:
+                archive.add(manifest_json, arcname="manifest.json")
+                archive.add(config_json, arcname="config.json")
+                archive.add(layer_tar, arcname="layer/layer.tar")
+
+            parse.Parse(str(source))(result_path=str(results))
+
+            observations = []
+            for path in results.glob("*.json"):
+                with open(path) as f:
+                    observations.append(json.load(f))
+
+            by_name = {observation["filename"]: observation for observation in observations}
+            self.assertIn("image.tar", by_name)
+            self.assertIn("layer.tar", by_name)
+            self.assertIn("child.txt", by_name)
+            self.assertEqual(by_name["image.tar"]["filetype"], ["DOCKER_TAR"])
+            self.assertEqual(by_name["layer.tar"]["parent"], by_name["image.tar"]["uuid"])
+            self.assertEqual(by_name["child.txt"]["parent"], by_name["layer.tar"]["uuid"])
+
+    def test_iso_uses_configured_7z_extractor(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            source = root / "source"
+            results = root / "results"
+            source.mkdir()
+            iso_path = source / "sample.iso"
+            fake_7z = root / "fake_7z.py"
+            iso_bytes = bytearray(0x9006)
+            iso_bytes[0x8001:0x8006] = b"CD001"
+            iso_path.write_bytes(iso_bytes)
+            fake_7z.write_text(
+                """#!/usr/bin/env python3
+import pathlib
+import sys
+
+if sys.argv[1] == 'l':
+    print('Path = child.txt')
+    print('Size = 14')
+    print('Attributes = A')
+    print()
+    sys.exit(0)
+if sys.argv[1] == 'x':
+    out_arg = next(arg for arg in sys.argv if arg.startswith('-o'))
+    out_dir = pathlib.Path(out_arg[2:])
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / 'child.txt').write_text('hello from iso', encoding='utf-8')
+    sys.exit(0)
+sys.exit(2)
+""",
+                encoding="utf-8",
+            )
+            fake_7z.chmod(0o755)
+
+            with patch.dict(os.environ, {"EYEON_7Z_PATH": str(fake_7z)}):
+                parse.Parse(str(source))(result_path=str(results))
+
+            observations = []
+            for path in results.glob("*.json"):
+                with open(path) as f:
+                    observations.append(json.load(f))
+
+            by_name = {observation["filename"]: observation for observation in observations}
+            self.assertIn("sample.iso", by_name)
+            self.assertIn("child.txt", by_name)
+            self.assertEqual(by_name["sample.iso"]["filetype"], ["ISO_9660_CD"])
+            self.assertEqual(by_name["child.txt"]["parent"], by_name["sample.iso"]["uuid"])
 
 class X86SinglethreadTestCase(X86ParseTestCase):
     @classmethod

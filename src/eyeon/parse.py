@@ -1,5 +1,5 @@
 from alive_progress import alive_bar, alive_it
-from typing import Any
+from typing import Any, Optional
 
 import datetime
 import hashlib
@@ -7,6 +7,7 @@ import json
 from importlib.metadata import version
 from loguru import logger
 from .observe import Observe
+from .container import cleanup_extraction, extract_container, supported_container_types
 import os
 import time
 import threading # allows the monitor to run concurrently without blocking multiprocessing 
@@ -25,8 +26,9 @@ class Parse:
         A string specifying the folder to parse.
     """
 
-    def __init__(self, dirpath: str) -> None:
+    def __init__(self, dirpath: str, max_container_depth: int = 3) -> None:
         self.path = dirpath
+        self.max_container_depth = max_container_depth
 
     @staticmethod
     def _create_hash(file: str, algorithm: str) -> str:
@@ -40,7 +42,7 @@ class Parse:
             h.update(f.read())
             return h.hexdigest()
 
-    def _write_error_json(self, file: str, result_path: str, message: str) -> None:
+    def _write_error_json(self, file: str, result_path: str, message: str, parent: Optional[str] = None) -> None:
         stat = os.stat(file)
         observation = {
             "uuid": str(uuid4()),
@@ -64,6 +66,8 @@ class Parse:
             "signatures": [],
             "eyeon_version": version("peyeon"),
         }
+        if parent:
+            observation["parent"] = parent
 
         os.makedirs(result_path, exist_ok=True)
         outfile = os.path.join(
@@ -74,17 +78,45 @@ class Parse:
             json.dump(observation, f)
 
     def _observe(self, file_and_path: tuple) -> None:
-        file, result_path = file_and_path
+        file, result_path, parent, depth = self._normalize_observe_args(file_and_path)
         try:
-            o = Observe(file)
+            o = Observe(file, parent=parent)
+            extraction = None
+            if depth < self.max_container_depth and supported_container_types(o.filetype):
+                extraction = extract_container(file, o.filetype)
+                container_md = o.metadata.setdefault("container_file", {})
+                container_md.update(
+                    {
+                        "extracted": extraction["extracted"],
+                        "extraction_status": extraction["extraction_status"],
+                        "extracted_child_count": len(extraction["children"]),
+                    }
+                )
+                if extraction["errors"]:
+                    container_md["errors"] = extraction["errors"]
             o.write_json(result_path)
+            if extraction and extraction["extracted"]:
+                try:
+                    for child in extraction["children"]:
+                        self._observe((child, result_path, o.uuid, depth + 1))
+                finally:
+                    cleanup_extraction(extraction["extract_dir"])
         except PermissionError:
             logger.warning(f"File {file} cannot be read.")
         except FileNotFoundError:
             logger.warning(f"No such file {file}.")
         except Exception as e:
             logger.exception(f"Observation failed for {file}: {e}")
-            self._write_error_json(file, result_path, str(e))
+            self._write_error_json(file, result_path, str(e), parent=parent)
+
+    def _normalize_observe_args(self, file_and_path: tuple) -> tuple[str, str, Optional[str], int]:
+        if len(file_and_path) == 2:
+            file, result_path = file_and_path
+            return file, result_path, None, 0
+        if len(file_and_path) == 4:
+            file, result_path, parent, depth = file_and_path
+            return file, result_path, parent, depth
+        raise ValueError(f"unexpected observe arguments: {file_and_path}")
 
     def _observe_worker(self, args) -> None:
         """

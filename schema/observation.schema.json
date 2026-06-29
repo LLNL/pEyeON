@@ -54,7 +54,7 @@
     },
     "parent": {
       "type": "string",
-      "description": "Some yet-to-be-determined pointer to a parent file or something"
+      "description": "UUID of the parent EyeON observation when this file was extracted from a container"
     },
     "permissions": {
       "type": "string",
@@ -140,6 +140,10 @@
       "file_decompression": {
         "type": "object",
         "$ref": "#/$defs/OtherMetadata"
+      },
+      "container_file": {
+        "type": "object",
+        "$ref": "#/$defs/ContainerMetadata"
       }
     },
     "signatures": {
@@ -544,6 +548,29 @@
       "required": ["description"],
       "properties": {
         "description": { "type": "string" }
+      }
+    },
+    "ContainerMetadata": {
+      "type": "object",
+      "required": ["formats", "extractable", "extracted", "extraction_status", "child_count"],
+      "properties": {
+        "formats": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "extractable": { "type": "boolean" },
+        "extracted": { "type": "boolean" },
+        "extraction_status": { "type": "string" },
+        "child_count": { "type": "integer" },
+        "extracted_child_count": { "type": "integer" },
+        "members": {
+          "type": "array",
+          "items": { "type": "object" }
+        },
+        "errors": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
       }
     }
   }
