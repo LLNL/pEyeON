@@ -36,7 +36,7 @@ jobs:
     
       - name: Run Test Command
         run: |
-            docker run --rm --platform ${{ matrix.platform }} peyeon:${{ matrix.tag }} sh -c "eyeon --help"
+            docker run --rm --platform ${{ matrix.platform }} peyeon:${{ matrix.tag }} sh -c "eyeon --help && binwalk --version && command -v sasquatch && command -v 7z"
 
   podman-build:
     runs-on: ubuntu-latest
@@ -55,4 +55,4 @@ jobs:
     
       - name: Run Test Command
         run: |
-            podman run --rm peyeon:podman sh -c "eyeon --help"
+            podman run --rm peyeon:podman sh -c "eyeon --help && binwalk --version && command -v sasquatch && command -v 7z"

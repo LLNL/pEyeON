@@ -50,7 +50,7 @@ pip install peyeon
 However, this does not install several key dependencies, namely `libmagic`, `ssdeep`, and `tlsh`. A better way to install is via the container or install scripts on the github page.
 
 ### Containers
-The container images include the main extraction dependencies such as `ssdeep`, `libmagic`, `tlsh`, and `detect-it-easy`.
+The container images include the main extraction dependencies such as `ssdeep`, `libmagic`, `tlsh`, `detect-it-easy`, Binwalk v3, 7-Zip, and `sasquatch`.
 
 For most users, the recommended container workflow is `eyeon-parse.sh` plus `eyeon-batch-summary.sh` from the quickstart above. The direct `docker run` and `podman run` examples below are mainly useful for development, debugging, and image validation.
 

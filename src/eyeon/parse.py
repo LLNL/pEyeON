@@ -7,7 +7,13 @@ import json
 from importlib.metadata import version
 from loguru import logger
 from .observe import Observe
-from .container import cleanup_extraction, extract_container, supported_container_types
+from .container import (
+    binwalk_extract,
+    cleanup_extraction,
+    extract_container,
+    should_use_binwalk,
+    supported_container_types,
+)
 import os
 import time
 import threading # allows the monitor to run concurrently without blocking multiprocessing 
@@ -94,11 +100,15 @@ class Parse:
                 )
                 if extraction["errors"]:
                     container_md["errors"] = extraction["errors"]
+            elif depth < self.max_container_depth and should_use_binwalk(file, o.filetype):
+                extraction = binwalk_extract(file)
+                o.metadata["binwalk_file"] = extraction["metadata"]
             o.write_json(result_path)
-            if extraction and extraction["extracted"]:
+            if extraction:
                 try:
-                    for child in extraction["children"]:
-                        self._observe((child, result_path, o.uuid, depth + 1))
+                    if extraction["extracted"]:
+                        for child in extraction["children"]:
+                            self._observe((child, result_path, o.uuid, depth + 1))
                 finally:
                     cleanup_extraction(extraction["extract_dir"])
         except PermissionError:

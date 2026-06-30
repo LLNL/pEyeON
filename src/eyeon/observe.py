@@ -25,6 +25,7 @@ from uuid import uuid4
 
 from loguru import logger
 from .container import container_metadata
+from .generic_metadata import generic_metadata
 
 
 class Observe:
@@ -89,20 +90,21 @@ class Observe:
         self.bytecount = stat.st_size
         self.filename = os.path.basename(file)  # TODO: split into absolute path maybe?
         self.signatures = []
+        self.set_magic(file)
         # self.set_detect_it_easy(file)
         # surfactant stuff
         mgr = get_plugin_manager()
-        self.filetype = mgr.hook.identify_file_type(filepath=file, context=None)
+        try:
+            self.filetype = mgr.hook.identify_file_type(filepath=file, context=None)
+        except Exception as e:
+            logger.warning(f"File type identification failed for {file}: {e}")
+            self.filetype = []
+            self.metadata = self._generic_metadata(file, identify_error=str(e))
 
         if (self.filetype is None) or (self.filetype == []):
             logger.debug(f"Unknown file type for {file}")
-            self.metadata = {
-                "Unknown": {
-                    "description": "some other file not in"
-                    "{a.out, coff, docker image, elf, java, "
-                    "js, mach-o, native lib, ole, pe, rpm, uboot image}"
-                }
-            }
+            if not hasattr(self, "metadata"):
+                self.metadata = self._generic_metadata(file)
         else:
             # if len(self.filetype) > 1:  # TODO: test this
             #     print(self.filetype)
@@ -132,7 +134,6 @@ class Observe:
             if "description" not in self.metadata:  # if the environment is not missing javatools
                 self.prep_javaclass_metadata()
 
-        self.set_magic(file)
         self.modtime = datetime.datetime.fromtimestamp(
             stat.st_mtime, tz=datetime.timezone.utc
         ).strftime("%Y-%m-%d %H:%M:%S")
@@ -434,18 +435,21 @@ class Observe:
                     }
                 }
             else:
-                logger.debug(f"No plugin produced metadata for {file}, using Unknown fallback")
-                self.metadata = {
-                    "Unknown": {
-                        "description": "some other file not in"
-                        "{a.out, coff, docker image, elf, java, "
-                        "js, mach-o, native lib, ole, pe, rpm, uboot image}"
-                    }
-                }
+                logger.debug(f"No plugin produced metadata for {file}, using generic fallback")
+                self.metadata = self._generic_metadata(file)
         elif plugin_errors:
             self.metadata["error"] = {
                 "message": plugin_errors[0]["message"],
             }
+
+    def _generic_metadata(self, file: str, identify_error: Optional[str] = None) -> dict:
+        return generic_metadata(
+            file,
+            filename=self.filename,
+            bytecount=self.bytecount,
+            magic=getattr(self, "magic", ""),
+            identify_error=identify_error,
+        )
 
     def set_container_metadata(self, file: str) -> None:
         metadata = container_metadata(file, self.filetype)

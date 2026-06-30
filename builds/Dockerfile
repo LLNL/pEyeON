@@ -3,9 +3,16 @@ FROM $LATEST_PYTHON_3_13 AS builder
 
 RUN apt-get update \
     && apt-get install -y \
-       git make wget unzip build-essential python3 python3-dev python3-venv \
+       git make wget unzip curl build-essential clang pkg-config python3 python3-dev python3-venv \
+       libfontconfig1-dev liblzma-dev libssl-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+ENV PATH="/root/.cargo/bin:$PATH"
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+      | sh -s -- -y --profile minimal \
+    && cargo install --git https://github.com/ReFirmLabs/binwalk --tag v3.1.0 binwalk
 
 
 RUN arch=$(dpkg --print-architecture) \
@@ -37,10 +44,16 @@ RUN python3 -m venv /eye \
 FROM $LATEST_PYTHON_3_13
 COPY --from=builder /opt/tlsh/bin /opt/tlsh/bin
 COPY --from=builder /eye /eye
+COPY --from=builder /root/.cargo/bin/binwalk /usr/local/bin/binwalk
 
 RUN apt-get update \
     && apt-get install -y \
-      libmagic1 ssdeep jq gosu \
+      libmagic1 ssdeep jq gosu curl 7zip zstd tar unzip sleuthkit cabextract lz4 lzop unar cpio device-tree-compiler \
+      libfontconfig1 liblzma5 \
+    && arch=$(dpkg --print-architecture) \
+    && curl -fsSL -o /tmp/sasquatch.deb "https://github.com/onekey-sec/sasquatch/releases/download/sasquatch-v4.5.1-5/sasquatch_1.0_${arch}.deb" \
+    && apt-get install -y /tmp/sasquatch.deb \
+    && rm -f /tmp/sasquatch.deb \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

@@ -1,5 +1,6 @@
 import bz2
 import gzip
+import json
 import lzma
 import os
 import shutil
@@ -22,12 +23,105 @@ CONTAINER_FILETYPES = {
     "DOCKER_TAR",
     "DOCKER_GZIP",
 }
+BINWALK_DEFAULT_EXTENSIONS = {".bin", ".chk", ".firmware", ".fw", ".img", ".trx"}
 
 
 def supported_container_types(filetypes: list[str] | None) -> list[str]:
     if not filetypes:
         return []
     return [filetype for filetype in filetypes if filetype in CONTAINER_FILETYPES]
+
+
+def should_use_binwalk(file_path: str, filetypes: list[str] | None) -> bool:
+    configured = os.environ.get("EYEON_BINWALK", "").lower()
+    if configured in {"0", "false", "no", "off"}:
+        return False
+    if configured in {"1", "true", "yes", "on"}:
+        return True
+    if filetypes and "UIMAGE" in filetypes:
+        return True
+    return Path(file_path).suffix.lower() in BINWALK_DEFAULT_EXTENSIONS
+
+
+def binwalk_extract(file_path: str) -> dict[str, Any]:
+    extract_dir = tempfile.mkdtemp(prefix="eyeon-binwalk-")
+    command = _binwalk_command()
+    if command is None:
+        return {
+            "extracted": False,
+            "metadata": {
+                "available": False,
+                "scanned": False,
+                "extracted": False,
+                "extraction_status": "unavailable",
+                "findings": [],
+                "extractions": [],
+                "errors": ["binwalk executable not found"],
+            },
+            "extract_dir": extract_dir,
+            "children": [],
+        }
+
+    json_path = Path(extract_dir) / "binwalk.json"
+    binwalk_out = Path(extract_dir) / "output"
+    binwalk_out.mkdir()
+    args = [command, "-q", "-e", "-C", str(binwalk_out), "-l", str(json_path), file_path]
+    try:
+        result = subprocess.run(args, capture_output=True, text=True, check=False)
+    except FileNotFoundError:
+        return {
+            "extracted": False,
+            "metadata": {
+                "available": False,
+                "scanned": False,
+                "extracted": False,
+                "extraction_status": "unavailable",
+                "command": args,
+                "findings": [],
+                "extractions": [],
+                "errors": [f"binwalk executable not found: {command}"],
+            },
+            "extract_dir": extract_dir,
+            "children": [],
+            "errors": [f"binwalk executable not found: {command}"],
+        }
+    raw_json = _load_binwalk_json(json_path)
+    findings = _binwalk_findings(raw_json)
+    extractions = _binwalk_extractions(raw_json)
+    children = _binwalk_children(binwalk_out, file_path)
+    extraction_failures = [item for item in extractions if not item.get("success")]
+    errors = []
+    if result.stderr:
+        errors.append(result.stderr.strip())
+    if result.returncode != 0:
+        errors.append(f"binwalk exited with status {result.returncode}")
+    status = "success"
+    if extraction_failures:
+        status = "partial"
+    if result.returncode != 0 or (not children and findings):
+        status = "failed"
+    if not findings:
+        status = "no_findings"
+    return {
+        "extracted": bool(children),
+        "metadata": {
+            "available": True,
+            "scanned": True,
+            "extracted": bool(children),
+            "extraction_status": status,
+            "command": args,
+            "returncode": result.returncode,
+            "stdout": result.stdout,
+            "stderr": result.stderr,
+            "findings": findings,
+            "extractions": extractions,
+            "extraction_failures": extraction_failures,
+            "errors": errors,
+        },
+        "extract_dir": extract_dir,
+        "children": children,
+        "errors": errors,
+    }
 
 
 def container_metadata(file_path: str, filetypes: list[str] | None) -> dict[str, Any] | None:
@@ -125,6 +219,74 @@ def extract_container(file_path: str, filetypes: list[str] | None) -> dict[str, 
 def cleanup_extraction(extract_dir: str | None) -> None:
     if extract_dir and os.path.exists(extract_dir):
         shutil.rmtree(extract_dir)
+
+
+def _binwalk_command() -> str | None:
+    configured = os.environ.get("EYEON_BINWALK_PATH")
+    if configured:
+        return configured
+    return shutil.which("binwalk")
+
+
+def _load_binwalk_json(json_path: Path) -> Any:
+    try:
+        with json_path.open("r", encoding="utf-8") as fh:
+            return json.load(fh)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
+
+
+def _binwalk_analysis(raw_json: Any) -> dict[str, Any]:
+    if isinstance(raw_json, list) and raw_json and isinstance(raw_json[0], dict):
+        analysis = raw_json[0].get("Analysis")
+        if isinstance(analysis, dict):
+            return analysis
+    return {}
+
+
+def _binwalk_findings(raw_json: Any) -> list[dict[str, Any]]:
+    findings = []
+    for item in _binwalk_analysis(raw_json).get("file_map", []):
+        findings.append(
+            {
+                "id": item.get("id"),
+                "offset": item.get("offset"),
+                "name": item.get("name"),
+                "description": item.get("description"),
+                "size": item.get("size"),
+                "confidence": item.get("confidence"),
+                "extraction_declined": item.get("extraction_declined"),
+            }
+        )
+    return findings
+
+
+def _binwalk_extractions(raw_json: Any) -> list[dict[str, Any]]:
+    extractions = []
+    for finding_id, item in _binwalk_analysis(raw_json).get("extractions", {}).items():
+        extractions.append(
+            {
+                "finding_id": finding_id,
+                "success": item.get("success", False),
+                "extractor": item.get("extractor"),
+                "output_directory": item.get("output_directory"),
+                "size": item.get("size"),
+                "do_not_recurse": item.get("do_not_recurse"),
+            }
+        )
+    return extractions
+
+
+def _binwalk_children(output_dir: Path, file_path: str) -> list[str]:
+    original = Path(file_path).name
+    children = []
+    for path in output_dir.rglob("*"):
+        if not path.is_file():
+            continue
+        if path.parent == output_dir and path.name == original:
+            continue
+        children.append(str(path))
+    return sorted(children)
 
 
 def decompressed_filename(file_path: str, container_type: str) -> str:

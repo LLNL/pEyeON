@@ -439,6 +439,76 @@ sys.exit(2)
             self.assertEqual(by_name["sample.iso"]["filetype"], ["ISO_9660_CD"])
             self.assertEqual(by_name["child.txt"]["parent"], by_name["sample.iso"]["uuid"])
 
+    def test_binwalk_cli_extracts_firmware_and_links_children(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            source = root / "source"
+            results = root / "results"
+            source.mkdir()
+            firmware = source / "firmware.bin"
+            fake_binwalk = root / "fake_binwalk.py"
+            firmware.write_bytes(b"firmware")
+            fake_binwalk.write_text(
+                """#!/usr/bin/env python3
+import json
+import pathlib
+import sys
+
+args = sys.argv[1:]
+out_dir = pathlib.Path(args[args.index('-C') + 1])
+log_path = pathlib.Path(args[args.index('-l') + 1])
+extract_dir = out_dir / 'firmware.bin.extracted' / '0'
+extract_dir.mkdir(parents=True, exist_ok=True)
+(out_dir / 'firmware.bin').write_bytes(b'original copy')
+(extract_dir / 'child.txt').write_text('hello from binwalk', encoding='utf-8')
+payload = [{
+    'Analysis': {
+        'file_path': args[-1],
+        'file_map': [{
+            'offset': 0,
+            'id': 'uimage-id',
+            'size': 8,
+            'name': 'uimage',
+            'confidence': 250,
+            'description': 'uImage firmware image',
+            'extraction_declined': False,
+        }],
+        'extractions': {
+            'uimage-id': {
+                'success': True,
+                'extractor': 'uimage_built_in',
+                'output_directory': str(extract_dir),
+                'size': 8,
+                'do_not_recurse': False,
+            }
+        },
+    }
+}]
+log_path.write_text(json.dumps(payload), encoding='utf-8')
+sys.exit(0)
+""",
+                encoding="utf-8",
+            )
+            fake_binwalk.chmod(0o755)
+
+            with patch.dict(os.environ, {"EYEON_BINWALK_PATH": str(fake_binwalk)}):
+                parse.Parse(str(source))(result_path=str(results))
+
+            observations = []
+            for path in results.glob("*.json"):
+                with open(path) as f:
+                    observations.append(json.load(f))
+
+            by_name = {observation["filename"]: observation for observation in observations}
+            self.assertIn("firmware.bin", by_name)
+            self.assertIn("child.txt", by_name)
+            binwalk_metadata = by_name["firmware.bin"]["metadata"]["binwalk_file"]
+            self.assertTrue(binwalk_metadata["available"])
+            self.assertTrue(binwalk_metadata["scanned"])
+            self.assertTrue(binwalk_metadata["extracted"])
+            self.assertEqual(binwalk_metadata["findings"][0]["name"], "uimage")
+            self.assertEqual(by_name["child.txt"]["parent"], by_name["firmware.bin"]["uuid"])
+
 class X86SinglethreadTestCase(X86ParseTestCase):
     @classmethod
     def setUpClass(self) -> None:
