@@ -100,6 +100,42 @@ class GenericMetadataTestCase(unittest.TestCase):
         self.assertEqual(obs.filetype, [])
         self._validate_observation(obs)
 
+    def test_write_json_preserves_same_name_same_hash_observations(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            source = Path(tmpdir) / "firmware.bin"
+            source.write_bytes(b"same firmware bytes")
+            outdir = Path(tmpdir) / "out"
+
+            first = observe.Observe(str(source))
+            second = observe.Observe(str(source), parent=first.uuid)
+            first.write_json(str(outdir))
+            second.write_json(str(outdir))
+
+            outputs = sorted(outdir.glob("firmware.bin.*.json"))
+
+        self.assertEqual(len(outputs), 2)
+        self.assertNotEqual(outputs[0].name, outputs[1].name)
+
+    def test_write_json_same_name_different_hash_uses_existing_name_shape(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            first_source = Path(tmpdir) / "first" / "firmware.bin"
+            second_source = Path(tmpdir) / "second" / "firmware.bin"
+            first_source.parent.mkdir()
+            second_source.parent.mkdir()
+            first_source.write_bytes(b"container bytes")
+            second_source.write_bytes(b"child bytes")
+            outdir = Path(tmpdir) / "out"
+
+            first = observe.Observe(str(first_source))
+            second = observe.Observe(str(second_source), parent=first.uuid)
+            first.write_json(str(outdir))
+            second.write_json(str(outdir))
+
+            outputs = sorted(outdir.glob("firmware.bin.*.json"))
+
+        self.assertEqual(len(outputs), 2)
+        self.assertTrue(all(len(path.name.split(".")) == 4 for path in outputs))
+
     def _validate_observation(self, obs: observe.Observe) -> None:
         with open("schema/observation.schema.json") as schem:
             schema = json.loads(schem.read())

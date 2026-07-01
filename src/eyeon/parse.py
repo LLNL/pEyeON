@@ -76,12 +76,24 @@ class Parse:
             observation["parent"] = parent
 
         os.makedirs(result_path, exist_ok=True)
-        outfile = os.path.join(
-            result_path, f"{observation['filename']}.{observation['md5']}.json"
-        )
+        outfile = self._error_json_output_path(result_path, observation)
 
         with open(outfile, "w") as f:
             json.dump(observation, f)
+
+    @staticmethod
+    def _error_json_output_path(result_path: str, observation: dict) -> str:
+        base = os.path.join(result_path, f"{observation['filename']}.{observation['md5']}.json")
+        if not os.path.exists(base):
+            return base
+        try:
+            with open(base, "r") as f:
+                existing_uuid = json.load(f).get("uuid")
+        except (OSError, json.JSONDecodeError):
+            existing_uuid = None
+        if existing_uuid == observation["uuid"]:
+            return base
+        return os.path.join(result_path, f"{observation['filename']}.{observation['md5']}.{observation['uuid']}.json")
 
     def _observe(self, file_and_path: tuple) -> None:
         file, result_path, parent, depth = self._normalize_observe_args(file_and_path)

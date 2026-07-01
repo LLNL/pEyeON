@@ -25,7 +25,7 @@
       "type": "array",
       "items": {
         "type": "string",
-        "enum": ["ELF", "Malformed PE", "DOS", "Linux Kernel Image", "PE", "OLE", "MSCAB", "ISCAB", "DOCKER_GZIP", "GZIP", "BZIP2", "XZ", "DOCKER_TAR", "TAR", "RAR", "ZIP", "JAR", "WAR", "EAR", "APK", "IPA", "MSIX", "MACHOFAT", "JAVACLASS", "MACHOFAT", "MACHOFAT64", "EFIFAT", "MACHO32", "MACHO64", "LLVM_BITCODE", "LLVM_IR", "A.OUT big", "A.OUT little", "COFF", "XCOFF32", "XCOFF64", "ECOFF", "AR_LIB", "OMF_LIB", "UIMAGE", "ZLIB", "CPIO_BIN big", "CPIO_BIN little", "CPIO_ASCII_OLD", "CPIO_ASCII_NEW", "CPIO_ASCII_NEW_CRC", "ZSTANDARD", "ZSTANDARD_DICTIONARY", "ISO_9660_CD", "MACOS_DMG", "RPM Package"]
+        "enum": ["ELF", "Malformed PE", "DOS", "Linux Kernel Image", "PE", "OLE", "MSCAB", "ISCAB", "DOCKER_GZIP", "GZIP", "BZIP2", "XZ", "DOCKER_TAR", "TAR", "RAR", "ZIP", "JAR", "WAR", "EAR", "APK", "IPA", "MSIX", "MACHOFAT", "JAVACLASS", "SHELL", "HTML", "CSS", "JAVASCRIPT", "SHEBANG", "MACHOFAT", "MACHOFAT64", "EFIFAT", "MACHO32", "MACHO64", "LLVM_BITCODE", "LLVM_IR", "A.OUT big", "A.OUT little", "COFF", "XCOFF32", "XCOFF64", "ECOFF", "AR_LIB", "OMF_LIB", "UIMAGE", "ZLIB", "CPIO_BIN big", "CPIO_BIN little", "CPIO_ASCII_OLD", "CPIO_ASCII_NEW", "CPIO_ASCII_NEW_CRC", "ZSTANDARD", "ZSTANDARD_DICTIONARY", "ISO_9660_CD", "MACOS_DMG", "RPM Package"]
       }
     },
     "imphash": {
@@ -144,6 +144,42 @@
       "container_file": {
         "type": "object",
         "$ref": "#/$defs/ContainerMetadata"
+      },
+      "binwalk_file": {
+        "type": "object",
+        "$ref": "#/$defs/BinwalkMetadata"
+      },
+      "text_file": {
+        "type": "object",
+        "$ref": "#/$defs/GenericTextMetadata"
+      },
+      "opkg_file": {
+        "type": "object",
+        "$ref": "#/$defs/OpkgMetadata"
+      },
+      "web_asset": {
+        "type": "object",
+        "$ref": "#/$defs/WebAssetMetadata"
+      },
+      "image_file": {
+        "type": "object",
+        "$ref": "#/$defs/GenericFileMetadata"
+      },
+      "symlink_file": {
+        "type": "object",
+        "$ref": "#/$defs/SymlinkMetadata"
+      },
+      "linux_kernel_image": {
+        "type": "object",
+        "$ref": "#/$defs/GenericFileMetadata"
+      },
+      "device_tree_file": {
+        "type": "object",
+        "$ref": "#/$defs/GenericFileMetadata"
+      },
+      "generic_file": {
+        "type": "object",
+        "$ref": "#/$defs/GenericFileMetadata"
       }
     },
     "signatures": {
@@ -550,6 +586,78 @@
         "description": { "type": "string" }
       }
     },
+    "GenericFileMetadata": {
+      "type": "object",
+      "required": ["kind", "magic", "is_empty"],
+      "properties": {
+        "kind": { "type": "string" },
+        "extension": { "type": "string" },
+        "magic": { "type": "string" },
+        "mime_type": { "type": ["string", "null"] },
+        "is_empty": { "type": "boolean" },
+        "identify_error": { "type": "string" }
+      }
+    },
+    "GenericTextMetadata": {
+      "type": "object",
+      "required": ["kind", "magic", "is_empty", "line_count", "has_shebang"],
+      "properties": {
+        "kind": { "type": "string" },
+        "extension": { "type": "string" },
+        "magic": { "type": "string" },
+        "mime_type": { "type": ["string", "null"] },
+        "is_empty": { "type": "boolean" },
+        "line_count": { "type": "integer" },
+        "has_shebang": { "type": "boolean" },
+        "read_error": { "type": "string" },
+        "identify_error": { "type": "string" }
+      }
+    },
+    "OpkgMetadata": {
+      "type": "object",
+      "required": ["kind", "package", "magic", "is_empty"],
+      "properties": {
+        "kind": { "type": "string" },
+        "package": { "type": "string" },
+        "extension": { "type": "string" },
+        "magic": { "type": "string" },
+        "mime_type": { "type": ["string", "null"] },
+        "is_empty": { "type": "boolean" },
+        "line_count": { "type": "integer" },
+        "has_shebang": { "type": "boolean" },
+        "fields": { "type": "object" },
+        "read_error": { "type": "string" },
+        "identify_error": { "type": "string" }
+      }
+    },
+    "WebAssetMetadata": {
+      "type": "object",
+      "required": ["kind", "magic", "is_empty"],
+      "properties": {
+        "kind": { "type": "string" },
+        "extension": { "type": "string" },
+        "magic": { "type": "string" },
+        "mime_type": { "type": ["string", "null"] },
+        "is_empty": { "type": "boolean" },
+        "line_count": { "type": "integer" },
+        "has_shebang": { "type": "boolean" },
+        "read_error": { "type": "string" },
+        "identify_error": { "type": "string" }
+      }
+    },
+    "SymlinkMetadata": {
+      "type": "object",
+      "required": ["kind", "target", "magic", "is_empty"],
+      "properties": {
+        "kind": { "type": "string" },
+        "target": { "type": "string" },
+        "extension": { "type": "string" },
+        "magic": { "type": "string" },
+        "mime_type": { "type": ["string", "null"] },
+        "is_empty": { "type": "boolean" },
+        "identify_error": { "type": "string" }
+      }
+    },
     "ContainerMetadata": {
       "type": "object",
       "required": ["formats", "extractable", "extracted", "extraction_status", "child_count"],
@@ -564,6 +672,39 @@
         "child_count": { "type": "integer" },
         "extracted_child_count": { "type": "integer" },
         "members": {
+          "type": "array",
+          "items": { "type": "object" }
+        },
+        "errors": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "BinwalkMetadata": {
+      "type": "object",
+      "required": ["available", "scanned", "extracted", "extraction_status", "findings", "extractions"],
+      "properties": {
+        "available": { "type": "boolean" },
+        "scanned": { "type": "boolean" },
+        "extracted": { "type": "boolean" },
+        "extraction_status": { "type": "string" },
+        "command": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "returncode": { "type": "integer" },
+        "stdout": { "type": "string" },
+        "stderr": { "type": "string" },
+        "findings": {
+          "type": "array",
+          "items": { "type": "object" }
+        },
+        "extractions": {
+          "type": "array",
+          "items": { "type": "object" }
+        },
+        "extraction_failures": {
           "type": "array",
           "items": { "type": "object" }
         },

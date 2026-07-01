@@ -493,10 +493,25 @@ class Observe:
             for c, b in self.certs.items():
                 with open(f"{os.path.join(outdir, 'certs', c)}.crt", "wb") as cert_out:
                     cert_out.write(b)
-        outfile = f"{os.path.join(outdir, self.filename)}.{self.md5}.json"
         vs = {k: v for k, v in vs.items() if k != "certs"}
+        outfile = self._json_output_path(outdir)
         with open(outfile, "w") as f:
             f.write(self._safe_serialize(vs))
+
+    def _json_output_path(self, outdir: str = ".") -> str:
+        """Return a collision-safe JSON output path for this observation."""
+
+        base = Path(outdir) / f"{self.filename}.{self.md5}.json"
+        if not base.exists():
+            return str(base)
+        try:
+            with base.open("r") as f:
+                existing_uuid = json.load(f).get("uuid")
+        except (OSError, json.JSONDecodeError):
+            existing_uuid = None
+        if existing_uuid == self.uuid:
+            return str(base)
+        return str(Path(outdir) / f"{self.filename}.{self.md5}.{self.uuid}.json")
 
     def __str__(self) -> str:
         return pprint.pformat(vars(self), indent=2)
