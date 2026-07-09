@@ -130,6 +130,41 @@ wget https://raw.githubusercontent.com/LLNL/pEyeON/refs/heads/main/builds/instal
 chmod +x install-rhel.sh && ./install-rhel.sh
 ```
 
+#### Appliance VM Image (Nutanix / qcow2)
+
+For Nutanix AHV (KVM), the simplest portable artifact is a `qcow2` VM disk image.
+This repository includes a Debian 12 based appliance VM build (development-focused)
+that installs EyeON into a virtual environment and makes `eyeon` available on PATH.
+
+Prerequisites on macOS:
+
+```bash
+brew install qemu
+brew install hashicorp/tap/packer
+python3 -m pip install --user build
+```
+
+Build:
+
+```bash
+bash builds/vm/build-qcow2.sh        # defaults to host architecture
+bash builds/vm/build-qcow2.sh --arm64
+bash builds/vm/build-qcow2.sh --amd64
+```
+
+Notes:
+
+- The VM build uses the Debian 12 cloud image and cloud-init.
+- Default credentials are intended for local development only.
+- On Apple Silicon, `--amd64` builds run under emulation and are much slower.
+- The resulting `qcow2` artifact is written under `builds/vm/output/debian12-<arch>/` as `eyeon-debian12-<arch>.qcow2`.
+
+Included in the appliance VM:
+
+- EyeON CLI (`eyeon` on PATH)
+- pEyeON-Analytics checkout at `/opt/pEyeON-Analytics`
+- `uv` (installed system-wide) with `uv sync` run during image build
+
 To request other options for install, please create an issue on our GitHub page.
 
 

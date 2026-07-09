@@ -1,0 +1,25 @@
+#cloud-config
+ssh_pwauth: true
+chpasswd:
+  expire: false
+  list: |
+    debian:debian
+    eyeon:eyeon
+
+users:
+  - default
+  - name: eyeon
+    groups: [sudo]
+    shell: /bin/bash
+    sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+    lock_passwd: false
+
+write_files:
+  - path: /etc/motd
+    permissions: '0644'
+    content: |
+      EyeON Appliance VM (development build)
+      - Run: eyeon --help
+      - Default user: eyeon / eyeon
+
+final_message: "cloud-init complete"
