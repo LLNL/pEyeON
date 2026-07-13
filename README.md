@@ -9,6 +9,10 @@ EyeON is a CLI tool that allows users to collect software metadata from their ma
 <p align="center">
 <img src="Photo/EyeON_Mascot.png" width="300" height="270">
 
+## Build Instructions
+
+See `BUILD.md` for container/VM build instructions and cross-architecture notes.
+
 ## Quickstart
 
 For normal field use, you do not need to clone this repository. Download the two wrapper scripts, pull the published container image, run a batch parse, and then summarize the newest batch.
@@ -54,6 +58,8 @@ The container images include the main extraction dependencies such as `ssdeep`, 
 
 For most users, the recommended container workflow is `eyeon-parse.sh` plus `eyeon-batch-summary.sh` from the quickstart above. The direct `docker run` and `podman run` examples below are mainly useful for development, debugging, and image validation.
 
+Build and cross-platform notes (amd64/arm64, buildx, qcow2 VM builds) are documented in `BUILD.md`.
+
 #### Published Multi-Arch Image
 The primary container image is published to GHCR as a multi-arch image. The same tag works on both `amd64` and `arm64` hosts, and Docker will pull the matching architecture automatically.
 
@@ -74,17 +80,7 @@ docker pull ghcr.io/llnl/peyeon:dev-<sha>
 docker run --rm ghcr.io/llnl/peyeon:dev-<sha> eyeon --help
 ```
 
-#### Local Docker Build
-```bash
-docker build -f builds/Dockerfile -t peyeon .
-docker run --rm -it -v "$(pwd):/workdir:Z" peyeon /bin/bash
-```
-
-#### Local Podman Build
-```bash
-podman build -t peyeon -f builds/podman.Dockerfile .
-podman run --rm -it -v "$(pwd):/workdir:rw" peyeon /bin/bash
-```
+Local build instructions (Docker/Podman) are in `BUILD.md`.
 
 ### VM Install
 Alternatively, to install on a clean Ubuntu or RHEL8/9 VM:
@@ -136,34 +132,7 @@ For Nutanix AHV (KVM), the simplest portable artifact is a `qcow2` VM disk image
 This repository includes a Debian 12 based appliance VM build (development-focused)
 that installs EyeON into a virtual environment and makes `eyeon` available on PATH.
 
-Prerequisites on macOS:
-
-```bash
-brew install qemu
-brew install hashicorp/tap/packer
-python3 -m pip install --user build
-```
-
-Build:
-
-```bash
-bash builds/vm/build-qcow2.sh        # defaults to host architecture
-bash builds/vm/build-qcow2.sh --arm64
-bash builds/vm/build-qcow2.sh --amd64
-```
-
-Notes:
-
-- The VM build uses the Debian 12 cloud image and cloud-init.
-- Default credentials are intended for local development only.
-- On Apple Silicon, `--amd64` builds run under emulation and are much slower.
-- The resulting `qcow2` artifact is written under `builds/vm/output/debian12-<arch>/` as `eyeon-debian12-<arch>.qcow2`.
-
-Included in the appliance VM:
-
-- EyeON CLI (`eyeon` on PATH)
-- pEyeON-Analytics checkout at `/opt/pEyeON-Analytics`
-- `uv` (installed system-wide) with `uv sync` run during image build
+Build and cross-arch details for the qcow2 appliance VM are in `BUILD.md`.
 
 To request other options for install, please create an issue on our GitHub page.
 
