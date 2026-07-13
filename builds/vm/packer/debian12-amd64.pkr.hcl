@@ -22,6 +22,11 @@ variable "eyeon_wheel" {
   type = string
 }
 
+variable "qemu_binary" {
+  type    = string
+  default = "qemu-system-x86_64"
+}
+
 variable "qemu_accelerator" {
   type    = string
   # On Apple Silicon, x86_64 builds require emulation.
@@ -39,6 +44,8 @@ source "qemu" "debian12" {
 
   output_directory = local.output_dir
   format           = "qcow2"
+
+  qemu_binary = var.qemu_binary
 
   accelerator = var.qemu_accelerator
 

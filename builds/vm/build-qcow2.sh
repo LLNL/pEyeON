@@ -5,6 +5,8 @@ set -euo pipefail
 repo_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)
 cd "$repo_root"
 
+os_name=$(uname -s)
+
 target_arch=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -24,17 +26,33 @@ while [[ $# -gt 0 ]]; do
 done
 
 if ! command -v packer >/dev/null 2>&1; then
-  echo "Missing packer. On macOS: brew install hashicorp/tap/packer" >&2
-  exit 1
-fi
-
-if ! command -v qemu-system-x86_64 >/dev/null 2>&1; then
-  echo "Missing QEMU. On macOS: brew install qemu" >&2
+  case "$os_name" in
+    Darwin)
+      echo "Missing packer. On macOS: brew install hashicorp/tap/packer" >&2
+      ;;
+    Linux)
+      echo "Missing packer. On RHEL8: sudo dnf install -y dnf-plugins-core && sudo dnf config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo && sudo dnf install -y packer" >&2
+      echo "(Alternative: install from the official zip: https://developer.hashicorp.com/packer/downloads)" >&2
+      ;;
+    *)
+      echo "Missing packer. Install packer for your OS: https://developer.hashicorp.com/packer/downloads" >&2
+      ;;
+  esac
   exit 1
 fi
 
 if ! python3 -c 'import build' >/dev/null 2>&1; then
-  echo "Missing Python build backend. Install with: python3 -m pip install --user build" >&2
+  case "$os_name" in
+    Linux)
+      echo "Missing Python build backend. On RHEL8: sudo dnf install -y python3-pip && python3 -m pip install --user build" >&2
+      ;;
+    Darwin)
+      echo "Missing Python build backend. Install with: python3 -m pip install --user build" >&2
+      ;;
+    *)
+      echo "Missing Python build backend. Install with: python3 -m pip install --user build" >&2
+      ;;
+  esac
   exit 1
 fi
 
@@ -56,6 +74,39 @@ if [[ -z "$target_arch" ]]; then
 fi
 
 template="builds/vm/packer/debian12-${target_arch}.pkr.hcl"
+
+# Pick a QEMU binary name. On RHEL, qemu-kvm is common; Packer can use either.
+qemu_bin=""
+if [[ "$target_arch" == "amd64" ]]; then
+  if command -v qemu-system-x86_64 >/dev/null 2>&1; then
+    qemu_bin="qemu-system-x86_64"
+  elif command -v qemu-kvm >/dev/null 2>&1; then
+    qemu_bin="qemu-kvm"
+  elif [[ -x /usr/libexec/qemu-kvm ]]; then
+    qemu_bin="/usr/libexec/qemu-kvm"
+  fi
+else
+  if command -v qemu-system-aarch64 >/dev/null 2>&1; then
+    qemu_bin="qemu-system-aarch64"
+  fi
+fi
+
+if [[ -z "$qemu_bin" ]]; then
+  case "$os_name" in
+    Darwin)
+      echo "Missing QEMU. On macOS: brew install qemu" >&2
+      ;;
+    Linux)
+      echo "Missing QEMU." >&2
+      echo "On RHEL8 (amd64 target): sudo dnf install -y qemu-kvm qemu-img" >&2
+      echo "On Debian/Ubuntu: sudo apt-get install -y qemu-system-x86 qemu-utils" >&2
+      ;;
+    *)
+      echo "Missing QEMU. Install qemu-system-* for your OS." >&2
+      ;;
+  esac
+  exit 1
+fi
 
 sums_url="https://cloud.debian.org/images/cloud/bookworm/latest/SHA512SUMS"
 image_url="https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-${target_arch}.qcow2"
@@ -80,6 +131,7 @@ rm -rf "$outdir"
 packer build \
   -var "debian_cloud_image_url=$image_url" \
   -var "debian_cloud_image_checksum=sha512:$sha512" \
+  -var "qemu_binary=$qemu_bin" \
   -var "qemu_accelerator=$qemu_accel" \
   -var "eyeon_wheel=$wheel" \
   "$template"

@@ -16,19 +16,17 @@ The build system has two primary delivery paths (containers and qcow2 VM images)
 
 ```mermaid
 flowchart TD
-  SRC[Repo source tree] --> PROV[builds/provision/*.sh]
+  SRC[Repo source tree] --> PROV["builds/provision/*.sh"]
 
   subgraph CONTAINERS[Containers]
     DF[builds/Dockerfile] --> IMG[Container image]
     PF[builds/podman.Dockerfile] --> IMG
-    CI[CI buildx publish] --> IMG_MA[Multi-arch tag
-ghcr.io/llnl/peyeon:latest]
+    CI[CI buildx publish] --> IMG_MA["Multi-arch tag ghcr.io/llnl/peyeon:latest"]
     IMG --> IMG_MA
   end
 
-  subgraph VM[Appliance VM (qcow2)]
-    VM_WRAP[builds/vm/build-qcow2.sh] --> PKR[Packer template
-debian12-<arch>.pkr.hcl]
+  subgraph VM["Appliance VM (qcow2)"]
+    VM_WRAP[builds/vm/build-qcow2.sh] --> PKR["Packer template debian12-<arch>.pkr.hcl"]
     CLOUD[Debian 12 cloud qcow2] --> PKR
     ANALYTICS[pEyeON-Analytics checkout] --> PKR
     PKR --> QCOW2[eyeon-debian12-<arch>.qcow2]
@@ -42,7 +40,7 @@ debian12-<arch>.pkr.hcl]
 ```mermaid
 flowchart LR
   EYEON[eyeon parse] --> JSON[EyeON JSON batch]
-  JSON --> DLT[load_eyeon.py (DLT)]
+  JSON --> DLT["load_eyeon.py (DLT)"]
   DLT --> DB[(DuckDB)]
   DB --> DBT[dbt models]
   DBT --> UI[Streamlit app]
@@ -50,16 +48,16 @@ flowchart LR
 
 ## Build Matrix (Common Permutations)
 
-| Artifact | Host example | Target arch | Build tooling | Command | Notes |
-|---|---|---|---|---|---|
-| Published container image | Any | amd64/arm64 | Docker | `docker pull ghcr.io/llnl/peyeon:latest` | Multi-arch tag; Docker selects the right arch automatically. |
-| Local Docker container | Linux amd64 | host arch | Docker | `docker build -f builds/Dockerfile -t peyeon .` | Single-arch local build. |
-| Local Docker container | macOS arm64 | host arch | Docker Desktop | `docker build -f builds/Dockerfile -t peyeon .` | Single-arch local build. |
-| Local Podman container | Linux | host arch | Podman | `podman build -f builds/podman.Dockerfile -t peyeon .` | Single-arch local build. |
-| CI multi-arch container | GitHub Actions | amd64+arm64 | buildx | (see workflow) | Implemented in `.github/workflows/publish-multiarch-container.yaml`. |
-| Debian 12 qcow2 appliance | macOS arm64 | arm64 | Packer + QEMU (HVF) | `bash builds/vm/build-qcow2.sh --arm64` | Fastest path on Apple Silicon. |
-| Debian 12 qcow2 appliance | macOS arm64 | amd64 | Packer + QEMU (TCG) | `bash builds/vm/build-qcow2.sh --amd64` | Emulated and slow. |
-| Debian 12 qcow2 appliance | Linux amd64 | amd64 | Packer + QEMU/KVM | `bash builds/vm/build-qcow2.sh --amd64` | Use KVM acceleration when available. |
+| Artifact                  | Host example   | Target arch | Build tooling       | Command                                                | Notes                                                                |
+| ------------------------- | -------------- | ----------- | ------------------- | ------------------------------------------------------ | -------------------------------------------------------------------- |
+| Published container image | Any            | amd64/arm64 | Docker              | `docker pull ghcr.io/llnl/peyeon:latest`               | Multi-arch tag; Docker selects the right arch automatically.         |
+| Local Docker container    | Linux amd64    | host arch   | Docker              | `docker build -f builds/Dockerfile -t peyeon .`        | Single-arch local build.                                             |
+| Local Docker container    | macOS arm64    | host arch   | Docker Desktop      | `docker build -f builds/Dockerfile -t peyeon .`        | Single-arch local build.                                             |
+| Local Podman container    | Linux          | host arch   | Podman              | `podman build -f builds/podman.Dockerfile -t peyeon .` | Single-arch local build.                                             |
+| CI multi-arch container   | GitHub Actions | amd64+arm64 | buildx              | (see workflow)                                         | Implemented in `.github/workflows/publish-multiarch-container.yaml`. |
+| Debian 12 qcow2 appliance | macOS arm64    | arm64       | Packer + QEMU (HVF) | `bash builds/vm/build-qcow2.sh --arm64`                | Fastest path on Apple Silicon.                                       |
+| Debian 12 qcow2 appliance | macOS arm64    | amd64       | Packer + QEMU (TCG) | `bash builds/vm/build-qcow2.sh --amd64`                | Emulated and slow.                                                   |
+| Debian 12 qcow2 appliance | Linux amd64    | amd64       | Packer + QEMU/KVM   | `bash builds/vm/build-qcow2.sh --amd64`                | Use KVM acceleration when available.                                 |
 
 ## Containers
 
@@ -120,6 +118,21 @@ The qcow2 appliance build starts from the Debian 12 cloud image and provisions i
 ```bash
 brew install qemu
 brew install hashicorp/tap/packer
+python3 -m pip install --user build
+```
+
+### Prerequisites (RHEL 8/9)
+
+Install QEMU/KVM + Packer + Python build tooling:
+
+```bash
+sudo dnf install -y qemu-kvm qemu-img
+
+sudo dnf install -y dnf-plugins-core
+sudo dnf config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo
+sudo dnf install -y packer
+
+sudo dnf install -y python3-pip
 python3 -m pip install --user build
 ```
 
