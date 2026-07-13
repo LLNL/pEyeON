@@ -29,8 +29,8 @@ variable "qemu_binary" {
 
 variable "qemu_accelerator" {
   type    = string
-  # On Apple Silicon, x86_64 builds require emulation.
-  default = "tcg"
+  # On Linux, prefer KVM. On Apple Silicon, x86_64 builds require emulation.
+  default = "kvm"
 }
 
 locals {

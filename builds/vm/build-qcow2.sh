@@ -117,9 +117,36 @@ if [[ -z "$sha512" ]]; then
   exit 1
 fi
 
-qemu_accel="hvf"
-if [[ "$host_arch" == "arm64" && "$target_arch" == "amd64" ]]; then
-  # x86_64 guest on Apple Silicon: run under TCG emulation.
+qemu_accel=""
+case "$os_name" in
+  Darwin)
+    qemu_accel="hvf"
+    if [[ "$host_arch" == "arm64" && "$target_arch" == "amd64" ]]; then
+      # x86_64 guest on Apple Silicon: run under TCG emulation.
+      qemu_accel="tcg"
+    fi
+    ;;
+  Linux)
+    # Prefer KVM when building for the host architecture and /dev/kvm is usable.
+    if [[ "$host_arch" == "x86_64" && "$target_arch" == "amd64" ]] || [[ "$host_arch" == "aarch64" && "$target_arch" == "arm64" ]]; then
+      if [[ -e /dev/kvm && -r /dev/kvm && -w /dev/kvm ]]; then
+        qemu_accel="kvm"
+      else
+        qemu_accel="tcg"
+      fi
+    else
+      # Cross-arch on Linux typically implies emulation.
+      qemu_accel="tcg"
+    fi
+    ;;
+  *)
+    qemu_accel="tcg"
+    ;;
+esac
+
+if [[ "$qemu_accel" == "kvm" && ! -w /dev/kvm ]]; then
+  echo "KVM requested but /dev/kvm is not accessible. Add your user to the kvm group or run as root." >&2
+  echo "Falling back to TCG emulation." >&2
   qemu_accel="tcg"
 fi
 
