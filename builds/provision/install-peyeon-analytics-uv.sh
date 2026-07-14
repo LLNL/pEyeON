@@ -28,7 +28,7 @@ cd "$analytics_dir"
 rm -rf .venv
 
 # Create/update the project venv from the lockfile.
-uv sync
+uv sync --frozen
 
 # Smoke import without launching Streamlit.
-uv run python -c "import duckdb; import dlt; import dbt" >/dev/null
+uv run --frozen --no-sync python -c "import duckdb; import dlt; import dbt" >/dev/null
