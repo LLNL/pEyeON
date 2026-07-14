@@ -22,4 +22,10 @@ write_files:
       - Run: eyeon --help
       - Default user: eyeon / eyeon
 
+  # Marker file used by eyeon-parse.sh to select VM behavior in --mode auto.
+  - path: /etc/eyeon-appliance
+    permissions: '0644'
+    content: |
+      eyeon-appliance
+
 final_message: "cloud-init complete"
