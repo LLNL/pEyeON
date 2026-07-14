@@ -156,6 +156,27 @@ Notes:
 - On Apple Silicon, `--amd64` builds run under QEMU TCG emulation and are much slower.
 - The amd64 Packer template sets a QEMU CPU model to avoid SIGILL in common Python wheels under emulation.
 
+### Operating / Running (libvirt)
+
+Get the IP address (works on RHEL for the default libvirt NAT network; does not require the guest agent):
+
+```bash
+mac="$(virsh domiflist eyeon-debian12-amd64 | awk '/network/ {print $5; exit}')" \
+  && virsh net-dhcp-leases default | awk -v mac="$mac" 'tolower($0) ~ tolower(mac) {print $5}' | cut -d/ -f1
+```
+
+Cleanup and recreate a domain using the same qcow2 path:
+
+```bash
+virsh shutdown eyeon-debian12-amd64 || true
+virsh destroy eyeon-debian12-amd64 || true
+
+# Remove the domain definition (this is what clears "Disk ... already in use")
+virsh undefine eyeon-debian12-amd64 --nvram || virsh undefine eyeon-debian12-amd64
+
+virsh list --all
+```
+
 ## Troubleshooting (common operator tasks)
 
 ### virsh console detach

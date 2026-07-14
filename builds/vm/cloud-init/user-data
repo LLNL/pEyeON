@@ -21,11 +21,55 @@ write_files:
       EyeON Appliance VM (development build)
       - Run: eyeon --help
       - Default user: eyeon / eyeon
+      - Quickstart: /home/eyeon/QUICKSTART.txt
 
   # Marker file used by eyeon-parse.sh to select VM behavior in --mode auto.
   - path: /etc/eyeon-appliance
     permissions: '0644'
     content: |
       eyeon-appliance
+
+  - path: /home/eyeon/QUICKSTART.txt
+    owner: eyeon:eyeon
+    permissions: '0644'
+    content: |
+      EyeON Appliance VM Quickstart
+
+      1) Confirm tools are available:
+         eyeon --help
+         duckdb --version
+
+      2) Analytics project checkout:
+         cd ~/pEyeON-Analytics
+
+      3) Run a batch parse (creates <timestamp>_<UTIL_CD> under the dataset root):
+         eyeon-parse.sh UTIL_CD /path/to/scan
+
+         Notes:
+         - This VM ships with /etc/eyeon-appliance, so eyeon-parse.sh defaults to VM mode.
+         - Dataset root defaults to datasets.dataset_path in EyeOnData.toml, else ~/data/eyeon.
+
+      4) Inspect a batch directory:
+         eyeon-batch-summary.sh
+         eyeon-batch-summary.sh ~/data/eyeon
+
+      5) Load parsed JSON into DuckDB (from ~/pEyeON-Analytics):
+         uv run python load_eyeon.py --help
+
+  - path: /etc/profile.d/eyeon-quickstart.sh
+    permissions: '0755'
+    content: |
+      #!/usr/bin/env bash
+      # Print the VM quickstart for the appliance user on interactive login.
+      if [ "${USER:-}" != "eyeon" ]; then
+        return 0
+      fi
+      case "${-}" in
+        *i*) ;;
+        *) return 0 ;;
+      esac
+      if [ -f /home/eyeon/QUICKSTART.txt ]; then
+        cat /home/eyeon/QUICKSTART.txt
+      fi
 
 final_message: "cloud-init complete"

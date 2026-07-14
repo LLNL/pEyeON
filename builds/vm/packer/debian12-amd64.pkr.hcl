@@ -85,6 +85,16 @@ build {
   }
 
   provisioner "file" {
+    source      = "eyeon-parse.sh"
+    destination = "/tmp/eyeon-parse.sh"
+  }
+
+  provisioner "file" {
+    source      = "eyeon-batch-summary.sh"
+    destination = "/tmp/eyeon-batch-summary.sh"
+  }
+
+  provisioner "file" {
     source      = "../pEyeON-Analytics"
     destination = "/tmp/pEyeON-Analytics"
   }
@@ -115,6 +125,13 @@ build {
       "sudo bash -lc 'wheel=$(ls -1 /tmp/peyeon-*.whl | head -1); test -f \"$wheel\"; bash /tmp/eyeon-provision/install-eyeon-venv.sh --venv /opt/eyeon/venv --wheel \"$wheel\"'",
       "sudo /opt/eyeon/venv/bin/surfactant plugin update-db --all || true",
       "sudo ln -sf /opt/eyeon/venv/bin/eyeon /usr/local/bin/eyeon",
+
+      # Wrapper scripts (container on hosts; direct execution in the appliance VM).
+      "sudo install -m 0755 /tmp/eyeon-parse.sh /usr/local/bin/eyeon-parse.sh",
+      "sudo ln -sf /usr/local/bin/eyeon-parse.sh /usr/local/bin/eyeon-parse",
+      "sudo install -m 0755 /tmp/eyeon-batch-summary.sh /usr/local/bin/eyeon-batch-summary.sh",
+      "sudo ln -sf /usr/local/bin/eyeon-batch-summary.sh /usr/local/bin/eyeon-batch-summary",
+
       "sudo useradd -m -s /bin/bash -G sudo eyeon || true",
       "echo 'eyeon:eyeon' | sudo chpasswd",
 
@@ -122,6 +139,7 @@ build {
       "sudo bash /tmp/eyeon-provision/install-uv.sh",
       "sudo rm -rf /opt/pEyeON-Analytics && sudo mv /tmp/pEyeON-Analytics /opt/pEyeON-Analytics",
       "sudo chown -R eyeon:eyeon /opt/pEyeON-Analytics",
+      "sudo rm -rf /home/eyeon/pEyeON-Analytics && sudo ln -s /opt/pEyeON-Analytics /home/eyeon/pEyeON-Analytics",
       "sudo -u eyeon -H bash -lc 'uv python install 3.13'",
       "sudo -u eyeon -H bash -lc '/tmp/eyeon-provision/install-peyeon-analytics-uv.sh /opt/pEyeON-Analytics'",
     ]
