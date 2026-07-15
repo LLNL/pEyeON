@@ -28,9 +28,20 @@ variable "qemu_binary" {
 }
 
 variable "qemu_accelerator" {
-  type    = string
+  type = string
   # Apple Silicon can accelerate arm64 guests with HVF.
   default = "hvf"
+}
+
+variable "qemu_memory" {
+  type = number
+  # Binwalk (Rust) builds can OOM on small defaults; 4G is a reasonable baseline.
+  default = 4096
+}
+
+variable "qemu_cpus" {
+  type    = number
+  default = 2
 }
 
 locals {
@@ -38,15 +49,18 @@ locals {
 }
 
 source "qemu" "debian12" {
-  disk_image = true
-  iso_url    = var.debian_cloud_image_url
+  disk_image   = true
+  iso_url      = var.debian_cloud_image_url
   iso_checksum = var.debian_cloud_image_checksum
 
   output_directory = local.output_dir
   format           = "qcow2"
 
-  qemu_binary  = var.qemu_binary
-  accelerator  = var.qemu_accelerator
+  qemu_binary = var.qemu_binary
+  accelerator = var.qemu_accelerator
+
+  memory       = var.qemu_memory
+  cpus         = var.qemu_cpus
   machine_type = "virt"
   headless     = true
   disk_size    = "20G"

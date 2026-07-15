@@ -28,9 +28,20 @@ variable "qemu_binary" {
 }
 
 variable "qemu_accelerator" {
-  type    = string
+  type = string
   # On Linux, prefer KVM. On Apple Silicon, x86_64 builds require emulation.
   default = "kvm"
+}
+
+variable "qemu_memory" {
+  type = number
+  # Binwalk (Rust) builds can OOM on small defaults; 4G is a reasonable baseline.
+  default = 4096
+}
+
+variable "qemu_cpus" {
+  type    = number
+  default = 2
 }
 
 locals {
@@ -38,8 +49,8 @@ locals {
 }
 
 source "qemu" "debian12" {
-  disk_image = true
-  iso_url    = var.debian_cloud_image_url
+  disk_image   = true
+  iso_url      = var.debian_cloud_image_url
   iso_checksum = var.debian_cloud_image_checksum
 
   output_directory = local.output_dir
@@ -48,6 +59,9 @@ source "qemu" "debian12" {
   qemu_binary = var.qemu_binary
 
   accelerator = var.qemu_accelerator
+
+  memory = var.qemu_memory
+  cpus   = var.qemu_cpus
 
   headless  = true
   disk_size = "20G"

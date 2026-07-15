@@ -9,4 +9,4 @@ export PATH="/root/.cargo/bin:$PATH"
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
   | sh -s -- -y --profile minimal
 
-cargo install --git https://github.com/ReFirmLabs/binwalk --tag "$binwalk_tag" binwalk
+cargo install --git https://github.com/ReFirmLabs/binwalk --tag "$binwalk_tag" --jobs 1 binwalk
