@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Create venv
+        run: python3 -m venv .venv --upgrade-deps
+      - name: Install package
+        run: |
+          set -euo pipefail
+          source .venv/bin/activate
+          pip install -e .
+          surfactant plugin update-db --all
+      - name: Run unit tests
+        run: |
+          set -euo pipefail
+          source .venv/bin/activate
+          coverage run --source=src/ -m unittest discover -s tests/
+          coverage report
+
+  docker-build-test:
+    name: Docker build + smoke (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runs_on: ubuntu-latest
+          - arch: arm64
+            runs_on: ubuntu-24.04-arm64
+    runs-on: ${{ matrix.runs_on }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: |
+          set -euo pipefail
+          docker build -f builds/Dockerfile -t peyeon:test-${{ matrix.arch }} .
+      - name: Smoke test
+        run: |
+          set -euo pipefail
+          docker run --rm peyeon:test-${{ matrix.arch }} sh -c "eyeon --help && binwalk --version && command -v sasquatch && command -v 7z"
+
+  podman-build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Podman
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y podman
+      - name: Build
+        run: |
+          set -euo pipefail
+          podman build -f builds/podman.Dockerfile -t peyeon:test-podman .
+      - name: Smoke test
+        run: |
+          set -euo pipefail
+          podman run --rm peyeon:test-podman sh -c "eyeon --help && binwalk --version && command -v sasquatch && command -v 7z"
