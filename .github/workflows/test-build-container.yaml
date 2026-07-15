@@ -8,41 +8,39 @@ on:
       - .dockerignore
       - builds/Dockerfile
       - builds/podman.Dockerfile
+      - builds/provision/**
+      - .github/workflows/test-build-container.yaml
 
 jobs:
   docker-build:
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
-          - platform: linux/amd64
-            tag: amd64
-          - platform: linux/arm64
-            tag: arm64
+          - arch: amd64
+            runs_on: ubuntu-latest
+          - arch: arm64
+            # Avoid qemu user-mode instability during Rust builds by using native arm64.
+            runs_on: ubuntu-24.04-arm64
+
+    runs-on: ${{ matrix.runs_on }}
 
     steps:
-      - uses: actions/checkout@v6
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+      - uses: actions/checkout@v4
 
       - name: Build Docker Image
         run: |
-            docker buildx build -f builds/Dockerfile --platform ${{ matrix.platform }} --load -t peyeon:${{ matrix.tag }} .
-    
+            docker build -f builds/Dockerfile -t peyeon:${{ matrix.arch }} .
+     
       - name: Run Test Command
         run: |
-            docker run --rm --platform ${{ matrix.platform }} peyeon:${{ matrix.tag }} sh -c "eyeon --help && binwalk --version && command -v sasquatch && command -v 7z"
+            docker run --rm peyeon:${{ matrix.arch }} sh -c "eyeon --help && binwalk --version && command -v sasquatch && command -v 7z"
 
   podman-build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
       - name: Set up Podman
         run: |

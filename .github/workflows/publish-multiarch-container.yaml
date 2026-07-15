@@ -6,37 +6,18 @@ on:
     branches:
       - main
       - linux-arm
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build-and-push-image:
+  meta:
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-      packages: write
-      attestations: write
-      id-token: write
-
+    outputs:
+      tags: ${{ steps.meta.outputs.tags }}
+      labels: ${{ steps.meta.outputs.labels }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
@@ -47,28 +28,115 @@ jobs:
             type=ref,event=branch,prefix=dev-,enable=${{ github.ref != 'refs/heads/main' }}
             type=sha,prefix=dev-,enable=${{ github.ref != 'refs/heads/main' }}
 
-      - name: Build and push Docker image
-        id: push
+  build-and-push:
+    name: Build and push (${{ matrix.arch }})
+    needs: meta
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runs_on: ubuntu-latest
+            platform: linux/amd64
+          - arch: arm64
+            # Prefer native arm64 to avoid qemu user-mode instability during Rust builds.
+            runs_on: ubuntu-24.04-arm64
+            platform: linux/arm64
+    runs-on: ${{ matrix.runs_on }}
+
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute arch-tagged image tags
+        id: tags
+        shell: bash
+        run: |
+          set -euo pipefail
+          tags_raw='${{ needs.meta.outputs.tags }}'
+          if [[ -z "$tags_raw" ]]; then
+            echo "No tags produced by metadata-action" >&2
+            exit 1
+          fi
+          tags_out=""
+          while IFS= read -r tag; do
+            [[ -n "$tag" ]] || continue
+            tags_out+="${tag}-${{ matrix.arch }}"$'\n'
+          done <<< "$tags_raw"
+          printf 'tags<<EOF\n%sEOF\n' "$tags_out" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push (arch-tagged)
         uses: docker/build-push-action@v6
         with:
           context: .
           file: builds/Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{ matrix.platform }}
+          # Push arch-suffixed tags so we can assemble a multi-arch manifest afterwards.
+          tags: ${{ steps.tags.outputs.tags }}
+          labels: ${{ needs.meta.outputs.labels }}
 
-      - name: Generate artifact attestation
-        uses: actions/attest-build-provenance@v4
+  manifest:
+    name: Create multi-arch manifest
+    needs: [meta, build-and-push]
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
         with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          subject-digest: ${{ steps.push.outputs.digest }}
-          push-to-registry: true
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create and push manifest list
+        shell: bash
+        run: |
+          set -euo pipefail
+          tags_raw='${{ needs.meta.outputs.tags }}'
+          if [[ -z "$tags_raw" ]]; then
+            echo "No tags produced by metadata-action" >&2
+            exit 1
+          fi
+
+          echo "Creating manifest(s) for:" >&2
+          echo "$tags_raw" >&2
+
+          while IFS= read -r tag; do
+            [[ -n "$tag" ]] || continue
+            docker buildx imagetools create \
+              -t "$tag" \
+              "${tag}-amd64" \
+              "${tag}-arm64"
+          done <<< "$tags_raw"
 
       - name: Summarize published image tags
+        shell: bash
         run: |
           {
             echo "Published multi-arch image tags:"
             echo
-            echo '${{ steps.meta.outputs.tags }}'
+            echo '${{ needs.meta.outputs.tags }}'
           } >> "$GITHUB_STEP_SUMMARY"
