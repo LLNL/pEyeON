@@ -28,10 +28,41 @@ set -euo pipefail
 #   EYEON_IMAGE=ghcr.io/llnl/peyeon:dev-<sha> ./eyeon-parse.sh UTIL_CD SOURCE
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SETTINGS_FILE="${SCRIPT_DIR}/EyeOnData.toml"
+SETTINGS_FILE=""
+
+resolve_settings_file() {
+  local candidates=()
+
+  if [[ -n "${EYEON_EYEONDATA_TOML:-}" ]]; then
+    candidates+=("$EYEON_EYEONDATA_TOML")
+  fi
+
+  # Run-local override.
+  candidates+=("$PWD/EyeOnData.toml")
+
+  # Repo-local: works when running from a checkout.
+  candidates+=("$SCRIPT_DIR/EyeOnData.toml")
+
+  # Sibling checkouts: pEyeON alongside pEyeON-Analytics.
+  candidates+=("$SCRIPT_DIR/../pEyeON-Analytics/EyeOnData.toml")
+
+  # Appliance VM canonical location.
+  candidates+=("/opt/pEyeON-Analytics/EyeOnData.toml")
+  candidates+=("$HOME/pEyeON-Analytics/EyeOnData.toml")
+
+  local candidate
+  for candidate in "${candidates[@]}"; do
+    if [[ -f "$candidate" ]]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+
+  return 1
+}
 
 read_dataset_path_from_toml() {
-  if [[ ! -f "$SETTINGS_FILE" ]]; then
+  if [[ -z "$SETTINGS_FILE" || ! -f "$SETTINGS_FILE" ]]; then
     return 0
   fi
 
@@ -67,6 +98,7 @@ Environment variables:
   EYEON_THREADS      Default: 8
   EYEON_IMAGE        Default: ghcr.io/llnl/peyeon:latest; override for dev/test images
   EYEON_DATASET_PATH Default: datasets.dataset_path from EyeOnData.toml
+  EYEON_EYEONDATA_TOML Explicit path to EyeOnData.toml (overrides auto-discovery)
   EYEON_MODE         auto|container|vm (default: auto; auto selects vm when /etc/eyeon-appliance exists)
   EYEON_OWNER        Required when running as root unless passthrough is enabled
   EYEON_UID/GID      Explicit numeric owner override for runtime outputs
@@ -434,6 +466,7 @@ if [[ -z "$UTIL_CD" || -z "$SOURCE" ]]; then
 fi
 
 if [[ -z "$DATASET_PATH" ]]; then
+  SETTINGS_FILE="$(resolve_settings_file 2>/dev/null || true)"
   DATASET_PATH="$(read_dataset_path_from_toml)"
 fi
 

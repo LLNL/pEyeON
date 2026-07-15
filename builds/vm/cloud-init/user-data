@@ -19,9 +19,13 @@ write_files:
     permissions: '0644'
     content: |
       EyeON Appliance VM (development build)
-      - Run: eyeon --help
-      - Default user: eyeon / eyeon
-      - Quickstart: /home/eyeon/QUICKSTART.txt
+
+      Smoke Test:
+        eyeon-parse demo /usr/sbin
+        eyeon-batch-summary
+
+      Default data location is /home/eyeon/data/eyeon/[batch]/
+      
 
   # Marker file used by eyeon-parse.sh to select VM behavior in --mode auto.
   - path: /etc/eyeon-appliance
@@ -47,7 +51,7 @@ write_files:
 
          Notes:
          - This VM ships with /etc/eyeon-appliance, so eyeon-parse.sh defaults to VM mode.
-         - Dataset root defaults to datasets.dataset_path in EyeOnData.toml, else ~/data/eyeon.
+         - Dataset root defaults to datasets.dataset_path in /opt/pEyeON-Analytics/EyeOnData.toml (default: /home/eyeon/data/).
 
       4) Inspect a batch directory:
          eyeon-batch-summary.sh

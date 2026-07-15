@@ -173,7 +173,17 @@ Examples:
 
 `THREADS` defaults to `8`.
 
-If `DATASET_PATH` is not provided, the wrapper uses `datasets.dataset_path` from `EyeOnData.toml`. If that is also unset, it falls back to `$HOME/data/eyeon`.
+If `DATASET_PATH` is not provided, the wrapper uses `datasets.dataset_path` from `EyeOnData.toml`.
+
+The wrapper auto-discovers `EyeOnData.toml` in this order:
+
+1. `EYEON_EYEONDATA_TOML` (explicit path)
+2. `./EyeOnData.toml` (current working directory)
+3. `EyeOnData.toml` next to the script (repo checkout)
+4. `../pEyeON-Analytics/EyeOnData.toml` (sibling checkout)
+5. `/opt/pEyeON-Analytics/EyeOnData.toml` (appliance VM)
+
+If no config is found, it falls back to `$HOME/data/eyeon`.
 
 #### Latest Batch Summary
 `eyeon-batch-summary.sh` prints a short summary for the newest parse batch directory, including total file count, top-level JSON count, and counts by metadata type.

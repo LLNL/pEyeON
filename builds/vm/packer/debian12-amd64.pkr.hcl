@@ -141,6 +141,8 @@ build {
       "sudo chown -R eyeon:eyeon /opt/pEyeON-Analytics",
       # cloud-init can create /home/eyeon as root before the user exists; fix ownership for uv.
       "sudo mkdir -p /home/eyeon/.cache && sudo chown -R eyeon:eyeon /home/eyeon",
+      "sudo -u eyeon -H bash -lc 'mkdir -p /home/eyeon/data'",
+      "sudo -u eyeon -H bash -lc 'cd /opt/pEyeON-Analytics && if [ ! -f EyeOnData.toml ]; then cp EyeOnData.toml-template EyeOnData.toml; fi && sed -i "s|^dataset_path = .*|dataset_path = \"/home/eyeon/data/\"|" EyeOnData.toml'",
       "sudo -u eyeon -H bash -lc 'rm -rf /home/eyeon/pEyeON-Analytics && ln -s /opt/pEyeON-Analytics /home/eyeon/pEyeON-Analytics'",
       "sudo -u eyeon -H bash -lc 'uv python install 3.13'",
       "sudo -u eyeon -H bash -lc '/tmp/eyeon-provision/install-peyeon-analytics-uv.sh /opt/pEyeON-Analytics'",
