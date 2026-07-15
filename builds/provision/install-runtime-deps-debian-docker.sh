@@ -11,5 +11,10 @@ apt-get update \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
+# Debian's 7zip package provides 7zz; some tooling expects the classic 7z name.
+if ! command -v 7z >/dev/null 2>&1 && command -v 7zz >/dev/null 2>&1; then
+  ln -sf "$(command -v 7zz)" /usr/local/bin/7z
+fi
+
 # Useful for inspecting the analytics database in-container.
 bash "$(dirname "$0")/install-duckdb-cli.sh"
