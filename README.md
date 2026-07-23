@@ -133,6 +133,7 @@ This repository includes a Debian 12 based appliance VM build (development-focus
 that installs EyeON into a virtual environment and makes `eyeon` available on PATH.
 
 Build and cross-arch details for the qcow2 appliance VM are in `BUILD.md`.
+Deployment/import instructions for external users are in `builds/README-Deploy.md`.
 
 To request other options for install, please create an issue on our GitHub page.
 

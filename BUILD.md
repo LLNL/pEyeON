@@ -54,7 +54,7 @@ flowchart LR
 | Local Docker container    | Linux amd64    | host arch   | Docker              | `docker build -f builds/Dockerfile -t peyeon .`        | Single-arch local build.                                             |
 | Local Docker container    | macOS arm64    | host arch   | Docker Desktop      | `docker build -f builds/Dockerfile -t peyeon .`        | Single-arch local build.                                             |
 | Local Podman container    | Linux          | host arch   | Podman              | `podman build -f builds/podman.Dockerfile -t peyeon .` | Single-arch local build.                                             |
-| CI multi-arch container   | GitHub Actions | amd64+arm64 | buildx              | (see workflow)                                         | Implemented in `.github/workflows/publish-multiarch-container.yaml`. |
+| CI multi-arch container   | GitHub Actions | amd64+arm64 | native per-arch jobs | (see workflows)                                        | Implemented via `.github/workflows/ci.yaml` and `.github/workflows/publish-container.yaml`. |
 | Debian 12 qcow2 appliance | macOS arm64    | arm64       | Packer + QEMU (HVF) | `bash builds/vm/build-qcow2.sh --arm64`                | Fastest path on Apple Silicon.                                       |
 | Debian 12 qcow2 appliance | macOS arm64    | amd64       | Packer + QEMU (TCG) | `bash builds/vm/build-qcow2.sh --amd64`                | Emulated and slow.                                                   |
 | Debian 12 qcow2 appliance | Linux amd64    | amd64       | Packer + QEMU/KVM   | `bash builds/vm/build-qcow2.sh --amd64`                | Use KVM acceleration when available.                                 |
@@ -93,10 +93,10 @@ podman run --rm -it -v "$(pwd):/workdir:rw" peyeon /bin/bash
 
 ### Multi-Arch / Cross-Platform Container Builds
 
-The repository CI builds `linux/amd64` and `linux/arm64` images using Docker buildx.
+The repository CI builds `linux/amd64` and `linux/arm64` images with native per-architecture jobs on GitHub Actions.
 
-- Build/test workflow: `.github/workflows/test-build-container.yaml`
-- Publish workflow: `.github/workflows/publish-multiarch-container.yaml`
+- Build/test workflow: `.github/workflows/ci.yaml`
+- Publish workflow: `.github/workflows/publish-container.yaml`
 
 If you need to run buildx locally:
 
@@ -151,10 +151,28 @@ Outputs are written to:
 - `builds/vm/output/debian12-arm64/eyeon-debian12-arm64.qcow2`
 - `builds/vm/output/debian12-amd64/eyeon-debian12-amd64.qcow2`
 
+External-user deployment/import guidance for Nutanix, libvirt, UTM, Hyper-V, VMware, and VirtualBox lives in `builds/README-Deploy.md`.
+
 Notes:
 
 - On Apple Silicon, `--amd64` builds run under QEMU TCG emulation and are much slower.
 - The amd64 Packer template sets a QEMU CPU model to avoid SIGILL in common Python wheels under emulation.
+
+### Running in UTM (macOS)
+
+For UTM, the appliance artifact is the qcow2 disk image itself; there is no separate ISO or kernel/initrd to boot.
+
+Intel Mac:
+
+- Use `builds/vm/output/debian12-amd64/eyeon-debian12-amd64.qcow2`.
+- Prefer UTM's virtualization path when it offers direct disk import.
+- On some UTM 4.7.x builds, `Import Existing Drive` may only appear under the `Emulate` flow. If so, import the qcow2 there, but remove any extra kernel/initrd or installer media UTM adds by default.
+- If UTM reports `bootindex=0 in use`, the VM has multiple boot devices marked first. Remove the extra boot source(s) and leave only the imported qcow2 as the boot device.
+
+Apple Silicon:
+
+- Use the arm64 qcow2 with virtualization for the best experience.
+- The amd64 qcow2 can be used for functional testing via emulation, but it is slow.
 
 ### Operating / Running (libvirt)
 
