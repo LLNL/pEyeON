@@ -147,22 +147,22 @@ class TestParseFunctions(unittest.TestCase):
         self.mock_thread = MagicMock()
         self.mock_thread_cls.return_value = self.mock_thread
 
-        #---Patch Pool---
-        pool_patcher=patch("eyeon.parse.Pool")
-        self.mock_pool_cls=pool_patcher.start()
-        self.addCleanup(pool_patcher.stop)
+        #---Patch Multiprocessing Context---
+        context_patcher=patch.object(parse.Parse, "_multiprocessing_context")
+        self.mock_context_factory=context_patcher.start()
+        self.addCleanup(context_patcher.stop)
+
+        self.mock_context = MagicMock()
+        self.mock_context_factory.return_value = self.mock_context
 
         # Context-managed Pool instance
-        self.mock_pool = self.mock_pool_cls.return_value.__enter__.return_value
+        self.mock_pool = self.mock_context.Pool.return_value.__enter__.return_value
         # Simulate one completed task result so the for-loop in __call__ can iterate once
         self.mock_pool.imap_unordered.return_value = [None]
 
         #---Patch Manager---
-        manager_patcher=patch("eyeon.parse.Manager")
-        self.mock_manager_cls=manager_patcher.start()
-        self.addCleanup(manager_patcher.stop)
         #create manager instance
-        self.mock_manager=self.mock_manager_cls.return_value
+        self.mock_manager=self.mock_context.Manager.return_value
         #give dict attribute an empty dict by default
         self.progress_map={} #need this for control
         self.mock_manager.dict.return_value = self.progress_map
@@ -280,6 +280,31 @@ class TestParseFunctions(unittest.TestCase):
             any("possible hung process" in msg for msg in logged_messages),
             msg=f"warning not found in: {logged_messages}",
         )
+
+    @patch("eyeon.parse.os.path.getsize", autospec=True)
+    def test_large_files_are_split_for_serial_processing(self, mock_getsize):
+        files = [
+            ("small.bin", "/results"),
+            ("large.bin", "/results"),
+        ]
+        mock_getsize.side_effect = [10, 60 * 1024 * 1024]
+
+        parallel_files, serial_files = self.prs._split_parallel_files(files)
+
+        self.assertEqual(parallel_files, [("small.bin", "/results")])
+        self.assertEqual(serial_files, [("large.bin", "/results")])
+
+    @patch.dict(os.environ, {"EYEON_SERIAL_LARGE_FILE_BYTES": "0"})
+    def test_large_file_split_can_be_disabled(self):
+        files = [
+            ("small.bin", "/results"),
+            ("large.bin", "/results"),
+        ]
+
+        parallel_files, serial_files = self.prs._split_parallel_files(files)
+
+        self.assertEqual(parallel_files, files)
+        self.assertEqual(serial_files, [])
 
 
 class TestParseErrorFallback(unittest.TestCase):

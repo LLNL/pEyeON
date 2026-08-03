@@ -17,7 +17,7 @@ from .container import (
 import os
 import time
 import threading # allows the monitor to run concurrently without blocking multiprocessing 
-from multiprocessing import Pool, Manager
+import multiprocessing
 from uuid import uuid4
 
 
@@ -140,6 +140,35 @@ class Parse:
             return file, result_path, parent, depth
         raise ValueError(f"unexpected observe arguments: {file_and_path}")
 
+    @staticmethod
+    def _multiprocessing_context() -> multiprocessing.context.BaseContext:
+        method = os.environ.get("EYEON_MULTIPROCESS_START_METHOD", "spawn")
+        return multiprocessing.get_context(method)
+
+    @staticmethod
+    def _large_file_threshold() -> int:
+        return int(os.environ.get("EYEON_SERIAL_LARGE_FILE_BYTES", str(50 * 1024 * 1024)))
+
+    def _split_parallel_files(self, files: list[tuple[str, str]]) -> tuple[list[tuple[str, str]], list[tuple[str, str]]]:
+        threshold = self._large_file_threshold()
+        if threshold <= 0:
+            return files, []
+
+        parallel_files = []
+        serial_files = []
+        for file_and_path in files:
+            file, _ = file_and_path
+            try:
+                size = os.path.getsize(file)
+            except OSError:
+                parallel_files.append(file_and_path)
+                continue
+            if size >= threshold:
+                serial_files.append(file_and_path)
+            else:
+                parallel_files.append(file_and_path)
+        return parallel_files, serial_files
+
     def _observe_worker(self, args) -> None:
         """
         wrapper to handle and monitor observe workers. 
@@ -186,7 +215,15 @@ class Parse:
             bar.text(f"{len(files)} files collected")
 
         if threads > 1:
-            manager=Manager()
+            parallel_files, serial_files = self._split_parallel_files(files)
+            if serial_files:
+                logger.warning(
+                    "Processing {} files >= {} bytes serially to avoid multiprocessing hangs",
+                    len(serial_files),
+                    self._large_file_threshold(),
+                )
+            context = self._multiprocessing_context()
+            manager=context.Manager()
             progress_map= manager.dict()
 
             def monitor():
@@ -197,6 +234,7 @@ class Parse:
                     now = time.time()
                     workers=list(progress_map.items())
                     if not workers:
+                        time.sleep(CHECK_INTERVAL)
                         continue
                         
                     for pid, info in workers:
@@ -214,18 +252,22 @@ class Parse:
             monitor_thread.start()
 
 
-            with Pool(threads) as p:
-                with alive_bar(
-                    len(files), 
-                    spinner="waves", 
-                    title=f"Parsing with {threads} threads..."
-                ) as bar:
-                    # each worker gets the file, result_path, and the shared progress_map
-                    iterable = [
-                        (file, result_path, progress_map) for (file, result_path) in files
-                    ]
-                    for _ in p.imap_unordered(self._observe_worker, iterable):
-                        bar()  # update the bar when a thread finishes
+            with alive_bar(
+                len(files),
+                spinner="waves",
+                title=f"Parsing with {threads} threads..."
+            ) as bar:
+                if parallel_files:
+                    with context.Pool(threads, maxtasksperchild=1) as p:
+                        # each worker gets the file, result_path, and the shared progress_map
+                        iterable = [
+                            (file, result_path, progress_map) for (file, result_path) in parallel_files
+                        ]
+                        for _ in p.imap_unordered(self._observe_worker, iterable):
+                            bar()  # update the bar when a thread finishes
+                for filet in serial_files:
+                    self._observe(filet)
+                    bar()
 
         else:
             #Single process path (no inter‑process monitoring needed)

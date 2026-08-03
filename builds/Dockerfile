@@ -31,6 +31,8 @@ RUN bash /provision/install-runtime-deps-debian-docker.sh \
 COPY *entrypoint.sh *builds/*entrypoint.sh /
 RUN chmod +x /entrypoint.sh
 ENV PATH="/eye/bin:$PATH"
+ENV XDG_DATA_HOME="/opt/eyeon/share"
+ENV XDG_CONFIG_HOME="/opt/eyeon/config"
 
 # pull the plugin dbs, then remove Surfactant's root-owned temp state so the
 # runtime user can recreate it as needed.
