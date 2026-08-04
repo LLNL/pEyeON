@@ -1,0 +1,128 @@
+name: Publish Container
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Primary tag to publish (e.g. latest, dev-foo). Leave blank to use latest on main or a sha tag on manual runs."
+        required: false
+        type: string
+  push:
+    branches:
+      - main
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  meta:
+    runs-on: ubuntu-latest
+    outputs:
+      tags: ${{ steps.meta.outputs.tags }}
+      labels: ${{ steps.meta.outputs.labels }}
+    steps:
+      - name: Decide tags
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest,enable=${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+            type=raw,value=${{ inputs.tag }},enable=${{ github.event_name == 'workflow_dispatch' && inputs.tag != '' }}
+            type=sha,prefix=dev-,enable=${{ github.event_name == 'workflow_dispatch' && inputs.tag == '' }}
+
+  build-and-push:
+    name: Build and push (${{ matrix.arch }})
+    needs: meta
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runs_on: ubuntu-latest
+            platform: linux/amd64
+          - arch: arm64
+            runs_on: ubuntu-24.04-arm
+            platform: linux/arm64
+    runs-on: ${{ matrix.runs_on }}
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute arch-tagged image tags
+        id: tags
+        shell: bash
+        run: |
+          set -euo pipefail
+          tags_raw='${{ needs.meta.outputs.tags }}'
+          if [[ -z "$tags_raw" ]]; then
+            echo "No tags produced by metadata-action" >&2
+            exit 1
+          fi
+          tags_out=""
+          while IFS= read -r tag; do
+            [[ -n "$tag" ]] || continue
+            tags_out+="${tag}-${{ matrix.arch }}"$'\n'
+          done <<< "$tags_raw"
+          printf 'tags<<EOF\n%sEOF\n' "$tags_out" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: builds/Dockerfile
+          push: true
+          platforms: ${{ matrix.platform }}
+          tags: ${{ steps.tags.outputs.tags }}
+          labels: ${{ needs.meta.outputs.labels }}
+
+  manifest:
+    name: Create multi-arch manifest
+    needs: [meta, build-and-push]
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create and push manifest list
+        shell: bash
+        run: |
+          set -euo pipefail
+          tags_raw='${{ needs.meta.outputs.tags }}'
+          echo "$tags_raw" | while IFS= read -r tag; do
+            [[ -n "$tag" ]] || continue
+            docker buildx imagetools create \
+              -t "$tag" \
+              "${tag}-amd64" \
+              "${tag}-arm64"
+          done
+
+      - name: Summary
+        shell: bash
+        run: |
+          {
+            echo "Published multi-arch image tags:"
+            echo
+            echo '${{ needs.meta.outputs.tags }}'
+          } >> "$GITHUB_STEP_SUMMARY"
