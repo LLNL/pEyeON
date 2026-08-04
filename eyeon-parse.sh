@@ -17,6 +17,8 @@ set -euo pipefail
 #   EYEON_THREADS      (default: 8)
 #   EYEON_IMAGE        (default: ghcr.io/llnl/peyeon:latest; override for dev/test images)
 #   EYEON_DATASET_PATH (default: datasets.dataset_path from EyeOnData.toml)
+#   EYEON_LOG_LEVEL    (default: WARNING)
+#   EYEON_MODE         auto|container|vm (default: auto)
 #   EYEON_OWNER        (required when running as root unless passthrough is enabled)
 #   EYEON_UID / EYEON_GID
 #   EYEON_PASSTHROUGH_ROOT=1 (intentionally create root-owned outputs)
@@ -27,10 +29,34 @@ set -euo pipefail
 #   EYEON_IMAGE=ghcr.io/llnl/peyeon:dev-<sha> ./eyeon-parse.sh UTIL_CD SOURCE
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SETTINGS_FILE="${SCRIPT_DIR}/EyeOnData.toml"
+SETTINGS_FILE=""
+
+resolve_settings_file() {
+  local candidates=()
+
+  if [[ -n "${EYEON_EYEONDATA_TOML:-}" ]]; then
+    candidates+=("$EYEON_EYEONDATA_TOML")
+  fi
+
+  candidates+=("$PWD/EyeOnData.toml")
+  candidates+=("$SCRIPT_DIR/EyeOnData.toml")
+  candidates+=("$SCRIPT_DIR/../pEyeON-Analytics/EyeOnData.toml")
+  candidates+=("/opt/pEyeON-Analytics/EyeOnData.toml")
+  candidates+=("$HOME/pEyeON-Analytics/EyeOnData.toml")
+
+  local candidate
+  for candidate in "${candidates[@]}"; do
+    if [[ -f "$candidate" ]]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+
+  return 1
+}
 
 read_dataset_path_from_toml() {
-  if [[ ! -f "$SETTINGS_FILE" ]]; then
+  if [[ -z "$SETTINGS_FILE" || ! -f "$SETTINGS_FILE" ]]; then
     return 0
   fi
 
@@ -54,7 +80,8 @@ read_dataset_path_from_toml() {
 
 usage() {
   cat >&2 <<EOF
-Usage: $(basename "$0") [--util-cd UTIL_CD] [--dir SOURCE] [--threads THREADS] [--image IMAGE] [--dataset-path DATASET_PATH] [--runtime RUNTIME] [--debug]
+Usage: $(basename "$0") [--util-cd UTIL_CD] [--dir SOURCE] [--threads THREADS] [--image IMAGE] [--dataset-path DATASET_PATH] [--runtime RUNTIME] [--log-level LEVEL] [--debug]
+       $(basename "$0") [--mode auto|container|vm] ...
        $(basename "$0") UTIL_CD SOURCE [DATASET_PATH] [THREADS]
 
 Command line args override environment variables.
@@ -65,6 +92,9 @@ Environment variables:
   EYEON_THREADS      Default: 8
   EYEON_IMAGE        Default: ghcr.io/llnl/peyeon:latest; override for dev/test images
   EYEON_DATASET_PATH Default: datasets.dataset_path from EyeOnData.toml
+  EYEON_LOG_LEVEL    Default: WARNING
+  EYEON_EYEONDATA_TOML Explicit path to EyeOnData.toml (overrides auto-discovery)
+  EYEON_MODE         auto|container|vm (default: auto; auto selects vm when /etc/eyeon-appliance exists)
   EYEON_OWNER        Required when running as root unless passthrough is enabled
   EYEON_UID/GID      Explicit numeric owner override for runtime outputs
   EYEON_PASSTHROUGH_ROOT=1  Intentionally create root-owned outputs
@@ -139,11 +169,187 @@ resolve_runtime() {
   exit 2
 }
 
+resolve_mode() {
+  local mode="$1"
+
+  if [[ -z "$mode" || "$mode" == "auto" ]]; then
+    if [[ -f /etc/eyeon-appliance ]]; then
+      mode="vm"
+    else
+      mode="container"
+    fi
+  fi
+
+  case "$mode" in
+    container|vm)
+      printf '%s\n' "$mode"
+      return 0
+      ;;
+    *)
+      echo "Unsupported mode: $mode" >&2
+      echo "Use --mode auto|container|vm (or set EYEON_MODE)." >&2
+      exit 2
+      ;;
+  esac
+}
+
+run_vm_parse() {
+  local util_cd="$1"
+  local source="$2"
+  local dataset_path="$3"
+  local threads="$4"
+  local debug_mode="$5"
+  local log_level="$6"
+
+  if ! command -v eyeon >/dev/null 2>&1; then
+    echo "eyeon is not installed or not in PATH." >&2
+    exit 2
+  fi
+
+  # Create a structured name for the parsed batch of data using a timestamp and the UTIL_CD.
+  local ts
+  ts="$(date -u +'%Y%m%dT%H%M%SZ')"
+  local o
+  o="${ts}_${util_cd}"
+  local output_dir
+  output_dir="$dataset_path/$o"
+
+  mkdir -p "$output_dir"
+
+  local cmd=(eyeon parse -o "$output_dir" -t "$threads" -v "$log_level" "$source")
+  local debug_command
+  debug_command="$(printf '%q ' "${cmd[@]}")"
+  debug_command="${debug_command% }"
+
+  if [[ "$debug_mode" == "1" ]]; then
+    echo "DEBUG=1" >&2
+    echo "MODE=vm" >&2
+    echo "UTIL_CD=$util_cd" >&2
+    echo "SOURCE=$source" >&2
+    echo "DATASET_PATH=$dataset_path" >&2
+    echo "OUTPUT_DIR=$output_dir" >&2
+    echo "THREADS=$threads" >&2
+    echo "LOG_LEVEL=$log_level" >&2
+    echo "EYEON_DEBUG_COMMAND=$debug_command" >&2
+    echo "Command:" >&2
+    print_command "${cmd[@]}" >&2
+    EYEON_DEBUG_COMMAND="$debug_command" exec bash
+  fi
+
+  exec "${cmd[@]}"
+}
+
+run_container_parse() {
+  local util_cd="$1"
+  local source="$2"
+  local dataset_path="$3"
+  local threads="$4"
+  local image="$5"
+  local debug_mode="$6"
+  local log_level="$7"
+
+  # Owner/uid/gid/runtime are resolved from the global variables and exported values
+  # earlier in the script.
+
+  resolve_runtime
+
+  # Create a structured name for the parsed batch of data using a timestamp and the UTIL_CD.
+  local ts
+  ts="$(date -u +'%Y%m%dT%H%M%SZ')"
+  local o
+  o="${ts}_${util_cd}"
+  local output_dir
+  output_dir="$dataset_path/$o"
+
+  mkdir -p "$output_dir"
+
+  if [[ "$EUID" -eq 0 && "$HOST_UID:$HOST_GID" != "0:0" ]]; then
+    chown "$HOST_UID:$HOST_GID" "$output_dir"
+  fi
+
+  local container_cmd=(eyeon parse -o "/workdir/$o" -t "$threads" -v "$log_level" /source)
+  local debug_command
+  debug_command="$(printf '%q ' "${container_cmd[@]}")"
+  debug_command="${debug_command% }"
+
+  local runtime_cmd=("$CONTAINER_RUNTIME" run --rm)
+
+  if [[ "$debug_mode" == "1" ]]; then
+    if [[ -t 0 && -t 1 ]]; then
+      runtime_cmd+=(-it)
+    else
+      runtime_cmd+=(-i)
+    fi
+  elif [[ -t 0 && -t 1 ]]; then
+    runtime_cmd+=(-it)
+  elif [[ -t 1 ]]; then
+    runtime_cmd+=(-t)
+  fi
+
+  case "$CONTAINER_RUNTIME" in
+    docker)
+      runtime_cmd+=(
+        -e "EYEON_UID=$HOST_UID"
+        -e "EYEON_GID=$HOST_GID"
+        -e "DEBUG=$debug_mode"
+        -e "LOGURU_LEVEL=$LOG_LEVEL"
+        -e "PYTHONUNBUFFERED=1"
+        -e "PYTHONWARNINGS=${PYTHONWARNINGS:-ignore:Possible nested set at position 81:FutureWarning}"
+        -e "TERM=${TERM:-xterm-256color}"
+        -e "EYEON_DEBUG_COMMAND=$debug_command"
+        -v "$source:/source:ro"
+        -v "$dataset_path:/workdir:rw,Z"
+        "$image"
+      )
+      ;;
+    podman)
+      runtime_cmd+=(
+        -e "DEBUG=$debug_mode"
+        -e "LOGURU_LEVEL=$LOG_LEVEL"
+        -e "PYTHONUNBUFFERED=1"
+        -e "PYTHONWARNINGS=${PYTHONWARNINGS:-ignore:Possible nested set at position 81:FutureWarning}"
+        -e "TERM=${TERM:-xterm-256color}"
+        -e "EYEON_DEBUG_COMMAND=$debug_command"
+        -v "$source:/source:ro"
+        -v "$dataset_path:/workdir:rw"
+        "$image"
+      )
+      ;;
+  esac
+
+  if [[ "$debug_mode" == "1" ]]; then
+    echo "DEBUG=1" >&2
+    echo "MODE=container" >&2
+    echo "RUNTIME=$CONTAINER_RUNTIME" >&2
+    echo "IMAGE=$image" >&2
+    echo "UTIL_CD=$util_cd" >&2
+    echo "SOURCE=$source" >&2
+    echo "DATASET_PATH=$dataset_path" >&2
+    echo "OUTPUT_DIR=$output_dir" >&2
+    echo "THREADS=$threads" >&2
+    echo "LOG_LEVEL=$log_level" >&2
+    echo "HOST_UID=$HOST_UID" >&2
+    echo "HOST_GID=$HOST_GID" >&2
+    echo "EYEON_DEBUG_COMMAND=$debug_command" >&2
+    echo "Container command:" >&2
+    print_command "${runtime_cmd[@]}" bash >&2
+    exec "${runtime_cmd[@]}" bash
+  fi
+
+  exec "${runtime_cmd[@]}" "${container_cmd[@]}"
+}
+
+source_has_files() {
+  [[ -n "$(find "$SOURCE" -type f -print -quit)" ]]
+}
+
 IMAGE="${EYEON_IMAGE:-ghcr.io/llnl/peyeon:latest}"
 DATASET_PATH="${EYEON_DATASET_PATH:-}"
 UTIL_CD="${EYEON_UTIL_CD:-}"
 SOURCE="${EYEON_SOURCE:-}"
 THREADS="${EYEON_THREADS:-8}"
+LOG_LEVEL="${EYEON_LOG_LEVEL:-WARNING}"
+MODE="${EYEON_MODE:-auto}"
 OWNER_OVERRIDE="${EYEON_OWNER:-}"
 HOST_UID="${EYEON_UID:-}"
 HOST_GID="${EYEON_GID:-}"
@@ -165,6 +371,15 @@ while [[ $# -gt 0 ]]; do
       fi
       UTIL_CD="${2:-}"
       UTIL_CD_FLAG_SET=1
+      shift 2
+      ;;
+    --log-level)
+      if [[ $# -lt 2 || "$2" == -* ]]; then
+        echo "Missing value for --log-level" >&2
+        usage
+        exit 2
+      fi
+      LOG_LEVEL="${2:-}"
       shift 2
       ;;
     --dir)
@@ -212,6 +427,15 @@ while [[ $# -gt 0 ]]; do
         exit 2
       fi
       CONTAINER_RUNTIME="${2:-}"
+      shift 2
+      ;;
+    --mode)
+      if [[ $# -lt 2 || "$2" == -* ]]; then
+        echo "Missing value for --mode" >&2
+        usage
+        exit 2
+      fi
+      MODE="${2:-}"
       shift 2
       ;;
     --debug)
@@ -270,6 +494,7 @@ if [[ -z "$UTIL_CD" || -z "$SOURCE" ]]; then
 fi
 
 if [[ -z "$DATASET_PATH" ]]; then
+  SETTINGS_FILE="$(resolve_settings_file 2>/dev/null || true)"
   DATASET_PATH="$(read_dataset_path_from_toml)"
 fi
 
@@ -283,9 +508,25 @@ if [[ ! -d "$SOURCE" ]]; then
   exit 2
 fi
 
+if ! source_has_files; then
+  echo "SOURCE does not contain any files: $SOURCE" >&2
+  echo "Select the directory that contains the EyeOn files to parse, not an empty parent directory." >&2
+  exit 2
+fi
+
 if ! [[ "$THREADS" =~ ^[0-9]+$ ]] || [[ "$THREADS" -lt 1 ]]; then
   echo "THREADS must be a positive integer, got: $THREADS" >&2
   exit 2
+fi
+
+if [[ "$LOG_LEVEL" == "WARN" ]]; then
+  LOG_LEVEL="WARNING"
+fi
+
+MODE="$(resolve_mode "$MODE")"
+
+if [[ "$MODE" == "vm" ]]; then
+  run_vm_parse "$UTIL_CD" "$SOURCE" "$DATASET_PATH" "$THREADS" "$DEBUG_MODE" "$LOG_LEVEL"
 fi
 
 if [[ -n "$OWNER_OVERRIDE" && (-n "$HOST_UID" || -n "$HOST_GID") ]]; then
@@ -321,69 +562,4 @@ fi
 
 resolve_runtime
 
-# Create a structured name for the parsed batch of data using a timestamp and the UTIL_CD.
-ts="$(date -u +'%Y%m%dT%H%M%SZ')"
-O="${ts}_${UTIL_CD}"
-OUTPUT_DIR="$DATASET_PATH/$O"
-
-mkdir -p "$OUTPUT_DIR"
-
-if [[ "$EUID" -eq 0 && "$HOST_UID:$HOST_GID" != "0:0" ]]; then
-  chown "$HOST_UID:$HOST_GID" "$OUTPUT_DIR"
-fi
-
-container_cmd=(eyeon parse -o "/workdir/$O" -t "$THREADS" /source)
-debug_command="$(printf '%q ' "${container_cmd[@]}")"
-debug_command="${debug_command% }"
-
-runtime_cmd=("$CONTAINER_RUNTIME" run --rm)
-
-if [[ "$DEBUG_MODE" == "1" ]]; then
-  if [[ -t 0 && -t 1 ]]; then
-    runtime_cmd+=(-it)
-  else
-    runtime_cmd+=(-i)
-  fi
-fi
-
-case "$CONTAINER_RUNTIME" in
-  docker)
-    runtime_cmd+=(
-      -e "EYEON_UID=$HOST_UID"
-      -e "EYEON_GID=$HOST_GID"
-      -e "DEBUG=$DEBUG_MODE"
-      -e "EYEON_DEBUG_COMMAND=$debug_command"
-      -v "$SOURCE:/source:ro"
-      -v "$DATASET_PATH:/workdir:rw,Z"
-      "$IMAGE"
-    )
-    ;;
-  podman)
-    runtime_cmd+=(
-      -e "DEBUG=$DEBUG_MODE"
-      -e "EYEON_DEBUG_COMMAND=$debug_command"
-      -v "$SOURCE:/source:ro"
-      -v "$DATASET_PATH:/workdir:rw"
-      "$IMAGE"
-    )
-    ;;
-esac
-
-if [[ "$DEBUG_MODE" == "1" ]]; then
-  echo "DEBUG=1" >&2
-  echo "RUNTIME=$CONTAINER_RUNTIME" >&2
-  echo "IMAGE=$IMAGE" >&2
-  echo "UTIL_CD=$UTIL_CD" >&2
-  echo "SOURCE=$SOURCE" >&2
-  echo "DATASET_PATH=$DATASET_PATH" >&2
-  echo "OUTPUT_DIR=$OUTPUT_DIR" >&2
-  echo "THREADS=$THREADS" >&2
-  echo "HOST_UID=$HOST_UID" >&2
-  echo "HOST_GID=$HOST_GID" >&2
-  echo "EYEON_DEBUG_COMMAND=$debug_command" >&2
-  echo "Container command:" >&2
-  print_command "${runtime_cmd[@]}" bash >&2
-  exec "${runtime_cmd[@]}" bash
-fi
-
-exec "${runtime_cmd[@]}" "${container_cmd[@]}"
+run_container_parse "$UTIL_CD" "$SOURCE" "$DATASET_PATH" "$THREADS" "$IMAGE" "$DEBUG_MODE" "$LOG_LEVEL"

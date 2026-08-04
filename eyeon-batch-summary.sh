@@ -2,10 +2,34 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SETTINGS_FILE="${SCRIPT_DIR}/EyeOnData.toml"
+SETTINGS_FILE=""
+
+resolve_settings_file() {
+  local candidates=()
+
+  if [[ -n "${EYEON_EYEONDATA_TOML:-}" ]]; then
+    candidates+=("$EYEON_EYEONDATA_TOML")
+  fi
+
+  candidates+=("$PWD/EyeOnData.toml")
+  candidates+=("$SCRIPT_DIR/EyeOnData.toml")
+  candidates+=("$SCRIPT_DIR/../pEyeON-Analytics/EyeOnData.toml")
+  candidates+=("/opt/pEyeON-Analytics/EyeOnData.toml")
+  candidates+=("$HOME/pEyeON-Analytics/EyeOnData.toml")
+
+  local candidate
+  for candidate in "${candidates[@]}"; do
+    if [[ -f "$candidate" ]]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+
+  return 1
+}
 
 read_dataset_path_from_toml() {
-  if [[ ! -f "$SETTINGS_FILE" ]]; then
+  if [[ -z "$SETTINGS_FILE" || ! -f "$SETTINGS_FILE" ]]; then
     return 0
   fi
 
@@ -47,6 +71,7 @@ resolve_default_dataset_path() {
   local dataset_path="${EYEON_DATASET_PATH:-}"
 
   if [[ -z "$dataset_path" ]]; then
+    SETTINGS_FILE="$(resolve_settings_file 2>/dev/null || true)"
     dataset_path="$(read_dataset_path_from_toml)"
   fi
 

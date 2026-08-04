@@ -6,7 +6,9 @@ from glob import glob
 import datetime as dt
 
 import json
+import tempfile
 from unittest.mock import patch
+from pathlib import Path
 
 from eyeon import observe
 
@@ -43,6 +45,102 @@ class ObservationTestCase(unittest.TestCase):
                 os.remove(j)
         except FileNotFoundError:
             pass
+
+
+class GenericMetadataTestCase(unittest.TestCase):
+    def test_opkg_control_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            control = Path(tmpdir) / "base-files.control"
+            control.write_text("Package: base-files\nVersion: 1.0\n", encoding="utf-8")
+
+            obs = observe.Observe(str(control))
+
+        self.assertIn("opkg_file", obs.metadata)
+        self.assertEqual(obs.metadata["opkg_file"]["kind"], "control")
+        self.assertEqual(obs.metadata["opkg_file"]["package"], "base-files")
+        self.assertEqual(obs.metadata["opkg_file"]["fields"]["Package"], "base-files")
+        self._validate_observation(obs)
+
+    def test_shell_script_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            script = Path(tmpdir) / "preinit"
+            script.write_text("#!/bin/sh\necho boot\n", encoding="utf-8")
+
+            obs = observe.Observe(str(script))
+
+        self.assertIn("text_file", obs.metadata)
+        self.assertEqual(obs.metadata["text_file"]["kind"], "shell")
+        self.assertTrue(obs.metadata["text_file"]["has_shebang"])
+        self._validate_observation(obs)
+
+    def test_web_asset_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            html = Path(tmpdir) / "index.htm"
+            html.write_text("<html><body>EyeON</body></html>\n", encoding="utf-8")
+
+            obs = observe.Observe(str(html))
+
+        self.assertIn("web_asset", obs.metadata)
+        self.assertEqual(obs.metadata["web_asset"]["kind"], "html")
+        self._validate_observation(obs)
+
+    def test_symlink_metadata_when_identification_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "target.conf"
+            target.write_text("config=value\n", encoding="utf-8")
+            link = Path(tmpdir) / "S10target"
+            link.symlink_to(target)
+
+            with patch("eyeon.observe.get_plugin_manager") as get_mgr:
+                get_mgr.return_value.hook.identify_file_type.side_effect = OSError("synthetic identify failure")
+                obs = observe.Observe(str(link))
+
+        self.assertIn("symlink_file", obs.metadata)
+        self.assertEqual(obs.metadata["symlink_file"]["target"], str(target))
+        self.assertEqual(obs.filetype, [])
+        self._validate_observation(obs)
+
+    def test_write_json_preserves_same_name_same_hash_observations(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            source = Path(tmpdir) / "firmware.bin"
+            source.write_bytes(b"same firmware bytes")
+            outdir = Path(tmpdir) / "out"
+
+            first = observe.Observe(str(source))
+            second = observe.Observe(str(source), parent=first.uuid)
+            first.write_json(str(outdir))
+            second.write_json(str(outdir))
+
+            outputs = sorted(outdir.glob("firmware.bin.*.json"))
+
+        self.assertEqual(len(outputs), 2)
+        self.assertNotEqual(outputs[0].name, outputs[1].name)
+
+    def test_write_json_same_name_different_hash_uses_existing_name_shape(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            first_source = Path(tmpdir) / "first" / "firmware.bin"
+            second_source = Path(tmpdir) / "second" / "firmware.bin"
+            first_source.parent.mkdir()
+            second_source.parent.mkdir()
+            first_source.write_bytes(b"container bytes")
+            second_source.write_bytes(b"child bytes")
+            outdir = Path(tmpdir) / "out"
+
+            first = observe.Observe(str(first_source))
+            second = observe.Observe(str(second_source), parent=first.uuid)
+            first.write_json(str(outdir))
+            second.write_json(str(outdir))
+
+            outputs = sorted(outdir.glob("firmware.bin.*.json"))
+
+        self.assertEqual(len(outputs), 2)
+        self.assertTrue(all(len(path.name.split(".")) == 4 for path in outputs))
+
+    def _validate_observation(self, obs: observe.Observe) -> None:
+        with open("schema/observation.schema.json") as schem:
+            schema = json.loads(schem.read())
+        obs_json = json.loads(json.dumps(vars(obs)))
+        jsonschema.validate(instance=obs_json, schema=schema)
 
 
 class ObservationTestCase2(unittest.TestCase):
@@ -507,6 +605,59 @@ class TestJSONSchema(unittest.TestCase):
         }
         with self.assertRaises(jsonschema.exceptions.ValidationError):
             assert jsonschema.validate(instance=additional_data, schema=schema) is None
+
+    def test_container_metadata_schema(self) -> None:
+        valid_data = {
+            "filename": "sample.zip",
+            "bytecount": 123,
+            "magic": "Zip archive data",
+            "eyeon_version": "null",
+            "md5": "438c259fc1772422c9bfdf83823fbaee",
+            "observation_ts": "2024-12-04 22:27:45",
+            "sha1": "445f0ed5abb5dbd479a8ab4d969f52aff2b0795d",
+            "sha256": "e88fd5933e559f2dc29952900c0bd267675b6f00d9f1c71c4a99d9f296918f62",
+            "uuid": "f1eba7e3-e4c0-43e8-91dc-009a85367517",
+            "filetype": ["ZIP"],
+            "metadata": {
+                "container_file": {
+                    "formats": ["ZIP"],
+                    "extractable": True,
+                    "extracted": True,
+                    "extraction_status": "success",
+                    "child_count": 1,
+                    "extracted_child_count": 1,
+                    "members": [{"path": "child.txt", "size": 5, "is_dir": False}],
+                }
+            },
+        }
+        assert jsonschema.validate(instance=valid_data, schema=schema) is None
+
+    def test_binwalk_metadata_schema(self) -> None:
+        valid_data = {
+            "filename": "firmware.bin",
+            "bytecount": 123,
+            "magic": "data",
+            "eyeon_version": "null",
+            "md5": "438c259fc1772422c9bfdf83823fbaee",
+            "observation_ts": "2024-12-04 22:27:45",
+            "sha1": "445f0ed5abb5dbd479a8ab4d969f52aff2b0795d",
+            "sha256": "e88fd5933e559f2dc29952900c0bd267675b6f00d9f1c71c4a99d9f296918f62",
+            "uuid": "f1eba7e3-e4c0-43e8-91dc-009a85367517",
+            "filetype": [],
+            "metadata": {
+                "binwalk_file": {
+                    "available": True,
+                    "scanned": True,
+                    "extracted": True,
+                    "extraction_status": "success",
+                    "findings": [{"name": "uimage", "offset": 0}],
+                    "extractions": [{"finding_id": "uimage-id", "success": True}],
+                    "extraction_failures": [],
+                    "errors": [],
+                }
+            },
+        }
+        assert jsonschema.validate(instance=valid_data, schema=schema) is None
 
 
 if __name__ == "__main__":

@@ -9,6 +9,10 @@ EyeON is a CLI tool that allows users to collect software metadata from their ma
 <p align="center">
 <img src="Photo/EyeON_Mascot.png" width="300" height="270">
 
+## Build Instructions
+
+See `BUILD.md` for container/VM build instructions and cross-architecture notes.
+
 ## Quickstart
 
 For normal field use, you do not need to clone this repository. Download the two wrapper scripts, pull the published container image, run a batch parse, and then summarize the newest batch.
@@ -50,9 +54,11 @@ pip install peyeon
 However, this does not install several key dependencies, namely `libmagic`, `ssdeep`, and `tlsh`. A better way to install is via the container or install scripts on the github page.
 
 ### Containers
-The container images include the main extraction dependencies such as `ssdeep`, `libmagic`, `tlsh`, and `detect-it-easy`.
+The container images include the main extraction dependencies such as `ssdeep`, `libmagic`, `tlsh`, `detect-it-easy`, Binwalk v3, 7-Zip, and `sasquatch`.
 
 For most users, the recommended container workflow is `eyeon-parse.sh` plus `eyeon-batch-summary.sh` from the quickstart above. The direct `docker run` and `podman run` examples below are mainly useful for development, debugging, and image validation.
+
+Build and cross-platform notes (amd64/arm64, buildx, qcow2 VM builds) are documented in `BUILD.md`.
 
 #### Published Multi-Arch Image
 The primary container image is published to GHCR as a multi-arch image. The same tag works on both `amd64` and `arm64` hosts, and Docker will pull the matching architecture automatically.
@@ -74,17 +80,7 @@ docker pull ghcr.io/llnl/peyeon:dev-<sha>
 docker run --rm ghcr.io/llnl/peyeon:dev-<sha> eyeon --help
 ```
 
-#### Local Docker Build
-```bash
-docker build -f builds/Dockerfile -t peyeon .
-docker run --rm -it -v "$(pwd):/workdir:Z" peyeon /bin/bash
-```
-
-#### Local Podman Build
-```bash
-podman build -t peyeon -f builds/podman.Dockerfile .
-podman run --rm -it -v "$(pwd):/workdir:rw" peyeon /bin/bash
-```
+Local build instructions (Docker/Podman) are in `BUILD.md`.
 
 ### VM Install
 Alternatively, to install on a clean Ubuntu or RHEL8/9 VM:
@@ -130,6 +126,15 @@ wget https://raw.githubusercontent.com/LLNL/pEyeON/refs/heads/main/builds/instal
 chmod +x install-rhel.sh && ./install-rhel.sh
 ```
 
+#### Appliance VM Image (Nutanix / qcow2)
+
+For Nutanix AHV (KVM), the simplest portable artifact is a `qcow2` VM disk image.
+This repository includes a Debian 12 based appliance VM build (development-focused)
+that installs EyeON into a virtual environment and makes `eyeon` available on PATH.
+
+Build and cross-arch details for the qcow2 appliance VM are in `BUILD.md`.
+Deployment/import instructions for external users are in `builds/README-Deploy.md`.
+
 To request other options for install, please create an issue on our GitHub page.
 
 
@@ -169,7 +174,17 @@ Examples:
 
 `THREADS` defaults to `8`.
 
-If `DATASET_PATH` is not provided, the wrapper uses `datasets.dataset_path` from `EyeOnData.toml`. If that is also unset, it falls back to `$HOME/data/eyeon`.
+If `DATASET_PATH` is not provided, the wrapper uses `datasets.dataset_path` from `EyeOnData.toml`.
+
+The wrapper auto-discovers `EyeOnData.toml` in this order:
+
+1. `EYEON_EYEONDATA_TOML` (explicit path)
+2. `./EyeOnData.toml` (current working directory)
+3. `EyeOnData.toml` next to the script (repo checkout)
+4. `../pEyeON-Analytics/EyeOnData.toml` (sibling checkout)
+5. `/opt/pEyeON-Analytics/EyeOnData.toml` (appliance VM)
+
+If no config is found, it falls back to `$HOME/data/eyeon`.
 
 #### Latest Batch Summary
 `eyeon-batch-summary.sh` prints a short summary for the newest parse batch directory, including total file count, top-level JSON count, and counts by metadata type.

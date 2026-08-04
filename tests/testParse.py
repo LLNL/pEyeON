@@ -3,6 +3,8 @@ import os
 import shutil
 import json
 import tempfile
+import tarfile
+import zipfile
 
 from unittest.mock import patch, MagicMock
 from eyeon import parse
@@ -145,22 +147,22 @@ class TestParseFunctions(unittest.TestCase):
         self.mock_thread = MagicMock()
         self.mock_thread_cls.return_value = self.mock_thread
 
-        #---Patch Pool---
-        pool_patcher=patch("eyeon.parse.Pool")
-        self.mock_pool_cls=pool_patcher.start()
-        self.addCleanup(pool_patcher.stop)
+        #---Patch Multiprocessing Context---
+        context_patcher=patch.object(parse.Parse, "_multiprocessing_context")
+        self.mock_context_factory=context_patcher.start()
+        self.addCleanup(context_patcher.stop)
+
+        self.mock_context = MagicMock()
+        self.mock_context_factory.return_value = self.mock_context
 
         # Context-managed Pool instance
-        self.mock_pool = self.mock_pool_cls.return_value.__enter__.return_value
+        self.mock_pool = self.mock_context.Pool.return_value.__enter__.return_value
         # Simulate one completed task result so the for-loop in __call__ can iterate once
         self.mock_pool.imap_unordered.return_value = [None]
 
         #---Patch Manager---
-        manager_patcher=patch("eyeon.parse.Manager")
-        self.mock_manager_cls=manager_patcher.start()
-        self.addCleanup(manager_patcher.stop)
         #create manager instance
-        self.mock_manager=self.mock_manager_cls.return_value
+        self.mock_manager=self.mock_context.Manager.return_value
         #give dict attribute an empty dict by default
         self.progress_map={} #need this for control
         self.mock_manager.dict.return_value = self.progress_map
@@ -279,6 +281,31 @@ class TestParseFunctions(unittest.TestCase):
             msg=f"warning not found in: {logged_messages}",
         )
 
+    @patch("eyeon.parse.os.path.getsize", autospec=True)
+    def test_large_files_are_split_for_serial_processing(self, mock_getsize):
+        files = [
+            ("small.bin", "/results"),
+            ("large.bin", "/results"),
+        ]
+        mock_getsize.side_effect = [10, 60 * 1024 * 1024]
+
+        parallel_files, serial_files = self.prs._split_parallel_files(files)
+
+        self.assertEqual(parallel_files, [("small.bin", "/results")])
+        self.assertEqual(serial_files, [("large.bin", "/results")])
+
+    @patch.dict(os.environ, {"EYEON_SERIAL_LARGE_FILE_BYTES": "0"})
+    def test_large_file_split_can_be_disabled(self):
+        files = [
+            ("small.bin", "/results"),
+            ("large.bin", "/results"),
+        ]
+
+        parallel_files, serial_files = self.prs._split_parallel_files(files)
+
+        self.assertEqual(parallel_files, files)
+        self.assertEqual(serial_files, [])
+
 
 class TestParseErrorFallback(unittest.TestCase):
     @patch("eyeon.parse.logger")
@@ -307,6 +334,205 @@ class TestParseErrorFallback(unittest.TestCase):
             )
             self.assertEqual(observation["signatures"], [])
             mock_logger.exception.assert_called_once()
+
+
+class TestContainerParse(unittest.TestCase):
+    def test_zip_container_gets_metadata_and_child_parent_relationship(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            source = root / "source"
+            results = root / "results"
+            source.mkdir()
+            archive_path = source / "sample.zip"
+
+            with zipfile.ZipFile(archive_path, "w") as archive:
+                archive.writestr("nested/child.txt", "hello from zip")
+
+            parse.Parse(str(source))(result_path=str(results))
+
+            observations = []
+            for path in results.glob("*.json"):
+                with open(path) as f:
+                    observations.append(json.load(f))
+
+            self.assertEqual(len(observations), 2)
+            by_name = {observation["filename"]: observation for observation in observations}
+            self.assertIn("sample.zip", by_name)
+            self.assertIn("child.txt", by_name)
+
+            container = by_name["sample.zip"]
+            child = by_name["child.txt"]
+            container_metadata = container["metadata"]["container_file"]
+
+            self.assertEqual(container["filetype"], ["ZIP"])
+            self.assertEqual(container_metadata["formats"], ["ZIP"])
+            self.assertTrue(container_metadata["extractable"])
+            self.assertTrue(container_metadata["extracted"])
+            self.assertEqual(container_metadata["extraction_status"], "success")
+            self.assertEqual(container_metadata["child_count"], 1)
+            self.assertEqual(container_metadata["extracted_child_count"], 1)
+            self.assertEqual(child["parent"], container["uuid"])
+
+    def test_docker_tar_container_gets_extracted_and_linked_children(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            source = root / "source"
+            results = root / "results"
+            docker_root = root / "docker"
+            layer_dir = docker_root / "layer"
+            source.mkdir()
+            layer_dir.mkdir(parents=True)
+            docker_archive = source / "image.tar"
+            layer_tar = layer_dir / "layer.tar"
+            config_json = docker_root / "config.json"
+            manifest_json = docker_root / "manifest.json"
+
+            with tarfile.open(layer_tar, "w") as layer:
+                child = root / "child.txt"
+                child.write_text("hello from docker layer", encoding="utf-8")
+                layer.add(child, arcname="child.txt")
+            config_json.write_text("{}", encoding="utf-8")
+            manifest_json.write_text(
+                json.dumps([{"Config": "config.json", "Layers": ["layer/layer.tar"]}]),
+                encoding="utf-8",
+            )
+            with tarfile.open(docker_archive, "w") as archive:
+                archive.add(manifest_json, arcname="manifest.json")
+                archive.add(config_json, arcname="config.json")
+                archive.add(layer_tar, arcname="layer/layer.tar")
+
+            parse.Parse(str(source))(result_path=str(results))
+
+            observations = []
+            for path in results.glob("*.json"):
+                with open(path) as f:
+                    observations.append(json.load(f))
+
+            by_name = {observation["filename"]: observation for observation in observations}
+            self.assertIn("image.tar", by_name)
+            self.assertIn("layer.tar", by_name)
+            self.assertIn("child.txt", by_name)
+            self.assertEqual(by_name["image.tar"]["filetype"], ["DOCKER_TAR"])
+            self.assertEqual(by_name["layer.tar"]["parent"], by_name["image.tar"]["uuid"])
+            self.assertEqual(by_name["child.txt"]["parent"], by_name["layer.tar"]["uuid"])
+
+    def test_iso_uses_configured_7z_extractor(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            source = root / "source"
+            results = root / "results"
+            source.mkdir()
+            iso_path = source / "sample.iso"
+            fake_7z = root / "fake_7z.py"
+            iso_bytes = bytearray(0x9006)
+            iso_bytes[0x8001:0x8006] = b"CD001"
+            iso_path.write_bytes(iso_bytes)
+            fake_7z.write_text(
+                """#!/usr/bin/env python3
+import pathlib
+import sys
+
+if sys.argv[1] == 'l':
+    print('Path = child.txt')
+    print('Size = 14')
+    print('Attributes = A')
+    print()
+    sys.exit(0)
+if sys.argv[1] == 'x':
+    out_arg = next(arg for arg in sys.argv if arg.startswith('-o'))
+    out_dir = pathlib.Path(out_arg[2:])
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / 'child.txt').write_text('hello from iso', encoding='utf-8')
+    sys.exit(0)
+sys.exit(2)
+""",
+                encoding="utf-8",
+            )
+            fake_7z.chmod(0o755)
+
+            with patch.dict(os.environ, {"EYEON_7Z_PATH": str(fake_7z)}):
+                parse.Parse(str(source))(result_path=str(results))
+
+            observations = []
+            for path in results.glob("*.json"):
+                with open(path) as f:
+                    observations.append(json.load(f))
+
+            by_name = {observation["filename"]: observation for observation in observations}
+            self.assertIn("sample.iso", by_name)
+            self.assertIn("child.txt", by_name)
+            self.assertEqual(by_name["sample.iso"]["filetype"], ["ISO_9660_CD"])
+            self.assertEqual(by_name["child.txt"]["parent"], by_name["sample.iso"]["uuid"])
+
+    def test_binwalk_cli_extracts_firmware_and_links_children(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            source = root / "source"
+            results = root / "results"
+            source.mkdir()
+            firmware = source / "firmware.bin"
+            fake_binwalk = root / "fake_binwalk.py"
+            firmware.write_bytes(b"firmware")
+            fake_binwalk.write_text(
+                """#!/usr/bin/env python3
+import json
+import pathlib
+import sys
+
+args = sys.argv[1:]
+out_dir = pathlib.Path(args[args.index('-C') + 1])
+log_path = pathlib.Path(args[args.index('-l') + 1])
+extract_dir = out_dir / 'firmware.bin.extracted' / '0'
+extract_dir.mkdir(parents=True, exist_ok=True)
+(out_dir / 'firmware.bin').write_bytes(b'original copy')
+(extract_dir / 'child.txt').write_text('hello from binwalk', encoding='utf-8')
+payload = [{
+    'Analysis': {
+        'file_path': args[-1],
+        'file_map': [{
+            'offset': 0,
+            'id': 'uimage-id',
+            'size': 8,
+            'name': 'uimage',
+            'confidence': 250,
+            'description': 'uImage firmware image',
+            'extraction_declined': False,
+        }],
+        'extractions': {
+            'uimage-id': {
+                'success': True,
+                'extractor': 'uimage_built_in',
+                'output_directory': str(extract_dir),
+                'size': 8,
+                'do_not_recurse': False,
+            }
+        },
+    }
+}]
+log_path.write_text(json.dumps(payload), encoding='utf-8')
+sys.exit(0)
+""",
+                encoding="utf-8",
+            )
+            fake_binwalk.chmod(0o755)
+
+            with patch.dict(os.environ, {"EYEON_BINWALK_PATH": str(fake_binwalk)}):
+                parse.Parse(str(source))(result_path=str(results))
+
+            observations = []
+            for path in results.glob("*.json"):
+                with open(path) as f:
+                    observations.append(json.load(f))
+
+            by_name = {observation["filename"]: observation for observation in observations}
+            self.assertIn("firmware.bin", by_name)
+            self.assertIn("child.txt", by_name)
+            binwalk_metadata = by_name["firmware.bin"]["metadata"]["binwalk_file"]
+            self.assertTrue(binwalk_metadata["available"])
+            self.assertTrue(binwalk_metadata["scanned"])
+            self.assertTrue(binwalk_metadata["extracted"])
+            self.assertEqual(binwalk_metadata["findings"][0]["name"], "uimage")
+            self.assertEqual(by_name["child.txt"]["parent"], by_name["firmware.bin"]["uuid"])
 
 class X86SinglethreadTestCase(X86ParseTestCase):
     @classmethod

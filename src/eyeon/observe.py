@@ -12,6 +12,7 @@ import os
 import pprint
 import subprocess
 import threading
+from typing import Optional
 
 import re
 from importlib.metadata import version
@@ -23,6 +24,8 @@ from queue import Queue
 from uuid import uuid4
 
 from loguru import logger
+from .container import container_metadata
+from .generic_metadata import generic_metadata
 
 
 class Observe:
@@ -77,28 +80,31 @@ class Observe:
             Windows File Properties -- OS, Architecture, File Info, etc.
     """
 
-    def __init__(self, file: str) -> None:
+    def __init__(self, file: str, parent: Optional[str] = None) -> None:
         logger.debug(f"initializing observe object for {file}")
 
         self.uuid = str(uuid4())
+        if parent:
+            self.parent = parent
         stat = os.stat(file)
         self.bytecount = stat.st_size
         self.filename = os.path.basename(file)  # TODO: split into absolute path maybe?
         self.signatures = []
+        self.set_magic(file)
         # self.set_detect_it_easy(file)
         # surfactant stuff
         mgr = get_plugin_manager()
-        self.filetype = mgr.hook.identify_file_type(filepath=file, context=None)
+        try:
+            self.filetype = mgr.hook.identify_file_type(filepath=file, context=None)
+        except Exception as e:
+            logger.warning(f"File type identification failed for {file}: {e}")
+            self.filetype = []
+            self.metadata = self._generic_metadata(file, identify_error=str(e))
 
         if (self.filetype is None) or (self.filetype == []):
             logger.debug(f"Unknown file type for {file}")
-            self.metadata = {
-                "Unknown": {
-                    "description": "some other file not in"
-                    "{a.out, coff, docker image, elf, java, "
-                    "js, mach-o, native lib, ole, pe, rpm, uboot image}"
-                }
-            }
+            if not hasattr(self, "metadata"):
+                self.metadata = self._generic_metadata(file)
         else:
             # if len(self.filetype) > 1:  # TODO: test this
             #     print(self.filetype)
@@ -106,9 +112,10 @@ class Observe:
             # self.filetype = self.filetype[0]
             logger.debug(f"Setting metadata for {file}")
             self.set_metadata(file, mgr)
+            self.set_container_metadata(file)
 
         if self.filetype is None:  # md files etc have no filetype
-            logger.warning(f"file {self.filename} has no type")
+            logger.debug(f"file {self.filename} has no type")
             self.filetype = []
 
         if "PE" in self.filetype:
@@ -127,7 +134,6 @@ class Observe:
             if "description" not in self.metadata:  # if the environment is not missing javatools
                 self.prep_javaclass_metadata()
 
-        self.set_magic(file)
         self.modtime = datetime.datetime.fromtimestamp(
             stat.st_mtime, tz=datetime.timezone.utc
         ).strftime("%Y-%m-%d %H:%M:%S")
@@ -377,6 +383,9 @@ class Observe:
 
         for plugin in hooks:
             plugin_name=plugin.plugin_name.split(".")[-1]
+            if plugin_name == "file_decompression":
+                # Parse owns extraction so it can create child observations and parent links.
+                continue
             logger.debug(f"trying hook: {plugin_name}")
 
             filtered_kwargs={}
@@ -386,7 +395,7 @@ class Observe:
                 if k in plugin.argnames: 
                     filtered_kwargs[k]=v
                 
-            logger.info(f"filtered args {filtered_kwargs} for {plugin_name}")
+            logger.debug(f"filtered args {filtered_kwargs} for {plugin_name}")
 
             try:
                 result=plugin.function(**filtered_kwargs)
@@ -426,18 +435,28 @@ class Observe:
                     }
                 }
             else:
-                logger.debug(f"No plugin produced metadata for {file}, using Unknown fallback")
-                self.metadata = {
-                    "Unknown": {
-                        "description": "some other file not in"
-                        "{a.out, coff, docker image, elf, java, "
-                        "js, mach-o, native lib, ole, pe, rpm, uboot image}"
-                    }
-                }
+                logger.debug(f"No plugin produced metadata for {file}, using generic fallback")
+                self.metadata = self._generic_metadata(file)
         elif plugin_errors:
             self.metadata["error"] = {
                 "message": plugin_errors[0]["message"],
             }
+
+    def _generic_metadata(self, file: str, identify_error: Optional[str] = None) -> dict:
+        return generic_metadata(
+            file,
+            filename=self.filename,
+            bytecount=self.bytecount,
+            magic=getattr(self, "magic", ""),
+            identify_error=identify_error,
+        )
+
+    def set_container_metadata(self, file: str) -> None:
+        metadata = container_metadata(file, self.filetype)
+        if metadata:
+            if "Unknown" in self.metadata:
+                del self.metadata["Unknown"]
+            self.metadata["container_file"] = metadata
 
     def _safe_serialize(self, obj) -> str:
         """
@@ -474,10 +493,25 @@ class Observe:
             for c, b in self.certs.items():
                 with open(f"{os.path.join(outdir, 'certs', c)}.crt", "wb") as cert_out:
                     cert_out.write(b)
-        outfile = f"{os.path.join(outdir, self.filename)}.{self.md5}.json"
         vs = {k: v for k, v in vs.items() if k != "certs"}
+        outfile = self._json_output_path(outdir)
         with open(outfile, "w") as f:
             f.write(self._safe_serialize(vs))
+
+    def _json_output_path(self, outdir: str = ".") -> str:
+        """Return a collision-safe JSON output path for this observation."""
+
+        base = Path(outdir) / f"{self.filename}.{self.md5}.json"
+        if not base.exists():
+            return str(base)
+        try:
+            with base.open("r") as f:
+                existing_uuid = json.load(f).get("uuid")
+        except (OSError, json.JSONDecodeError):
+            existing_uuid = None
+        if existing_uuid == self.uuid:
+            return str(base)
+        return str(Path(outdir) / f"{self.filename}.{self.md5}.{self.uuid}.json")
 
     def __str__(self) -> str:
         return pprint.pformat(vars(self), indent=2)

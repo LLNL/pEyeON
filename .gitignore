@@ -19,3 +19,6 @@ box_tokens.json
 
 # Build artifacts
 eye/
+
+# VM build outputs
+builds/vm/output/
