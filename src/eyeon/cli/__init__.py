@@ -2,6 +2,8 @@
 CLI interface for EyeON tools.
 """
 import argparse
+import os
+import warnings
 
 import box.box_auth
 import box.box_config
@@ -13,6 +15,8 @@ import eyeon.upload
 from loguru import logger
 from sys import stderr
 from pathlib import Path
+
+SURFACTANT_NESTED_SET_WARNING = "Possible nested set at position 81"
 
 class CommandLine:
     """
@@ -164,6 +168,17 @@ class CommandLine:
         :param log_file: name and path for the log file
             :type log_file: str | None
         """
+
+        os.environ["LOGURU_LEVEL"] = log_level
+        os.environ.setdefault(
+            "PYTHONWARNINGS",
+            f"ignore:{SURFACTANT_NESTED_SET_WARNING}:FutureWarning",
+        )
+        warnings.filterwarnings(
+            "ignore",
+            message=SURFACTANT_NESTED_SET_WARNING,
+            category=FutureWarning,
+        )
 
         logger.remove()
         fmt = "{time:%Y-%m-%d %H:%M:%S,%f} - {name} - {level} - {message}"

@@ -292,7 +292,9 @@ run_container_parse() {
         -e "EYEON_UID=$HOST_UID"
         -e "EYEON_GID=$HOST_GID"
         -e "DEBUG=$debug_mode"
+        -e "LOGURU_LEVEL=$LOG_LEVEL"
         -e "PYTHONUNBUFFERED=1"
+        -e "PYTHONWARNINGS=${PYTHONWARNINGS:-ignore:Possible nested set at position 81:FutureWarning}"
         -e "TERM=${TERM:-xterm-256color}"
         -e "EYEON_DEBUG_COMMAND=$debug_command"
         -v "$source:/source:ro"
@@ -303,7 +305,9 @@ run_container_parse() {
     podman)
       runtime_cmd+=(
         -e "DEBUG=$debug_mode"
+        -e "LOGURU_LEVEL=$LOG_LEVEL"
         -e "PYTHONUNBUFFERED=1"
+        -e "PYTHONWARNINGS=${PYTHONWARNINGS:-ignore:Possible nested set at position 81:FutureWarning}"
         -e "TERM=${TERM:-xterm-256color}"
         -e "EYEON_DEBUG_COMMAND=$debug_command"
         -v "$source:/source:ro"

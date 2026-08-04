@@ -115,7 +115,7 @@ class Observe:
             self.set_container_metadata(file)
 
         if self.filetype is None:  # md files etc have no filetype
-            logger.warning(f"file {self.filename} has no type")
+            logger.debug(f"file {self.filename} has no type")
             self.filetype = []
 
         if "PE" in self.filetype:
@@ -395,7 +395,7 @@ class Observe:
                 if k in plugin.argnames: 
                     filtered_kwargs[k]=v
                 
-            logger.info(f"filtered args {filtered_kwargs} for {plugin_name}")
+            logger.debug(f"filtered args {filtered_kwargs} for {plugin_name}")
 
             try:
                 result=plugin.function(**filtered_kwargs)

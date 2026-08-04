@@ -18,6 +18,7 @@ import os
 import time
 import threading # allows the monitor to run concurrently without blocking multiprocessing 
 import multiprocessing
+from sys import stderr
 from uuid import uuid4
 
 
@@ -178,6 +179,9 @@ class Parse:
         """
 
         file, result_path, progress_map = args
+
+        logger.remove()
+        logger.add(stderr, level=os.environ.get("LOGURU_LEVEL", "WARNING"))
 
         pid= os.getpid()
         start_time=time.time()
