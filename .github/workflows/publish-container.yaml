@@ -43,7 +43,7 @@ jobs:
             runs_on: ubuntu-latest
             platform: linux/amd64
           - arch: arm64
-            runs_on: ubuntu-24.04-arm64
+            runs_on: ubuntu-24.04-arm
             platform: linux/arm64
     runs-on: ${{ matrix.runs_on }}
 
