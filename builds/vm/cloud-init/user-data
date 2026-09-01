@@ -20,12 +20,15 @@ write_files:
     content: |
       EyeON Appliance VM (development build)
 
+      Networking: DHCP via systemd-networkd (not the default Debian mechanism).
+      Read /home/eyeon/QUICKSTART.txt for diagnostics, static networking, and
+      optional NFS input/output instructions.
+
       Smoke Test:
         eyeon-parse demo /usr/sbin
         eyeon-batch-summary
 
       Default data location is /home/eyeon/data/eyeon/[batch]/
-      
 
   # Marker file used by eyeon-parse.sh to select VM behavior in --mode auto.
   - path: /etc/eyeon-appliance
@@ -53,12 +56,75 @@ write_files:
          - This VM ships with /etc/eyeon-appliance, so eyeon-parse.sh defaults to VM mode.
          - Dataset root defaults to datasets.dataset_path in /opt/pEyeON-Analytics/EyeOnData.toml (default: /home/eyeon/data/).
 
-      4) Inspect a batch directory:
-         eyeon-batch-summary.sh
-         eyeon-batch-summary.sh ~/data/eyeon
+       6) Networking (the VM default):
+          - The VM uses systemd-networkd with DHCP on en* interfaces.
+          - Inspect: networkctl status; ip addr; resolvectl status
+          - Recover: sudo systemctl restart systemd-networkd
+          - Active config: /etc/systemd/network/20-eyeon-dhcp.network
+          - Static example: /home/eyeon/STATIC-NETWORK.network.example
+          - Do not copy the static example into /etc/systemd/network until you
+            have replaced its placeholders and intentionally disabled DHCP.
 
-      5) Load parsed JSON into DuckDB (from ~/pEyeON-Analytics):
-         uv run python load_eyeon.py --help
+       7) Optional NFS workflow:
+          NFS is not required. SCP, SSHFS, hypervisor shared folders, and local
+          storage are also valid ways to move files in and out of the VM.
+
+          Check client tools:
+            nfsstat --version
+            mount.nfs --version
+            showmount --version
+
+          Discover exports when supported:
+            showmount -e <nfs-server>
+
+          NFSv4-only servers may not support showmount. In that case, mount a
+          known export directly:
+            sudo mkdir -p /mnt/scan-input /mnt/parse-output
+            sudo mount -t nfs -o vers=4 <nfs-server>:/<input-export> /mnt/scan-input
+            sudo mount -t nfs -o vers=4 <nfs-server>:/<output-export> /mnt/parse-output
+            touch /mnt/parse-output/.eyeon-write-test
+            rm /mnt/parse-output/.eyeon-write-test
+            eyeon-parse.sh UTIL_CD /mnt/scan-input /mnt/parse-output
+            sudo umount /mnt/scan-input /mnt/parse-output
+
+          A disabled placeholder is also available at:
+            /home/eyeon/NFS-MOUNTS.example
+
+          Keep the active DuckDB database on local VM storage. Do not place an
+          active database on NFS without deliberate locking/consistency testing.
+
+       8) Inspect a batch directory:
+          eyeon-batch-summary.sh
+          eyeon-batch-summary.sh ~/data/eyeon
+
+       9) Load parsed JSON into local DuckDB (from ~/pEyeON-Analytics):
+          uv run python load_eyeon.py --help
+
+  - path: /home/eyeon/STATIC-NETWORK.network.example
+    owner: eyeon:eyeon
+    permissions: '0644'
+    content: |
+      # Disabled example. Do not copy this file into /etc/systemd/network until
+      # all placeholders are replaced and DHCP is intentionally disabled.
+      [Match]
+      Name=en*
+
+      [Network]
+      Address=192.0.2.10/24
+      Gateway=192.0.2.1
+      DNS=192.0.2.1
+
+  - path: /home/eyeon/NFS-MOUNTS.example
+    owner: eyeon:eyeon
+    permissions: '0644'
+    content: |
+      # Disabled examples. Replace placeholders and run manually; do not add
+      # deployment-specific values to the appliance image.
+      sudo mkdir -p /mnt/scan-input /mnt/parse-output
+      sudo mount -t nfs -o vers=4 <nfs-server>:/<input-export> /mnt/scan-input
+      sudo mount -t nfs -o vers=4 <nfs-server>:/<output-export> /mnt/parse-output
+      eyeon-parse.sh UTIL_CD /mnt/scan-input /mnt/parse-output
+      sudo umount /mnt/scan-input /mnt/parse-output
 
   - path: /etc/profile.d/eyeon-quickstart.sh
     permissions: '0755'

@@ -17,7 +17,11 @@ Default login:
 - `eyeon / eyeon`
 - `debian / debian`
 
-The VM is headless and expects DHCP networking.
+The VM is headless and defaults to DHCP networking through
+`systemd-networkd`. This is intentional: it is not the default Debian/cloud-init
+networking mechanism. After login, read `/home/eyeon/QUICKSTART.txt` for local
+network diagnostics, the disabled static-network example, and the optional NFS
+workflow.
 
 Recommended starting size:
 
@@ -115,3 +119,25 @@ Then create a new Linux VM and attach the converted `vdi` as the primary disk.
 - The project currently ships qcow2 as the primary VM artifact.
 - Nutanix AHV and libvirt/KVM are the most direct deployment paths.
 - VMware, Hyper-V, and VirtualBox deployment paths are conversion-based and should be treated as convenience paths rather than the primary validated target.
+
+## Optional NFS Workflow
+
+The image includes NFS client tools, but NFS is optional and no export is
+mounted automatically. Use the local quickstart after login for the complete
+workflow. A deployment can instead use local storage, SCP, SSHFS, hypervisor
+shared folders, or another site-specific transfer mechanism.
+
+Typical manual client setup is:
+
+```bash
+sudo mkdir -p /mnt/scan-input /mnt/parse-output
+showmount -e <nfs-server>  # may not work against NFSv4-only servers
+sudo mount -t nfs -o vers=4 <nfs-server>:/<input-export> /mnt/scan-input
+sudo mount -t nfs -o vers=4 <nfs-server>:/<output-export> /mnt/parse-output
+eyeon-parse.sh UTIL_CD /mnt/scan-input /mnt/parse-output
+sudo umount /mnt/scan-input /mnt/parse-output
+```
+
+Keep the active DuckDB database on local VM storage. An active DuckDB database
+on NFS is future work requiring deliberate validation of locking and consistency
+behavior.

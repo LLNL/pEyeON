@@ -126,6 +126,7 @@ build {
       "sudo bash /tmp/eyeon-provision/install-rust-binwalk.sh",
       "sudo install -m 0755 /root/.cargo/bin/binwalk /usr/local/bin/binwalk",
       "sudo bash /tmp/eyeon-provision/install-runtime-deps-debian-podman.sh",
+      "sudo bash /tmp/eyeon-provision/install-nfs-client-debian.sh",
       "sudo bash /tmp/eyeon-provision/install-sasquatch-deb.sh",
 
       # Ensure networking comes up on boot across hypervisors.
