@@ -37,7 +37,6 @@ write_files:
       eyeon-appliance
 
   - path: /home/eyeon/QUICKSTART.txt
-    owner: eyeon:eyeon
     permissions: '0644'
     content: |
       EyeON Appliance VM Quickstart
@@ -70,12 +69,12 @@ write_files:
           storage are also valid ways to move files in and out of the VM.
 
           Check client tools:
-            nfsstat --version
-            mount.nfs --version
-            showmount --version
+            sudo nfsstat --version
+            sudo mount.nfs --version
+            sudo showmount --version
 
           Discover exports when supported:
-            showmount -e <nfs-server>
+            sudo showmount -e <nfs-server>
 
           NFSv4-only servers may not support showmount. In that case, mount a
           known export directly:
@@ -101,7 +100,6 @@ write_files:
           uv run python load_eyeon.py --help
 
   - path: /home/eyeon/STATIC-NETWORK.network.example
-    owner: eyeon:eyeon
     permissions: '0644'
     content: |
       # Disabled example. Do not copy this file into /etc/systemd/network until
@@ -115,7 +113,6 @@ write_files:
       DNS=192.0.2.1
 
   - path: /home/eyeon/NFS-MOUNTS.example
-    owner: eyeon:eyeon
     permissions: '0644'
     content: |
       # Disabled examples. Replace placeholders and run manually; do not add
