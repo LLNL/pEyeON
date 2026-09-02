@@ -2,9 +2,12 @@
 
 set -euo pipefail
 
-# Ensure a simple, robust DHCP client config on "en*" interfaces.
-# This avoids relying on cloud-init's networking behavior, which can vary by
-# image and hypervisor.
+# The VM intentionally uses systemd-networkd for DHCP rather than the default
+# Debian/cloud-init networking path. Keep this file as the single active
+# network configuration installed by the VM provisioning flow.
+#
+# A static example is shipped separately in the VM quickstart. It is not placed
+# in /etc/systemd/network, so it cannot accidentally override this DHCP file.
 
 mkdir -p /etc/systemd/network
 
@@ -21,5 +24,6 @@ EOF
 
 systemctl enable --now systemd-networkd
 
-# Optional, but commonly useful for name resolution consistency.
+# Keep name resolution consistent with systemd-networkd when systemd-resolved
+# is available in the guest image.
 systemctl enable --now systemd-resolved || true
